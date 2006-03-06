@@ -25,10 +25,8 @@
 #include "flaimsys.h"
 
 extern FLMBYTE gnDaysInMonth[];
-
 extern FLMBYTE SENLenArray[];
-
-/* Local function prototypes */
+extern FLMBYTE flm_c60_max[];
 
 FSTATIC eCorruptionType flmVerifyBlobField(
 	FLMBYTE *	pBlobHdr,
@@ -66,7 +64,7 @@ eCorruptionType flmVerifyWPChar(
 {
 	if (uiCharSet < NCHSETS)
 	{
-		if (uiChar >= (FLMUINT)fwp_c60_max[ uiCharSet])
+		if (uiChar >= (FLMUINT)flm_c60_max[ uiCharSet])
 			return( FLM_BAD_CHAR);
 	}
 	else if ((uiCharSet >= ACHSMIN) && (uiCharSet < ACHSETS))
@@ -115,7 +113,7 @@ eCorruptionType flmVerifyTextField(
 		/* Determine what we are pointing at. */
 
 		uiChar1 = (FLMUINT)*pText;
-		uiObjType = (FLMUINT)(GedTextObjType( uiChar1));
+		uiObjType = (FLMUINT)(flmTextObjType( uiChar1));
 		switch (uiObjType)
 		{
 			case ASCII_CHAR_CODE:
@@ -1891,19 +1889,19 @@ eCorruptionType flmVerifyElmFOP(
 	STATE_INFO *	pStateInfo)
 {
 	eCorruptionType	eCorruptionCode = FLM_NO_CORRUPTION;
-	FLMBYTE *			pElmRec = pStateInfo->pElmRec;
-	FLMUINT				uiElmRecOffset = pStateInfo->uiElmRecOffset;
-	FLMUINT				uiElmRecLen = pStateInfo->uiElmRecLen;
-	FLMBYTE *			pField;
-	FLMBYTE *			pTmpFld;
-	FLMBOOL				bDictField;
-	FLMBOOL				bFOPIsField;
-	FLMBYTE *			pElm = pStateInfo->pElm;
-	FLMUINT				uiFOPDataLen;
-	FLMUINT				uiFldOverhead;
-	FLMUINT				uiFldFlags;
-	FLMUINT				uiLfNumber;
-	FLMUINT				uiMaxDictFieldNum = FLM_LAST_DICT_FIELD_NUM;
+	FLMBYTE *	pElmRec = pStateInfo->pElmRec;
+	FLMUINT		uiElmRecOffset = pStateInfo->uiElmRecOffset;
+	FLMUINT		uiElmRecLen = pStateInfo->uiElmRecLen;
+	FLMBYTE *	pField;
+	FLMBYTE *	pTmpFld;
+	FLMBOOL		bDictField;
+	FLMBOOL		bFOPIsField;
+	FLMBYTE *	pElm = pStateInfo->pElm;
+	FLMUINT		uiFOPDataLen;
+	FLMUINT		uiFldOverhead;
+	FLMUINT		uiBaseFldFlags;
+	FLMUINT		uiLfNumber;
+	FLMUINT		uiMaxDictFieldNum = FLM_LAST_DICT_FIELD_NUM;
 
 	uiLfNumber = (pStateInfo->pLogicalFile)
 					? pStateInfo->pLogicalFile->pLFile->uiLfNum
@@ -2020,17 +2018,21 @@ eCorruptionType flmVerifyElmFOP(
 			/* See if the field is a child or sibling of the previous field. */
 
 			if (FOPE_LEVEL( pField))
+			{
 				pStateInfo->uiFieldLevel++;
+			}
 
 			/* See if field number is one or two bytes. */
 
-			pTmpFld = pField + 1;
-			uiFldFlags = (FLMUINT)(FOP_GET_FLD_FLAGS( pField));
+			pTmpFld = pField;
+			uiFldOverhead = 0;
+			uiBaseFldFlags = (FLMUINT)(FOP_GET_FLD_FLAGS( pTmpFld));
+			pTmpFld++;
 
-			if (FOP_2BYTE_FLDNUM( uiFldFlags))
+			if( FOP_2BYTE_FLDNUM( uiBaseFldFlags))
 			{
-				uiFldOverhead = 3;
-				if (uiElmRecOffset + uiFldOverhead > uiElmRecLen)
+				uiFldOverhead += 3;
+				if( uiElmRecOffset + uiFldOverhead > uiElmRecLen)
 				{
 					pStateInfo->bElmRecOK = FALSE;
 					eCorruptionCode = FLM_BAD_ELM_FLD_OVERHEAD;
@@ -2041,7 +2043,7 @@ eCorruptionType flmVerifyElmFOP(
 			}
 			else
 			{
-				uiFldOverhead = 2;
+				uiFldOverhead += 2;
 				if (uiElmRecOffset + uiFldOverhead > uiElmRecLen)
 				{
 					pStateInfo->bElmRecOK = FALSE;
@@ -2052,23 +2054,24 @@ eCorruptionType flmVerifyElmFOP(
 				pTmpFld++;
 			}
 
-			/* See if the field length is one or two bytes. */
+			// Determine the field length
 
-			if (FOP_2BYTE_FLDLEN( uiFldFlags))
+			if( FOP_2BYTE_FLDLEN( uiBaseFldFlags))
 			{
 				uiFldOverhead += 2;
-				if (uiElmRecOffset + uiFldOverhead > uiElmRecLen)
+				if( uiElmRecOffset + uiFldOverhead > uiElmRecLen)
 				{
 					pStateInfo->bElmRecOK = FALSE;
 					eCorruptionCode = FLM_BAD_ELM_FLD_OVERHEAD;
 					goto Exit;
 				}
+
 				pStateInfo->uiFieldLen = (FLMUINT)FB2UW( pTmpFld);
 			}
 			else
 			{
 				uiFldOverhead++;
-				if (uiElmRecOffset + uiFldOverhead > uiElmRecLen)
+				if( uiElmRecOffset + uiFldOverhead > uiElmRecLen)
 				{
 					pStateInfo->bElmRecOK = FALSE;
 					eCorruptionCode = FLM_BAD_ELM_FLD_OVERHEAD;
@@ -2080,26 +2083,33 @@ eCorruptionType flmVerifyElmFOP(
 
 		/* Test for UNREGISTERED fields -- not in dictionary. */
 
-		else if (FOP_IS_TAGGED( pField))
+		else if( FOP_IS_TAGGED( pField))
 		{
 			pStateInfo->uiFOPType = FLM_FOP_TAGGED;
 
 			/* See if the field is a child or sibling of the previous field. */
 
-			if (FTAG_LEVEL( pField))
+			if( FTAG_LEVEL( pField))
+			{
 				pStateInfo->uiFieldLevel++;
+			}
+
+			pTmpFld = pField;
+			uiBaseFldFlags = (FLMUINT)(FOP_GET_FLD_FLAGS( pTmpFld));
+			pTmpFld++;
+			uiFldOverhead = 1;
 
 			/* Get the field type. */
 
-			pStateInfo->uiFieldType = (FLMUINT)FTAG_FLD_TYPE( pField);
+			pStateInfo->uiFieldType = (FLMUINT)FTAG_GET_FLD_TYPE( *pTmpFld);
+			pTmpFld++;
+			uiFldOverhead++;
 
 			/* See if field number is one or two bytes. */
 
-			pTmpFld = pField + 2;
-			uiFldFlags = (FLMUINT)(FOP_GET_FLD_FLAGS( pField));
-			if (FOP_2BYTE_FLDNUM( uiFldFlags))
+			if( FOP_2BYTE_FLDNUM( uiBaseFldFlags))
 			{
-				uiFldOverhead = 4;
+				uiFldOverhead += 2;
 				if (uiElmRecOffset + uiFldOverhead > uiElmRecLen)
 				{
 					pStateInfo->bElmRecOK = FALSE;
@@ -2111,7 +2121,7 @@ eCorruptionType flmVerifyElmFOP(
 			}
 			else
 			{
-				uiFldOverhead = 3;
+				uiFldOverhead++;
 				if (uiElmRecOffset + uiFldOverhead > uiElmRecLen)
 				{
 					pStateInfo->bElmRecOK = FALSE;
@@ -2122,19 +2132,21 @@ eCorruptionType flmVerifyElmFOP(
 				pTmpFld++;
 			}
 
-			/*
-			Toggle high bit to get true field number.  FOP_TAGGED
-			is now used for more than just UNREGISTERED fields.
-			*/
+			// Toggle high bit to get true field number.  FOP_TAGGED
+			// is now used for more than just UNREGISTERED fields.
 
 			if (pStateInfo->uiFieldNum & 0x8000)
+			{
 				pStateInfo->uiFieldNum &= (FLMUINT) 0x7FFF;
+			}
 			else
+			{
 				pStateInfo->uiFieldNum |= (FLMUINT) 0x8000;
+			}
 
-			/* See if the field length is one or two bytes */
+			// See if the field length is one or two bytes
 
-			if (FOP_2BYTE_FLDLEN( uiFldFlags))
+			if( FOP_2BYTE_FLDLEN( uiBaseFldFlags))
 			{
 				uiFldOverhead += 2;
 				if (uiElmRecOffset + uiFldOverhead > uiElmRecLen)
@@ -2143,6 +2155,7 @@ eCorruptionType flmVerifyElmFOP(
 					eCorruptionCode = FLM_BAD_ELM_FLD_OVERHEAD;
 					goto Exit;
 				}
+
 				pStateInfo->uiFieldLen = (FLMUINT)FB2UW( pTmpFld);
 			}
 			else
@@ -2158,7 +2171,7 @@ eCorruptionType flmVerifyElmFOP(
 			}
 		}
 
-		/* Test for a field with NO value -- must be in dictionary. */
+		// Test for a field with NO value -- must be in dictionary
 
 		else if (FOP_IS_NO_VALUE( pField))
 		{
@@ -2166,19 +2179,21 @@ eCorruptionType flmVerifyElmFOP(
 			bDictField = TRUE;
 			pStateInfo->uiFieldLen = 0;
 
-			/* See if the field is a child or sibling of previous field. */
+			// See if the field is a child or sibling of previous field
 
-			if (FNOV_LEVEL( pField))
+			if( FNOV_LEVEL( pField))
+			{
 				pStateInfo->uiFieldLevel++;
+			}
 
-			/* See if field number is one or two bytes. */
+			// See if field number is one or two bytes
 
 			pTmpFld = pField + 1;
-			uiFldFlags = (FLMUINT)(FOP_GET_FLD_FLAGS( pField));
-			if (FOP_2BYTE_FLDNUM( uiFldFlags))
+			uiBaseFldFlags = (FLMUINT)(FOP_GET_FLD_FLAGS( pField));
+			if( FOP_2BYTE_FLDNUM( uiBaseFldFlags))
 			{
 				uiFldOverhead = 3;
-				if (uiElmRecOffset + uiFldOverhead > uiElmRecLen)
+				if( uiElmRecOffset + uiFldOverhead > uiElmRecLen)
 				{
 					pStateInfo->bElmRecOK = FALSE;
 					eCorruptionCode = FLM_BAD_ELM_FLD_OVERHEAD;
@@ -2190,7 +2205,7 @@ eCorruptionType flmVerifyElmFOP(
 			else
 			{
 				uiFldOverhead = 2;
-				if (uiElmRecOffset + uiFldOverhead > uiElmRecLen)
+				if( uiElmRecOffset + uiFldOverhead > uiElmRecLen)
 				{
 					pStateInfo->bElmRecOK = FALSE;
 					eCorruptionCode = FLM_BAD_ELM_FLD_OVERHEAD;
@@ -2201,30 +2216,32 @@ eCorruptionType flmVerifyElmFOP(
 			}
 		}
 
-		/* Test for the code which just resets the field level. */
+		// Test for the code which just resets the field level
 
-		else if (FOP_IS_SET_LEVEL( pField))
+		else if( FOP_IS_SET_LEVEL( pField))
 		{
 			FLMUINT	uiTempLevel;
 
 			pStateInfo->uiFOPType = FLM_FOP_JUMP_LEVEL;
 			uiFldOverhead = 1;
-			if (uiElmRecOffset + uiFldOverhead > uiElmRecLen)
+			if( uiElmRecOffset + uiFldOverhead > uiElmRecLen)
 			{
 				pStateInfo->bElmRecOK = FALSE;
 				eCorruptionCode = FLM_BAD_ELM_FLD_OVERHEAD;
 				goto Exit;
 			}
+
 			bFOPIsField = FALSE;
 			pStateInfo->uiFieldNum = 0;
 			pStateInfo->uiFieldLen = 0;
 			pStateInfo->uiFieldType = 0xFF;
 
-			/* Jumping back better not cause us to go below level one. */
+			// Jumping back better not cause us to go below level one
 
 			uiTempLevel = (FLMUINT)(FSLEV_GET( pField));
 			pStateInfo->uiJumpLevel = uiTempLevel;
-			if (pStateInfo->uiFieldLevel <= uiTempLevel)
+
+			if( pStateInfo->uiFieldLevel <= uiTempLevel)
 			{
 				pStateInfo->bElmRecOK = FALSE;
 				eCorruptionCode = FLM_BAD_ELM_FLD_LEVEL_JUMP;
@@ -2232,7 +2249,7 @@ eCorruptionType flmVerifyElmFOP(
 			}
 			pStateInfo->uiFieldLevel -= uiTempLevel;
 		}
-		else if (FOP_IS_RECORD_INFO( pField))
+		else if( FOP_IS_RECORD_INFO( pField))
 		{
 			bFOPIsField = FALSE;
 			pStateInfo->uiFOPType = FLM_FOP_REC_INFO;
@@ -2241,8 +2258,9 @@ eCorruptionType flmVerifyElmFOP(
 			pStateInfo->uiFieldType = 0xFF;
 
 			pTmpFld = pField + 1;
-			uiFldFlags = (FLMUINT)(FOP_GET_FLD_FLAGS( pField));
-			if (FOP_2BYTE_FLDLEN( uiFldFlags))
+			uiBaseFldFlags = (FLMUINT)(FOP_GET_FLD_FLAGS( pField));
+			
+			if( FOP_2BYTE_FLDLEN( uiBaseFldFlags))
 			{
 				uiFldOverhead += 2;
 				if (uiElmRecOffset + uiFldOverhead > uiElmRecLen)
@@ -2364,9 +2382,49 @@ eCorruptionType flmVerifyElmFOP(
 				pStateInfo->uiEncFieldLen += ((FLMUINT) *pTmpFld++) << 8;
 			}
 		}
+		else if( FOP_IS_LARGE( pField))
+		{
+			pStateInfo->uiFOPType = FLM_FOP_LARGE;
+			bFOPIsField = TRUE;
 
-		/* Anything else is a code we don't understand. */
+			uiFldOverhead = 2;
 
+			if( uiElmRecOffset + uiFldOverhead > uiElmRecLen)
+			{
+				pStateInfo->bElmRecOK = FALSE;
+				eCorruptionCode = FLM_BAD_ELM_FLD_OVERHEAD;
+				goto Exit;
+			}
+
+			if( FLARGE_LEVEL( pField))
+			{
+				pStateInfo->uiFieldLevel++;
+			}
+
+			pStateInfo->uiFieldType = FLARGE_FLD_TYPE( pField);
+
+			pStateInfo->uiFieldNum = FLARGE_TAG_NUM( pField);
+			uiFldOverhead += 2;
+
+			pStateInfo->uiFieldLen = FLARGE_DATA_LEN( pField);
+			uiFldOverhead += 4;
+
+			if( FLARGE_ENCRYPTED( pField))
+			{
+				pStateInfo->uiEncId = FLARGE_ETAG_NUM( pField);
+				uiFldOverhead += 2;
+
+				pStateInfo->uiEncFieldLen = FLARGE_EDATA_LEN( pField);
+				uiFldOverhead += 4;
+			}
+
+			if( uiElmRecOffset + uiFldOverhead > uiElmRecLen)
+			{
+				pStateInfo->bElmRecOK = FALSE;
+				eCorruptionCode = FLM_BAD_ELM_FLD_OVERHEAD;
+				goto Exit;
+			}
+		}
 		else
 		{
 			// Anything else is a code we don't understand
@@ -2498,7 +2556,6 @@ Exit:
 
 	return( eCorruptionCode);
 }
-
 
 /********************************************************************
 Desc: ?

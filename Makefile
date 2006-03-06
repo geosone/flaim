@@ -1098,7 +1098,7 @@ installcheck:
 	
 .PHONY : clean
 clean:
-	-$(ec)$(call rmdircmd,$(target_path))
+	-$(ec)$(call rmdircmd,$(build_output_dir))
 	-$(ec)$(call rmcmd *.pch)
 	
 .PHONY : distclean

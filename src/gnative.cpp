@@ -24,7 +24,7 @@
 
 #include "flaimsys.h"
 
-/*API~*********************************************************************
+/****************************************************************************
 Desc:	Copies and formats a native 8-bit null terminated string into a 
 		GEDCOM node.  The code page
 		It converts the string into an internal TEXT string in the GEDCOM node.
@@ -36,7 +36,7 @@ Note: The code page parameter is currently not supported.  All character
 		These values will be preserved if GedGetNATIVE is called, but will
 		be dropped if any other GEDCOM get routine is called.  In addition,
 		all character values under 0x20 are preserved as non-character values.
-*END************************************************************************/
+****************************************************************************/
 RCODE GedPutNATIVE(
 	POOL *	 		pPool,
 	NODE * 			node,
@@ -67,7 +67,7 @@ RCODE GedPutNATIVE(
 
 	// Determine the size of the buffer needed to store the string 
 	
-	if( RC_BAD( rc = FlmNative2Storage( nativeString, &allocLength, NULL)))
+	if( RC_BAD( rc = FlmNative2Storage( nativeString, 0, &allocLength, NULL)))
 	{
 		goto Exit;
 	}
@@ -82,7 +82,7 @@ RCODE GedPutNATIVE(
 
 	// Convert the string 
 
-	if( RC_BAD( rc = FlmNative2Storage( nativeString, &allocLength, outPtr)))
+	if( RC_BAD( rc = FlmNative2Storage( nativeString, 0, &allocLength, outPtr)))
 	{
 		goto Exit;
 	}
@@ -99,12 +99,12 @@ Exit:
 	return( rc);
 }
 
-/*API~*********************************************************************
+/****************************************************************************
 Desc : Places 8-bit text from a GEDCOM text type node into an output buffer.
 		 The current text representation supports WordPerfect 6.x character
 		 values, WordPerfect formatting codes, UNICODE character values 
 		 and 8-bit character values that range from 0x80 to 0xFF.
-*END************************************************************************/
+****************************************************************************/
 RCODE GedGetNATIVE(
 	NODE *			node,
 	char *			pszBuffer,

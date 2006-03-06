@@ -37,13 +37,13 @@ FSTATIC RCODE	flmKeyRetrieveCS(
 FSTATIC RCODE flmNextKey(
 	FDB *			pDb,
 	LFILE *		pLFile,
-	BTSK_p		pStack,
+	BTSK *		pStack,
 	FLMUINT *	pudRefDrn);
 
 
-/*API~***********************************************************************
+/****************************************************************************
 Desc:		Retrieves a key from an index based on a passed-in GEDCOM tree and DRN.
-*END************************************************************************/
+****************************************************************************/
 FLMEXP RCODE FLMAPI FlmKeyRetrieve(
 	HFDB				hDb,
 	FLMUINT			uiIndex,
@@ -57,10 +57,10 @@ FLMEXP RCODE FLMAPI FlmKeyRetrieve(
 {
 	BTSK			stack[ BH_MAX_LEVELS];
 	FLMBOOL		bStackInitialized = FALSE;
-	BTSK_p		pStack = &stack[0];
+	BTSK *		pStack = &stack[0];
 	DIN_STATE	dinState;
 	FDB *			pDb = (FDB *)hDb;
-	IXD_p			pIxd = NULL;
+	IXD *			pIxd = NULL;
 	LFILE *		pLFile;
 	FLMBYTE *	pSearchKeyBuf = NULL;
 	FLMBYTE *	pKeyBuf = NULL;
@@ -430,14 +430,11 @@ Exit_CS:
 	return( rc);
 }
 
-
 /****************************************************************************
-Name :	flmKeyRetrieveCS
-Area :	RETRIEVAL
 Desc:		Retrieves a key from an index based on a passed-in GEDCOM tree and DRN.
 VISIT:	On reading data records and FO_EXCL, increment the DRN instead of
 			positioning to the DRN and then scanning to the next record.
-*END************************************************************************/
+****************************************************************************/
 FSTATIC RCODE	flmKeyRetrieveCS(
 	FDB *				pDb,
 	FLMUINT			uiIndex,
@@ -586,7 +583,7 @@ Desc: 	Go to the next key given a valid cursor.  Get & position to reference
 FSTATIC RCODE flmNextKey(
 	FDB *			pDb,
 	LFILE *		pLFile,
-	BTSK_p		pStack,
+	BTSK *		pStack,
 	FLMUINT *	puiRefDrn)
 {
 	RCODE			rc;

@@ -28,52 +28,52 @@
 #define DRN_TO_DOMAIN(uiDrn)		(FLMUINT)(((uiDrn) - 1) / 256 - 1)
 
 FSTATIC FLMINT flmPosKeyCompare(
-	POS_KEY_p		pKey1,
-	POS_KEY_p		pKey2);
+	POS_KEY *		pKey1,
+	POS_KEY *		pKey2);
 
 FSTATIC RCODE flmLoadPosKeys(
-	CURSOR_p			pCursor,
-	POS_KEY_p		pKeys,
+	CURSOR *			pCursor,
+	POS_KEY *		pKeys,
 	FLMUINT			uiNumKeys,
 	FLMBOOL			bLeafLevel);
 
 FSTATIC RCODE flmKeyIsMatch(
-	CURSOR_p				pCursor,
-	IXD_p					pIxd,
+	CURSOR *				pCursor,
+	IXD *					pIxd,
 	FLMBYTE *			pucKey,
 	FLMUINT				uiKeyLen,
 	FLMUINT				uiDrn,
-	POS_KEY_p *			ppKeys,
+	POS_KEY * *			ppKeys,
 	FLMUINT *			puiNumKeys,
 	FLMUINT *			puiKeyArrayAllocSize,
 	FLMUINT				uiKeyArrayGrowSize);
 
 FSTATIC RCODE flmExamineBlock(
-	CURSOR_p				pCursor,
-	IXD_p					pIxd,
+	CURSOR *				pCursor,
+	IXD *					pIxd,
 	FLMBYTE *			pucBlk,
 	FSIndexCursor *	pFSIndexCursor,
 	FLMUINT **			ppuiChildBlockAddresses,
 	FLMUINT *			puiNumChildBlocks,
 	FLMUINT *			puiBlkAddressArrayAllocSize,
-	POS_KEY_p *			ppKeys,
+	POS_KEY * *			ppKeys,
 	FLMUINT *			puiNumKeys,
 	FLMUINT *			puiKeyArrayAllocSize,
 	FLMBOOL *			pbHighKeyInRange);
 
 FSTATIC RCODE flmGetLastKey(
 	FDB *					pDb,
-	CURSOR_p				pCursor,
-	IXD_p					pIxd,
+	CURSOR *				pCursor,
+	IXD *					pIxd,
 	LFILE *				pLFile,
 	FLMUINT				uiBlockAddress,
-	POS_KEY_p *			ppKeys,
+	POS_KEY * *			ppKeys,
 	FLMUINT *			puiNumKeys,
 	FLMUINT *			puiKeyArrayAllocSize);
 
 FSTATIC RCODE flmCurGetPosKeys(
 	FDB *				pDb,
-	CURSOR_p			pCursor);
+	CURSOR *			pCursor);
 
 /****************************************************************************
 Desc: Compares the contents of the key buffers for two cursor positioning keys,
@@ -83,8 +83,8 @@ Desc: Compares the contents of the key buffers for two cursor positioning keys,
 				>0		Indicates that the first key is greater then the second.
 ****************************************************************************/
 FSTATIC FLMINT flmPosKeyCompare(
-	POS_KEY_p	pKey1,
-	POS_KEY_p	pKey2
+	POS_KEY *	pKey1,
+	POS_KEY *	pKey2
 	)
 {
 	FLMINT	iCmp;
@@ -134,8 +134,8 @@ Desc: Loads a set of positioning keys into a subquery's array, allocating it
 		if necessary.
 ****************************************************************************/
 FSTATIC RCODE flmLoadPosKeys(
-	CURSOR_p		pCursor,
-	POS_KEY_p	pKeys,
+	CURSOR *		pCursor,
+	POS_KEY *	pKeys,
 	FLMUINT		uiNumKeys,
 	FLMBOOL		bLeafLevel
 	)
@@ -261,23 +261,23 @@ Desc: Evaluates an index key against selection criteria, and adds it to the
 		passed-in key array.
 ****************************************************************************/
 FSTATIC RCODE flmKeyIsMatch(
-	CURSOR_p				pCursor,
-	IXD_p					pIxd,
+	CURSOR *				pCursor,
+	IXD *					pIxd,
 	FLMBYTE *			pucKey,
 	FLMUINT				uiKeyLen,
 	FLMUINT				uiDrn,
-	POS_KEY_p *			ppKeys,
+	POS_KEY * *			ppKeys,
 	FLMUINT *			puiNumKeys,
 	FLMUINT *			puiKeyArrayAllocSize,
 	FLMUINT				uiKeyArrayGrowSize
 	)
 {
 	RCODE				rc = FERR_OK;
-	SUBQUERY_p		pSubQuery = pCursor->pSubQueryList;
+	SUBQUERY *		pSubQuery = pCursor->pSubQueryList;
 	FlmRecord *		pKey = NULL;
 	FLMBOOL			bHaveMatch = FALSE;
 	FLMUINT			uiResult;
-	POS_KEY_p		pPosKey;
+	POS_KEY *		pPosKey;
 	
 	// If pSubQuery->bDoKeyMatch is FALSE, the selection criteria for this
 	// query are satisfied by a contiguous set of index keys.  Therefore,
@@ -357,14 +357,14 @@ Visit:This code NEEDS to use the b-tree routines and NOT use the low level
 		level of the b-tree.
 ****************************************************************************/
 FSTATIC RCODE flmExamineBlock(
-	CURSOR_p				pCursor,
-	IXD_p					pIxd,
+	CURSOR *				pCursor,
+	IXD *					pIxd,
 	FLMBYTE *			pucBlk,
 	FSIndexCursor *	pFSIndexCursor,
 	FLMUINT **			ppuiChildBlockAddresses,
 	FLMUINT *			puiNumChildBlocks,
 	FLMUINT *			puiBlkAddressArrayAllocSize,
-	POS_KEY_p *			ppKeys,
+	POS_KEY * *			ppKeys,
 	FLMUINT *			puiNumKeys,
 	FLMUINT *			puiKeyArrayAllocSize,
 	FLMBOOL *			pbHighKeyInRange
@@ -651,11 +651,11 @@ Visit:This routine must be rewritten to get rid of the low level BTREE
 ****************************************************************************/
 FSTATIC RCODE flmGetLastKey(
 	FDB *				pDb,
-	CURSOR_p			pCursor,
-	IXD_p				pIxd,
+	CURSOR *			pCursor,
+	IXD *				pIxd,
 	LFILE *			pLFile,
 	FLMUINT			uiBlockAddress,
-	POS_KEY_p *		ppKeys,
+	POS_KEY * *		ppKeys,
 	FLMUINT *		puiNumKeys,
 	FLMUINT *		puiKeyArrayAllocSize
 	)
@@ -666,7 +666,7 @@ FSTATIC RCODE flmGetLastKey(
 	FLMUINT			uiEndDrn = 0;
 	BTSK				stack;
 	FLMBYTE			ucKeyBuf [MAX_KEY_SIZ];
-	BTSK_p			pStack = &stack;
+	BTSK *			pStack = &stack;
 	FLMUINT			uiEndOfBlock;
 	FLMUINT			uiCurrElmOffset;
 	FLMUINT			uiBlkType;
@@ -845,7 +845,7 @@ Exit:
 Desc: Frees the allocations associated with a subquery's array.
 ****************************************************************************/
 void flmCurFreePosKeys(
-	CURSOR_p			pCursor
+	CURSOR *			pCursor
 	)
 {
 	FLMUINT	uiLoopCnt;
@@ -869,23 +869,23 @@ Desc: Gets a set of positioning keys for a particular subquery.
 ****************************************************************************/
 FSTATIC RCODE flmCurGetPosKeys(
 	FDB *				pDb,
-	CURSOR_p			pCursor
+	CURSOR *			pCursor
 	)
 {
 	RCODE				rc = FERR_OK;
 	BTSK				stack [BH_MAX_LEVELS];
 	FLMBYTE			ucKeyBuf [MAX_KEY_SIZ];
-	BTSK_p			pStack = stack;
+	BTSK *			pStack = stack;
 	LFILE *			pLFile;
 	LFILE				TmpLFile;
-	IXD_p				pIxd;
-	SUBQUERY_p		pSubQuery;
+	IXD *				pIxd;
+	SUBQUERY *		pSubQuery;
 	FLMUINT *		puiChildBlockAddresses = NULL;
 	FLMUINT *		puiTmpBlocks = NULL;
 	FLMUINT 			uiNumChildBlocks = 0;
 	FLMUINT			uiNumTmpBlks;
 	FLMUINT			uiBlkAddressArrayAllocSize = 0;
-	POS_KEY_p		pKeys = NULL;
+	POS_KEY *		pKeys = NULL;
 	FLMUINT			uiNumKeys = 0;
 	FLMUINT			uiKeyArrayAllocSize = 0;
 	FLMBOOL			bHighKeyInRange = FALSE;
@@ -1074,11 +1074,11 @@ Exit:
 Desc: Gets a set of positioning keys for a particular subquery.
 ****************************************************************************/
 RCODE flmCurSetupPosKeyArray(
-	CURSOR_p	pCursor
+	CURSOR *	pCursor
 	)
 {
 	RCODE	rc = FERR_OK;
-	FDB_p	pDb = NULL;
+	FDB *	pDb = NULL;
 	
 	// Optimize the subqueries as necessary
 
@@ -1117,14 +1117,14 @@ Desc: Gets the approximate percentage position of a passed-in key within a
 		cursor's result set.
 ****************************************************************************/
 RCODE flmCurGetPercentPos(
-	CURSOR_p			pCursor,
+	CURSOR *			pCursor,
 	FLMUINT *		puiPrcntPos
 	)
 {
 	RCODE				rc = FERR_OK;
-	FDB_p				pDb = NULL;
-	IXD_p				pIxd;
-	POS_KEY_p		pPosKeyArray;
+	FDB *				pDb = NULL;
+	IXD *				pIxd;
+	POS_KEY *		pPosKeyArray;
 	POS_KEY			CompKey;
 	FLMUINT			uiLowOffset;
 	FLMUINT			uiMidOffset;
@@ -1348,17 +1348,17 @@ Desc: Sets a query's position to a percentage represented by one of an array
 		of positioning keys.
 ****************************************************************************/
 RCODE flmCurSetPercentPos(
-	CURSOR_p			pCursor,
+	CURSOR *			pCursor,
 	FLMUINT			uiPrcntPos
 	)
 {
 	RCODE				rc = FERR_OK;
-	FDB_p				pDb = NULL;
+	FDB *				pDb = NULL;
 	FLMUINT			uiPrcntOffs;
 	FLMUINT			uiIntervalSize;
 	FLMUINT			uiRFactor;
-	SUBQUERY_p		pSubQuery = NULL;
-	POS_KEY_p		pPosKey;
+	SUBQUERY *		pSubQuery = NULL;
+	POS_KEY *		pPosKey;
 	
 	// Optimize the subqueries as necessary
 

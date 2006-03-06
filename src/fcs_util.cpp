@@ -1657,7 +1657,7 @@ RCODE fcsGetBlock(
 	flmAssert( IsInCSMode( hDb));
 
 	fdbInitCS( pDb);
-	CS_CONTEXT_p		pCSContext = pDb->pCSContext;
+	CS_CONTEXT *		pCSContext = pDb->pCSContext;
 	FCL_WIRE				Wire( pCSContext, pDb);
 
 	if( !pCSContext->bConnectionGood)
@@ -1805,7 +1805,7 @@ RCODE fcsSetBackupActiveFlag(
 	flmAssert( IsInCSMode( hDb));
 
 	fdbInitCS( pDb);
-	CS_CONTEXT_p		pCSContext = pDb->pCSContext;
+	CS_CONTEXT *		pCSContext = pDb->pCSContext;
 	FCL_WIRE				Wire( pCSContext, pDb);
 
 	if( !pCSContext->bConnectionGood)

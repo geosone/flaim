@@ -46,7 +46,7 @@ FSTATIC RCODE flmFreeContainerBlocks(
 	LFILE *			pLFile);
 
 FSTATIC RCODE flmFreeIndexBlocks(
-	FDB_p			pDb,
+	FDB *			pDb,
 	LFILE *			pLFile,
 	FLMBOOL			bInvalidateLFile);
 
@@ -1149,7 +1149,7 @@ RCODE flmIndexSetOfRecords(
 
 				// Send indexing completed event notification
 
-				if( gv_FlmSysData.EventHdrs[ F_EVENT_UPDATES].pEventCBList)
+				if( gv_FlmSysData.UpdateEvents.pEventCBList)
 				{
 					flmDoEventCallback( F_EVENT_UPDATES, 
 							F_EVENT_INDEXING_COMPLETE, (void *)uiIxNum, 
@@ -1284,7 +1284,7 @@ Exit:
 
 	if( !pThread)
 	{
-		if( gv_FlmSysData.EventHdrs[ F_EVENT_UPDATES].pEventCBList)
+		if( gv_FlmSysData.UpdateEvents.pEventCBList)
 		{
 			flmDoEventCallback( F_EVENT_UPDATES, 
 					F_EVENT_INDEXING_COMPLETE, (void *)uiIxNum, 
@@ -1295,7 +1295,7 @@ Exit:
 	}
 	else if( uiLastDrn)
 	{
-		if( gv_FlmSysData.EventHdrs[ F_EVENT_UPDATES].pEventCBList)
+		if( gv_FlmSysData.UpdateEvents.pEventCBList)
 		{
 			flmDoEventCallback( F_EVENT_UPDATES, 
 					F_EVENT_INDEXING_COMPLETE, (void *)uiIxNum, 
@@ -2703,7 +2703,7 @@ FSTATIC RCODE flmRetrieveTrackerRec(
 	POOL				readPool;
 	LFILE *			pTrackerLFile;
 	BTSK  			stackBuf[ BH_MAX_LEVELS];
-	BTSK_p			pStack = &stackBuf[ 0];
+	BTSK *			pStack = &stackBuf[ 0];
 	FLMBYTE			ucKeyBuf[ DIN_KEY_SIZ];
 	FLMBYTE			ucSearchKey[ DIN_KEY_SIZ];
 	FlmRecord *		pTrackerRec = NULL;

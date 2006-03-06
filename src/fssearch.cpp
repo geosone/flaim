@@ -25,7 +25,7 @@
 #include "flaimsys.h"
 
 FSTATIC FLMUINT FSKeyCmp( 
-	BTSK_p		pStack,
+	BTSK *		pStack,
 	FLMBYTE *	key, 
 	FLMUINT		uiKeyLen,
 	FLMUINT 		drnDomain);
@@ -54,16 +54,16 @@ Notes:	All buffers for the stack (pKeyBuf and BlkBuf must have been
 Notes:	btSearch responsible for bsLevel & bsBlock in stack structure.
 *****************************************************************************/
 RCODE FSBtSearch(
-	FDB_p			pDb,
+	FDB *			pDb,
 	LFILE *		pLFile,				/* Logical file definition 					*/
-	BTSK_p *		pStackRV,			/* Stack of variables for each level		*/
+	BTSK * *		pStackRV,			/* Stack of variables for each level		*/
 	FLMBYTE *	key,					/* The input key to search for 				*/
 	FLMUINT		keyLen,				/* Length of the key (not null term)		*/
 	FLMUINT		dinDomain			/* INDEXES ONLY - lower bounds of din		*/
 	)
 {
 	RCODE			rc = FERR_OK;		// Technically, don't need to set, but we
-	BTSK_p		pStack = *pStackRV;
+	BTSK *		pStack = *pStackRV;
 	FLMBYTE *	pKeyBuf = pStack->pKeyBuf;// Used to set key buf on each btsk.
 	FLMUINT		uiBlkAddr;
 	FLMUINT		uiKeyBufSize;
@@ -135,13 +135,13 @@ Out:		Stack set up for each level & stack[level].bsStatus set to...
 			BT_END_OF_DATA (0xFFFF) if marker was hit before eq or gt key found
 *****************************************************************************/
 RCODE FSBtSearchEnd(
-	FDB_p			pDb,
+	FDB *			pDb,
 	LFILE *		pLFile,				/* Logical file definition 					*/
-	BTSK_p *		pStackRV,			/* Stack of variables for each level		*/
+	BTSK * *		pStackRV,			/* Stack of variables for each level		*/
 	FLMUINT		uiDrn)				/* Used to position and setup for update	*/
 {
 	RCODE			rc = FERR_OK;		// Technically, don't need to set, but we
-	BTSK_p		pStack = *pStackRV;
+	BTSK *		pStack = *pStackRV;
 	FLMBYTE *	pKeyBuf = pStack->pKeyBuf;// Used to set key buf on each btsk.
 	FLMBYTE		key[ DIN_KEY_SIZ + 4 ];/* Key buffer pointed to by stack */
 	FLMUINT		uiBlkAddr;
@@ -203,10 +203,10 @@ Exit:
 Desc:		Returns the root block of a passed-in LFILE
 ****************************************************************************/
 RCODE FSGetRootBlock(
-	FDB_p				pDb,
+	FDB *				pDb,
 	LFILE **			ppLFile,				/* Logical file definition 					*/
 	LFILE *			pTmpLFile,
-	BTSK_p			pStack)				/* Stack of variables for each level		*/
+	BTSK *			pStack)				/* Stack of variables for each level		*/
 {
 	RCODE				rc = FERR_OK;
 	LFILE *			pLFile = *ppLFile;
@@ -317,7 +317,7 @@ Notes:	This routine has been optimized for speed.  Routine calls
 			have been taken out in order to improve the performance.
 *****************************************************************************/
 RCODE FSBtScan(
-	BTSK_p			pStack,					// [in/out] Stack of variables for each level 
+	BTSK *			pStack,					// [in/out] Stack of variables for each level 
 	FLMBYTE *		pSearchKey,				// The input key to search for 
 	FLMUINT			uiSearchKeyLen,		// Length of the key (not null terminated) 
 	FLMUINT			dinDomain)				// INDEXES ONLY - lower bounds of din
@@ -509,7 +509,7 @@ Out:		Stack set up - bsStatus set to following...
 Return:	RCODE - FERR_OK
 *****************************************************************************/
 RCODE FSBtScanNonLeafData(
-	BTSK_p			pStack,
+	BTSK *			pStack,
 	FLMUINT			uiDrn)
 {
 	RCODE			rc = FERR_OK;
@@ -591,7 +591,7 @@ Out:   	stack updated with needed block contents.
 Notes:	Same code is in FSGetBlock(). 
 ****************************************************************************/
 void FSBlkToStack(
-	BTSK_p			pStack)
+	BTSK *			pStack)
 {
 	FLMBYTE *		pBlk = pStack->pBlk;
 	FLMUINT			uiBlkType;
@@ -638,7 +638,7 @@ Desc:		Scan to a specific element (pStack->uiCurElm) in a b-tree block.
 Notes:	This may be called at ANY b-tree level.
 *****************************************************************************/
 RCODE FSBtScanTo(
-	BTSK_p			pStack,				// Stack of variables for each level
+	BTSK *			pStack,				// Stack of variables for each level
 	FLMBYTE *		pSearchKey,			// The input key to search for 
 	FLMUINT			uiSearchKeyLen,	// Length of the key (not null term) 
 	FLMUINT			dinDomain			// INDEXES ONLY - lower bounds of din
@@ -846,7 +846,7 @@ Return:	BT_EQ_KEY (0) if equal key was found
 			BT_LT_KEY (2) if less than (keep going)
 *****************************************************************************/
 FSTATIC FLMUINT FSKeyCmp(
-	BTSK_p			pStack,				/* Stack of variables for each level */
+	BTSK *			pStack,				/* Stack of variables for each level */
 	FLMBYTE *		key,					/* The input key to search for */
 	FLMUINT			uiKeyLen,			/*	Length of the key (not null term) */
 	FLMUINT			dinDomain)			/* INDEXES ONLY - lower bounds of din*/
@@ -906,7 +906,7 @@ Notes: 	The key is NOT moved into the byKeyBuf[]
 			(LEM) or is NOW positioned on the LEM.
 ****************************************************************************/
 RCODE FSBlkNextElm(
-	BTSK_p			pStack)						/* Stack of variables for each level */
+	BTSK *			pStack)						/* Stack of variables for each level */
 {
 	FLMBYTE *		elmPtr;
 	FLMUINT	 		uiElmSize;
@@ -945,9 +945,9 @@ Desc:		Go to the next element in the logical b-tree while building the key
 Notes:	You may be at any level of the b-tree!
 *****************************************************************************/
 RCODE FSBtNextElm(
-	FDB_p			pDb,
+	FDB *			pDb,
 	LFILE *		pLFile,			/* Logical file definition */
-	BTSK_p		pStack)			/* Stack of variables for each level */
+	BTSK *		pStack)			/* Stack of variables for each level */
 {
 	RCODE			rc = FERR_OK;						/* Return code */
 
@@ -1019,9 +1019,9 @@ Desc:		Adjust a full stack if pStack->byFlags & FULL_STACK
 			splits.
 *****************************************************************************/
 RCODE FSAdjustStack(
-	FDB_p			pDb,
+	FDB *			pDb,
 	LFILE *		pLFile,		/* Logical file definition */
-	BTSK_p		pStack,		/* Stack of variables for each level */
+	BTSK *		pStack,		/* Stack of variables for each level */
 	FLMBOOL		bMovedNext)
 {
 	RCODE			rc = FERR_OK;
@@ -1061,10 +1061,10 @@ Desc:		Read in a block from the cache and set most stack elements.
 *****************************************************************************/
 
 RCODE FSGetBlock(
-	FDB_p			pDb,
+	FDB *			pDb,
 	LFILE *		pLFile,			// Logical file definition
 	FLMUINT		uiBlkAddr,		// Block Address to read.
-	BTSK_p		pStack)			// Stack of variables for each level
+	BTSK *		pStack)			// Stack of variables for each level
 {
 	RCODE			rc = FERR_OK;
 	FLMBYTE *	pBlk;
@@ -1151,7 +1151,7 @@ Exit:
 Desc:	Release all of the cache associated with a stack.
 ***************************************************************************/
 void FSReleaseStackCache(
-	BTSK_p		pStack,
+	BTSK *		pStack,
 	FLMUINT		uiNumLevels,
 	FLMBOOL		bMutexAlreadyLocked)
 {

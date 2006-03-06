@@ -42,14 +42,14 @@ Out:   	The element may be split, or may not.  It is not the callers concern.
 RCODE FSRefSplit(
 	FDB *			pDb,
 	LFILE *		pLFile,
-	BTSK_p *		pStackRV,					/* Stack area */
+	BTSK * *		pStackRV,					/* Stack area */
 	FLMBYTE *	pElmBuf,					/* Setup with elements key */
 	FLMUINT		din,						/* din to insert */
 	FLMUINT		uiDeleteFlag,			/* Set if you are to delete din */
 	FLMUINT		uiSplitFactor)			/* Set to SPLIT_90_10 | SPLIT_50_50*/
 {
 	RCODE			rc = FERR_OK;				/* Must be set */
-	BTSK_p		pStack = *pStackRV;			/* Stack may change on you! */
+	BTSK *		pStack = *pStackRV;			/* Stack may change on you! */
 	FLMBYTE *	pCurElm = CURRENT_ELM( pStack );/* Points to current element*/
 	FLMINT		iElmLen;						/* Length of element in pElmBuf[] */
 

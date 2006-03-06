@@ -40,10 +40,10 @@ Desc:		Setup routine for the KREF_CNTRL structure for record updates.
 			record operation (like we did in the session pool).
 ****************************************************************************/
 RCODE KrefCntrlCheck(
-	FDB_p				pDb)
+	FDB *				pDb)
 {
 	RCODE				rc = FERR_OK;			// Set for cleaner code.
-	KREF_CNTRL_p	pKrefCntrl;
+	KREF_CNTRL *	pKrefCntrl;
 
 	pKrefCntrl = &pDb->KrefCntrl;
 
@@ -65,8 +65,8 @@ RCODE KrefCntrlCheck(
 	}
 	else
 	{
-		FLMUINT		uiKrefTblSize = KREF_TBL_SIZE * sizeof(KREF_ENTRY_p);
-		FLMUINT		uiCDLSize = pDb->pDict->uiIfdCnt * sizeof( CDL_p);
+		FLMUINT		uiKrefTblSize = KREF_TBL_SIZE * sizeof(KREF_ENTRY *);
+		FLMUINT		uiCDLSize = pDb->pDict->uiIfdCnt * sizeof( CDL *);
 		FLMUINT		uiIxdSize = pDb->pDict->uiIxdCnt;
 		FLMUINT		uiKeyBufSize = MAX_KEY_SIZ + 8;
 	
@@ -120,9 +120,9 @@ Exit:
 Desc:		Resets or frees the memory associated with the KREF.
 ****************************************************************************/
 void KrefCntrlFree(
-	FDB_p	pDb)
+	FDB *	pDb)
 {
-	KREF_CNTRL_p	pKrefCntrl = &pDb->KrefCntrl;
+	KREF_CNTRL *	pKrefCntrl = &pDb->KrefCntrl;
 
 	if( pKrefCntrl->bKrefSetup)
 	{

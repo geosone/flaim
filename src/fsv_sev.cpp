@@ -28,11 +28,11 @@
 Desc: Receives stream events and dispatches them to the appropriate handlers
 *****************************************************************************/
 RCODE flmStreamEventDispatcher(
-	FCS_BIOS_p		pStream,
+	FCS_BIOS *		pStream,
 	FLMUINT			uiEvent,
 	void *			UserData)
 {
-	CS_CONTEXT_p	pCSContext = (CS_CONTEXT_p)UserData;
+	CS_CONTEXT *	pCSContext = (CS_CONTEXT *)UserData;
 	FLMUINT			uiStreamHandlerId = FSEV_HANDLER_UNKNOWN;
 	RCODE				rc	= FERR_OK;
 
@@ -104,11 +104,11 @@ Exit:
 Desc:    Provides loopback support for C/S testing
 *****************************************************************************/
 RCODE fsvStreamLoopback(
-	FCS_BIOS_p	pStream,
+	FCS_BIOS *	pStream,
 	FLMUINT		uiEvent,
 	void *	UserData)
 {
-	CS_CONTEXT_p			pCSContext = (CS_CONTEXT_p)UserData;
+	CS_CONTEXT *			pCSContext = (CS_CONTEXT *)UserData;
 	FCS_DIS					dataIStream;
 	FCS_DOS					dataOStream;
 	RCODE						rc = FERR_OK;
@@ -118,13 +118,13 @@ RCODE fsvStreamLoopback(
 	if( uiEvent == FCS_BIOS_EOM_EVENT)
 	{
 		if( RC_BAD( rc = dataIStream.setup(
-			(FCS_BIOS_p)(pCSContext->pOStream))))
+			(FCS_BIOS *)(pCSContext->pOStream))))
 		{
 			goto Exit;
 		}
 
 		if( RC_BAD( rc = dataOStream.setup(
-			(FCS_BIOS_p)(pCSContext->pIStream))))
+			(FCS_BIOS *)(pCSContext->pIStream))))
 		{
 			goto Exit;
 		}

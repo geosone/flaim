@@ -48,20 +48,20 @@ FSTATIC RCODE FSOutputIxCounts(
 FSTATIC RCODE FSRefCreateRec(
 	FDB *				pDb,
 	LFILE *			pLFile,
-	KREF_ENTRY_p	pKrefEntry,
-	BTSK_p 			pStack);
+	KREF_ENTRY *	pKrefEntry,
+	BTSK * 			pStack);
 
 FSTATIC RCODE FSRefInsert(
 	FDB *				pDb,
 	LFILE *			pLFile,
-	KREF_ENTRY_p	pKrefEntry,
-	BTSK_p 			pStack);
+	KREF_ENTRY *	pKrefEntry,
+	BTSK * 			pStack);
 
 FSTATIC RCODE FSRefDelete(
 	FDB *				pDb,
 	LFILE *			pLFile,
-	KREF_ENTRY_p	pKrefEntry,
-	BTSK_p 			pStack,
+	KREF_ENTRY *	pKrefEntry,
+	BTSK * 			pStack,
 	FLMBOOL *		pbSingleRef);
 
 
@@ -76,12 +76,12 @@ TODO:		Index by the logical file attribute to determine the compression
 RCODE FSRefUpdate(
 	FDB *				pDb,
 	LFILE *			pLFile,
-	KREF_ENTRY_p	pKrefEntry
+	KREF_ENTRY *	pKrefEntry
 	)
 {
 	RCODE				rc;
 	BTSK				stackBuf[ BH_MAX_LEVELS ];	// Stack to hold b-tree variables
-	BTSK_p			pStack = stackBuf;			// Points to proper stack frame
+	BTSK *			pStack = stackBuf;			// Points to proper stack frame
 	FLMUINT			uiDinDomain = DIN_DOMAIN( pKrefEntry->uiDrn) + 1; // Lower bounds
 	FLMBYTE			byFlags = (FLMBYTE)pKrefEntry->uiFlags;
 	FLMBOOL			bSingleRef = FALSE;
@@ -559,8 +559,8 @@ Notes:	The record size is the size of the only SEN value
 FSTATIC RCODE FSRefCreateRec(
 	FDB *				pDb,
 	LFILE *			pLFile,
-	KREF_ENTRY_p	pKrefEntry,
-	BTSK_p 			pStack)
+	KREF_ENTRY *	pKrefEntry,
+	BTSK * 			pStack)
 {
 	RCODE			rc;
 	FLMUINT		uiElmSize;					// Element size for insert
@@ -604,8 +604,8 @@ Notes:	The algorithm positions for an insert and inserts the reference
 FSTATIC RCODE FSRefInsert(
 	FDB *			pDb,
 	LFILE *		pLFile,
-	KREF_ENTRY_p pKrefEntry,
-	BTSK_p 		pStack)
+	KREF_ENTRY * pKrefEntry,
+	BTSK * 		pStack)
 {
 	RCODE			rc;
 	FLMBYTE *	pElement = CURRENT_ELM( pStack );	// Points to element
@@ -841,8 +841,8 @@ Desc:		Delete a matching reference into a key|reference list.  If this
 FSTATIC RCODE FSRefDelete( 
 	FDB *				pDb,
 	LFILE *			pLFile,
-	KREF_ENTRY_p	pKrefEntry,
-	BTSK_p 			pStack,
+	KREF_ENTRY *	pKrefEntry,
+	BTSK * 			pStack,
 	FLMBOOL *		pbSingleRef)				/* [out] return TRUE if last ref */
 {
 	RCODE				rc = FERR_OK;
@@ -1314,7 +1314,7 @@ Desc:  	Put the next one run value - high level
 ****************************************************************************/
 FLMUINT DINPutOneRunVal( 
 	FLMBYTE *		dinPtr,
-	DIN_STATE_p		state,
+	DIN_STATE *		state,
 	FLMUINT			uiValue)
 {
 	FLMUINT			uiLength = 1;					/* Default */

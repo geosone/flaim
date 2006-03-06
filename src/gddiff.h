@@ -37,6 +37,9 @@ enum GRD_DifferenceType
 	GRD_DeletedSubtree
 };
 
+/****************************************************************************
+Desc:
+****************************************************************************/
 typedef struct 
 {
 	GRD_DifferenceType	type;					/* The 'type' indicates the nature 
@@ -115,16 +118,18 @@ void flmRecordDifference(
 	GRD_CallBackFunction	pCallBackFunction,
 	void *			pvCallBackData);
 
-/*
- * Data definitions for string differencing
- */
- 
+/****************************************************************************
+Desc:
+****************************************************************************/
 enum GSD_DifferenceType
 {
 	GSD_Inserted,
 	GSD_Deleted
 };
 
+/****************************************************************************
+Desc:
+****************************************************************************/
 typedef struct 
 {
 	GSD_DifferenceType	type;					/* The 'type' indicates the nature 

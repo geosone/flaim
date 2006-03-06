@@ -39,8 +39,6 @@ class F_FileHdlPage;
 class F_ListMgr;
 class F_MutexRef;
 
-typedef F_FileHdlMgr *		F_FileHdlMgr_p;
-
 #define	FHM_AVAIL_LIST		0
 #define	FHM_USED_LIST		1
 #define	FHM_LNODE_COUNT	2
@@ -48,7 +46,7 @@ typedef F_FileHdlMgr *		F_FileHdlMgr_p;
 RCODE flmCloseAllFiles();
 
 RCODE DetermineLockMgr(
-	FFILE_p			pFile,
+	FFILE *			pFile,
 	F_FileHdlImp *	pFileHdl);
 
 RCODE flmCopyPartial(

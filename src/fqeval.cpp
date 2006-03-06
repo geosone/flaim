@@ -27,37 +27,37 @@
 extern FQ_OPERATION * FQ_DoOperation[];
 	
 FSTATIC FLMUINT flmCurEvalTrueFalse(
-	FQATOM_p			pElm);
+	FQATOM *			pElm);
 
 FSTATIC RCODE flmFieldIterate(
 	FDB *				pDb,
 	POOL *			pPool,
 	QTYPES			eFldType,
-	FQNODE_p			pOpCB,
+	FQNODE *			pOpCB,
 	FlmRecord *		pRecord,
 	FLMBOOL			bHaveKey,
 	FLMBOOL			bGetAtomVals,
 	FLMUINT			uiAction,
-	FQATOM_p			pResult);
+	FQATOM *			pResult);
 
 FSTATIC RCODE flmCurEvalArithOp(
 	FDB *				pDb,
-	SUBQUERY_p		pSubQuery,
+	SUBQUERY *		pSubQuery,
 	FlmRecord *		pRecord,
-	FQNODE_p			pQNode,
+	FQNODE *			pQNode,
 	QTYPES			eOp,
 	FLMBOOL			bGetNewField,
 	FLMBOOL			bHaveKey,
-	FQATOM_p			pResult);
+	FQATOM *			pResult);
 
 FSTATIC RCODE flmCurEvalLogicalOp(
 	FDB *				pDb,
-	SUBQUERY_p		pSubQuery,
+	SUBQUERY *		pSubQuery,
 	FlmRecord *		pRecord,
-	FQNODE_p			pQNode,
+	FQNODE *			pQNode,
 	QTYPES			eOp,
 	FLMBOOL			bHaveKey,
-	FQATOM_p			pResult);
+	FQATOM *			pResult);
 
 #define IS_EXPORT_PTR( e) \
 	((e) == FLM_TEXT_VAL || (e) == FLM_BINARY_VAL)
@@ -72,10 +72,10 @@ Ret:	FLM_TRUE if all elements have nonzero numerics or nonempty buffers.
 		are met.
 ****************************************************************************/
 FSTATIC FLMUINT flmCurEvalTrueFalse(
-	FQATOM_p pQAtom
+	FQATOM * pQAtom
 	)
 {
-	FQATOM_p	pTmpQAtom;
+	FQATOM *	pTmpQAtom;
 	FLMUINT	uiTrueFalse = 0;
 
 	for (pTmpQAtom = pQAtom; pTmpQAtom; pTmpQAtom = pTmpQAtom->pNext)
@@ -144,7 +144,7 @@ RCODE flmCurGetAtomVal(
 	void *		pField,
 	POOL *		pPool,
 	QTYPES		eFldType,
-	FQATOM_p		pResult)
+	FQATOM *		pResult)
 {
 	RCODE			rc = FERR_OK;
 	FLMUINT		uiType = 0;
@@ -394,16 +394,16 @@ Ret:
 RCODE flmCurGetAtomFromRec(
 	FDB *				pDb,
 	POOL *			pPool,
-	FQATOM_p			pTreeAtom,
+	FQATOM *			pTreeAtom,
 	FlmRecord *		pRecord,			// may be NULL - for testing query on empty rec
 	QTYPES			eFldType,
 	FLMBOOL			bGetAtomVals,
-	FQATOM_p			pResult,
+	FQATOM *			pResult,
 	FLMBOOL			bHaveKey)
 {
 	RCODE			rc = FERR_OK;
-	FQATOM_p		pTmpResult = NULL;
-	FQATOM_p		pTmpQAtom;
+	FQATOM *		pTmpResult = NULL;
+	FQATOM *		pTmpQAtom;
 	void *		pField;
 	FLMUINT *	puiFldPath;
 	FLMUINT		uiCurrFieldPath[ GED_MAXLVLNUM + 1];
@@ -545,7 +545,7 @@ RCODE flmCurGetAtomFromRec(
 					else if (pTmpResult->eType)
 					{
 						if ((pTmpResult->pNext =
-							(FQATOM_p)GedPoolCalloc( pPool, sizeof( FQATOM))) == NULL)
+							(FQATOM *)GedPoolCalloc( pPool, sizeof( FQATOM))) == NULL)
 						{
 							rc = RC_SET( FERR_MEM);
 							goto Exit;
@@ -569,7 +569,7 @@ RCODE flmCurGetAtomFromRec(
 				if (pTmpResult && pTmpResult != pResult &&
 					 pTmpResult->eType == NO_TYPE)
 				{
-					FQATOM_p		pTmp;
+					FQATOM *		pTmp;
 
 					for (pTmp = pResult;
 						  pTmp && pTmp->pNext != pTmpResult;
@@ -621,12 +621,12 @@ FSTATIC RCODE flmFieldIterate(
 	FDB *				pDb,
 	POOL *			pPool,
 	QTYPES			eFldType,
-	FQNODE_p			pOpCB,
+	FQNODE *			pOpCB,
 	FlmRecord *		pRecord,			// may be NULL - for testing query on empty rec.
 	FLMBOOL			bHaveKey,
 	FLMBOOL			bGetAtomVals,
 	FLMUINT			uiAction,
-	FQATOM_p			pResult)
+	FQATOM *			pResult)
 {
 	RCODE				rc = FERR_OK;
 	FlmRecord *		pFieldRec = NULL;
@@ -708,29 +708,29 @@ Notes:	This is a recursive routine.
 ****************************************************************************/
 FSTATIC RCODE flmCurEvalArithOp(
 	FDB *				pDb,
-	SUBQUERY_p		pSubQuery,
+	SUBQUERY *		pSubQuery,
 	FlmRecord *		pRecord,
-	FQNODE_p			pQNode,
+	FQNODE *			pQNode,
 	QTYPES			eOp,
 	FLMBOOL			bGetNewField,
 	FLMBOOL			bHaveKey,
-	FQATOM_p			pResult
+	FQATOM *			pResult
 	)
 {
 	RCODE				rc = FERR_OK;
-	FQNODE_p			pTmpQNode;
+	FQNODE *			pTmpQNode;
 	FQATOM			Lhs;
 	FQATOM			Rhs;
-	FQATOM_p			pTmpQAtom;
-	FQATOM_p			pRhs;
-	FQATOM_p			pLhs;
-	FQATOM_p			pFirstRhs;
+	FQATOM *			pTmpQAtom;
+	FQATOM *			pRhs;
+	FQATOM *			pLhs;
+	FQATOM *			pFirstRhs;
 	QTYPES			eType;
 	QTYPES			eFldType = NO_TYPE;
 	FLMBOOL			bSecondOperand = FALSE;
-	FQNODE_p			pRightOpCB = NULL;
-	FQNODE_p			pLeftOpCB = NULL;
-	FQNODE_p			pOpCB = NULL;
+	FQNODE *			pRightOpCB = NULL;
+	FQNODE *			pLeftOpCB = NULL;
+	FQNODE *			pOpCB = NULL;
 	POOL *			pTmpPool = &pDb->TempPool;
 	FLMBOOL			bSavedInvisTrans;
 	RCODE				TempRc;
@@ -976,7 +976,7 @@ Get_Operand:
 		// Set up for next result
 
 		if ((pTmpQAtom->pNext =
-					(FQATOM_p)GedPoolCalloc( pTmpPool, sizeof( FQATOM)))
+					(FQATOM *)GedPoolCalloc( pTmpPool, sizeof( FQATOM)))
 									== NULL)
 		{
 			rc = RC_SET( FERR_MEM);
@@ -1034,8 +1034,8 @@ Desc:	Performs a comparison operation on two operands,
 ****************************************************************************/
 void flmCompareOperands(
 	FLMUINT		uiLang,
-	FQATOM_p		pLhs,
-	FQATOM_p		pRhs,
+	FQATOM *		pLhs,
+	FQATOM *		pRhs,
 	QTYPES		eOp,
 	FLMBOOL		bResolveUnknown,
 	FLMBOOL		bForEvery,
@@ -1175,20 +1175,20 @@ Desc:	Performs relational operations on stack elements.
 ****************************************************************************/
 RCODE flmCurEvalCompareOp(
 	FDB *				pDb,
-	SUBQUERY_p		pSubQuery,
+	SUBQUERY *		pSubQuery,
 	FlmRecord *		pRecord,			// maybe NULL - for testing query on empty rec.
-	FQNODE_p			pQNode,
+	FQNODE *			pQNode,
 	QTYPES			eOp,
 	FLMBOOL			bHaveKey,
-	FQATOM_p			pResult
+	FQATOM *			pResult
 	)
 {
 	RCODE				rc = FERR_OK;
-	FQNODE_p			pTmpQNode;
-	FQATOM_p			pTmpQAtom;
-	FQATOM_p			pLhs;
-	FQATOM_p			pRhs;
-	FQATOM_p			pFirstRhs;
+	FQNODE *			pTmpQNode;
+	FQATOM *			pTmpQAtom;
+	FQATOM *			pLhs;
+	FQATOM *			pRhs;
+	FQATOM *			pFirstRhs;
 	FQATOM			Lhs;
 	FQATOM			Rhs;
 	QTYPES			wTmpOp = eOp;
@@ -1204,9 +1204,9 @@ RCODE flmCurEvalCompareOp(
 												? TRUE : FALSE;
 	FLMBOOL			bForEvery =
 							(pQNode->uiStatus & FLM_FOR_EVERY) ? TRUE : FALSE;
-	FQNODE_p			pRightOpCB = NULL;
-	FQNODE_p			pLeftOpCB = NULL;
-	FQNODE_p			pOpCB = NULL;
+	FQNODE *			pRightOpCB = NULL;
+	FQNODE *			pLeftOpCB = NULL;
+	FQNODE *			pOpCB = NULL;
 	RCODE				TempRc;
 	FLMBOOL			bSavedInvisTrans;
 	POOL *			pTmpPool = &pDb->TempPool;
@@ -1479,7 +1479,7 @@ Get_Operand:
 			 uiTrueFalse == FLM_TRUE &&
 			 bHaveKey)
 		{
-			FQATOM_p		pTreeAtom = pTmpQNode->pQAtom;
+			FQATOM *		pTreeAtom = pTmpQNode->pQAtom;
 			FLMUINT		uiResult;
 			void *		pField = NULL;
 
@@ -1650,18 +1650,18 @@ Desc:		Performs logical AND or OR operations
 ****************************************************************************/
 FSTATIC RCODE  flmCurEvalLogicalOp(
 	FDB *				pDb,
-	SUBQUERY_p		pSubQuery,
+	SUBQUERY *		pSubQuery,
 	FlmRecord *		pRecord,
-	FQNODE_p			pQNode,
+	FQNODE *			pQNode,
 	QTYPES			eOp,
 	FLMBOOL			bHaveKey,
-	FQATOM_p			pResult
+	FQATOM *			pResult
 	)
 {
 	RCODE				rc = FERR_OK;
 	FQATOM			TmpQAtom;
-	FQNODE_p			pTmpQNode;
-	FQATOM_p			pTmpQAtom;
+	FQNODE *			pTmpQNode;
+	FQATOM *			pTmpQAtom;
 	QTYPES			eType;
 	FLMBOOL			bSavedInvisTrans;
 	FLMUINT			uiTrueFalse;
@@ -1978,8 +1978,8 @@ Desc:	Checks a record that has been retrieved from the database in GEDCOM tree
 Note:	Note the two early returns.
 ****************************************************************************/
 RCODE flmCurEvalCriteria(
-	CURSOR_p			pCursor,
-	SUBQUERY_p		pSubQuery,
+	CURSOR *			pCursor,
+	SUBQUERY *		pSubQuery,
 	FlmRecord *		pRecord,							// Points to the data record
 	FLMBOOL			bHaveKey,						// Evaluating key?
 	FLMUINT *		puiResult						// Returns FLM_TRUE if match.
@@ -1988,11 +1988,11 @@ RCODE flmCurEvalCriteria(
 	RCODE				rc = FERR_OK;
 	FQATOM			Result;
 	QTYPES			eType;
-	FDB_p				pDb = pCursor->pDb;
-	FQNODE_p			pQNode;
+	FDB *				pDb = pCursor->pDb;
+	FQNODE *			pQNode;
 	void *			pTmpMark = GedPoolMark( &pDb->TempPool);
 	FLMUINT			uiResult = 0;
-	FQNODE_p			pOpCB = NULL;
+	FQNODE *			pOpCB = NULL;
 	RCODE				TempRc;
 
 	// By definition, a NULL record doesn't match selection criteria.

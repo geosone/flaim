@@ -24,31 +24,17 @@
 
 #include "flaimsys.h"
 
-/*API~*********************************************************************
-Name : GedFind
-Area : GEDCOM
-Desc : Gets the nth occurance of the node with a matching tag number.
-		 Continues, if necessary, thru a limited number of sibling sub-trees.
-		 If "treeCnt" is GED_FOREST(0), it continues thru virtually all sub-trees.
-		 matches occur without regard to path (always assumes leading wild card)
-Note:	
-*END************************************************************************/
-NODE * 
-		// Returns a pointer to the nth occurance of the node with a matching 
-		// tag or NULL if unsuccesful. If a value less than 0 is
-		// given for nth, the first value will be returned. If a
-		// value greater than the number of occurances is given,
-		// NULL will be returned.
-	GedFind(
-		FLMUINT		treeCnt,
-			// [IN] Maximum number of sibling trees to search.
-		NODE *		nd,
-			// [IN] GEDCOM tree or forest to search for matching tnum.
-		FLMUINT		tnum,
-			// [IN] Specific tag number to find.
-		FLMINT 		nth  
-			// [IN] The occurance of the tag number to find.
-	)
+/***************************************************************************
+Desc:	Gets the nth occurance of the node with a matching tag number.
+		Continues, if necessary, thru a limited number of sibling sub-trees.
+		If "treeCnt" is GED_FOREST(0), it continues thru virtually all sub-trees.
+		matches occur without regard to path (always assumes leading wild card)
+****************************************************************************/
+NODE * GedFind(
+	FLMUINT		treeCnt,
+	NODE *		nd,
+	FLMUINT		tnum,
+	FLMINT 		nth)
 {
 	if( nd)
   	{
@@ -70,34 +56,19 @@ NODE *
 }
 
 
-/*API~*********************************************************************
-Name : GedNodeCopy
-Area : GEDCOM
-Desc : Gets the "nth" occurance of the node with a matching path of tag numbers.
-		 This path may be found in the first tree only, the entire forest or
-		 within the first "treeCnt" of trees.
-Notes: This routine does not support any wildcard tags.
-VISIT: This code has some bugs, one of which is that the
-		 path array may be accessed past the null terminator.
-*END************************************************************************/
-NODE *  
-		//	Returns the nth occurance of the node at the end of the
-		//path or NULL if unsuccesful. If a value less than 0 is
-		//given for nth, the first value will be returned. If a
-		//value greater than the number of occurances is given,
-		//NULL will be returned.
-	GedPathFind(
-		FLMUINT		treeCnt,
-			// [IN] Maximum number of sibling tress to search.
-		NODE *		nd,
-			// [IN] The input GEDCOM tree to search for matching path.
-		FLMUINT *	puiPathArray,
-			// [IN] A null terminated array of field numbers which make
-			// up a path.
-		FLMINT		nth
-  			// [IN] The occurance of the matching path to return.  This
-			// value is usualy one.
-	)
+/****************************************************************************
+Desc:		Gets the "nth" occurance of the node with a matching path of tag numbers.
+			This path may be found in the first tree only, the entire forest or
+			within the first "treeCnt" of trees.
+Notes: 	This routine does not support any wildcard tags.
+VISIT: 	This code has some bugs, one of which is that the
+		 	path array may be accessed past the null terminator.
+****************************************************************************/
+NODE * GedPathFind(
+	FLMUINT		treeCnt,
+	NODE *		nd,
+	FLMUINT *	puiPathArray,
+	FLMINT		nth)
 {
 	NODE *		node = nd;
 	NODE *		savenode;

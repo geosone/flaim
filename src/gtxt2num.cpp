@@ -75,7 +75,7 @@ RCODE GedTextToNum(
 		/* Determine what we are pointing at */
 
 		c = *textStr;
-		objType = (FLMBYTE)GedTextObjType( c);		/* Don't put this in if() below */
+		objType = (FLMBYTE)flmTextObjType( c);		/* Don't put this in if() below */
 
 		if( objType == ASCII_CHAR_CODE)
 		{

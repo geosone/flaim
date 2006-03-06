@@ -28,10 +28,10 @@
 Desc:		Performs unary minus operation on list of query atoms.
 ****************************************************************************/
 RCODE flmCurDoNeg(
-	FQATOM_p pResult)
+	FQATOM * pResult)
 {
 	RCODE		rc = FERR_OK;
-	FQATOM_p	pTmpQAtom;
+	FQATOM *	pTmpQAtom;
 
 	/* Perform operation on list according to operand types */
 
@@ -67,8 +67,8 @@ Desc:		Performs match begin operation on two stack elements of buffered type.
 			When bMatchEntire is TRUE, we are doing the MATCH operation.
 ****************************************************************************/
 FLMUINT flmCurDoMatchOp(
-	FQATOM_p		pLhs,
-	FQATOM_p		pRhs,
+	FQATOM *		pLhs,
+	FQATOM *		pRhs,
 	FLMUINT		uiLang,
 	FLMBOOL		bLeadingWildCard,
 	FLMBOOL		bTrailingWildCard)
@@ -144,8 +144,8 @@ VISIT:	Don't like ALWAYS setting spaces to space and converting to upper.
 			parse through the data again.
 ****************************************************************************/
 FLMUINT flmCurDoContainsOp(
-	FQATOM_p		pLhs,
-	FQATOM_p		pRhs,
+	FQATOM *		pLhs,
+	FQATOM *		pRhs,
 	FLMUINT		uiLang
 	)
 {
@@ -191,8 +191,8 @@ Exit:
 Desc:		Performs a compare on two operands.  Strings are matched fully.
 ****************************************************************************/
 FLMINT flmCurDoRelationalOp(
-	FQATOM_p		pLhs,
-	FQATOM_p		pRhs,
+	FQATOM *		pLhs,
+	FQATOM *		pRhs,
 	FLMUINT		uiLang)				// Language for text
 {
 	FLMUINT		uiFlags = pLhs->uiFlags | pRhs->uiFlags;	// String flags.

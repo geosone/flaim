@@ -188,27 +188,16 @@ Exit:
 	return( rc);
 }
 
-/*API~*********************************************************************
-Name : GedGetINT
-Area : GEDCOM
-Desc : Returns a signed value from a GEDCOM node field.
-		 The data in the node may be a number type, text type or context type.
-Notes:
-*END************************************************************************/
-RCODE // FERR_OK
-		// FERR_CONV_ILLEGAL	- node was not a number type or had
-		// non-converatble values if a context or text type.
-		// FERR_CONV_NUM_OVERFLOW	- the value is too large to fit into WSDWORD.
-		// FERR_CONV_NUM_UNDERFLOW - the value is too small to fit into WSDWORD.
-	GedGetINT(
-		NODE *		pNode,
-			// [IN] Pointer to a GEDCOM node.
-		FLMINT  *	piNum
-			// [OUT] Returns the 16-bit unsigned number value.
-	)
+/****************************************************************************
+Desc:	Returns a signed value from a GEDCOM node field.
+		The data in the node may be a number type, text type or context type.
+****************************************************************************/
+RCODE GedGetINT(
+	NODE *		pNode,
+	FLMINT  *	piNum)
 {
-	BCD_TYPE	bcd;
-	RCODE		rc = FERR_OK;
+	RCODE			rc = FERR_OK;
+	BCD_TYPE		bcd;
 
 	if (pNode->ui32EncId)
 	{
@@ -249,27 +238,17 @@ Exit:
 	return( rc);
 }
 
-/*API~*********************************************************************
-Name : GedGetINT32
-Area : GEDCOM
-Desc : Returns a 32-bit signed value from a GEDCOM node field.
-		 The data in the node may be a number type, text type or context type.
-Notes:
-*END************************************************************************/
-RCODE // FERR_OK
-		// FERR_CONV_ILLEGAL	- node was not a number type or had
-		// non-converatble values if a context or text type.
-		// FERR_CONV_NUM_OVERFLOW	- the value is too large to fit into WSDWORD.
-		// FERR_CONV_NUM_UNDERFLOW - the value is too small to fit into WSDWORD.
-	GedGetINT32(
+/****************************************************************************
+Desc:	Returns a 32-bit signed value from a GEDCOM node field.
+		The data in the node may be a number type, text type or context
+		type.
+****************************************************************************/
+RCODE GedGetINT32(
 		NODE *		pNode,
-			// [IN] Pointer to a GEDCOM node.
-		FLMINT32  *	pi32Num
-			// [OUT] Returns the 16-bit unsigned number value.
-	)
+		FLMINT32 *	pi32Num)
 {
-	BCD_TYPE	bcd;
-	RCODE		rc = FERR_OK;
+	RCODE			rc = FERR_OK;
+	BCD_TYPE		bcd;
 
 	if (pNode->ui32EncId)
 	{
@@ -309,27 +288,16 @@ Exit:
 	return( rc);
 }
 
-/*API~*********************************************************************
-Name : GedGetINT16
-Area : GEDCOM
-Desc : Returns a 16-bit signed value from a GEDCOM node field.
-		 The data in the node may be a number type, text type or context type.
-Notes:
-*END************************************************************************/
-RCODE // FERR_OK
-		// FERR_CONV_ILLEGAL	- node was not a number type or had
-		// non-converatble values if a context or text type.
-		// FERR_CONV_NUM_OVERFLOW	- the value is too large to fit into WSWORD.
-		// FERR_CONV_NUM_UNDERFLOW - the value is too small to fit into WSWORD.
-	GedGetINT16(
-		NODE *			pNode,
-			// [IN] Pointer to a GEDCOM node.
-		FLMINT16 	*	pi16Num
-			// [OUT] Returns the 16-bit unsigned number value.
-	)
+/****************************************************************************
+Desc:	Returns a 16-bit signed value from a GEDCOM node field.
+		The data in the node may be a number type, text type or context type.
+****************************************************************************/
+RCODE GedGetINT16(
+	NODE *			pNode,
+	FLMINT16 *		pi16Num)
 {
-	BCD_TYPE	bcd;
-	RCODE		rc = FERR_OK;
+	RCODE				rc = FERR_OK;
+	BCD_TYPE			bcd;
 
 	if (pNode->ui32EncId)
 	{
@@ -367,27 +335,16 @@ Exit:
 	return( rc);
 }
 
-/*API~*********************************************************************
-Name : GedGetUINT
-Area : GEDCOM
-Desc : Returns an unsigned value from a GEDCOM node field.
-		 The data in the node may be a number type, text type or context type.
-Notes:
-*END************************************************************************/
-RCODE // FERR_OK
-		// FERR_CONV_ILLEGAL	- node was not a number type or had
-		// non-converatble values if a context or text type.
-		// FERR_CONV_NUM_OVERFLOW	- the value is too large to fit into FLMUINT16
-		// FERR_CONV_NUM_UNDERFLOW - the value is a negative number
-	GedGetUINT(
-		NODE *			pNode,
-			// [IN] Pointer to a GEDCOM node.
-		FLMUINT *		puiNum
-			// [OUT] Returns the 32-bit unsigned number value.
-	)
+/****************************************************************************
+Desc:	Returns an unsigned value from a GEDCOM node field.
+		The data in the node may be a number type, text type or context type.
+****************************************************************************/
+RCODE GedGetUINT(
+	NODE *			pNode,
+	FLMUINT *		puiNum)
 {
-	BCD_TYPE	bcd;
-	RCODE		rc = FERR_OK;
+	RCODE			rc = FERR_OK;
+	BCD_TYPE		bcd;
 
 	if (pNode->ui32EncId)
 	{
@@ -430,27 +387,16 @@ Exit:
 	return( rc);
 }
 
-/*API~*********************************************************************
-Name : GedGetUINT8
-Area : GEDCOM
-Desc : Returns an 8-bit unsigned value from a GEDCOM node field.
-		 The data in the node may be a number type, text type or context type.
-Notes:
-*END************************************************************************/
-RCODE // FERR_OK
-		// FERR_CONV_ILLEGAL	- node was not a number type or had
-		// non-converatble values if a context or text type.
-		// FERR_CONV_NUM_OVERFLOW	- the value is too large to fit into FLMUINT16
-		// FERR_CONV_NUM_UNDERFLOW - the value is a negative number
-	GedGetUINT8(
-		NODE *			pNode,
-			// [IN] Pointer to a GEDCOM node.
-		FLMUINT8 *		pui8Num
-			// [OUT] Returns the 8-bit unsigned number value.
-	)
+/****************************************************************************
+Desc:	Returns an 8-bit unsigned value from a GEDCOM node field.
+		The data in the node may be a number type, text type or context type.
+****************************************************************************/
+RCODE GedGetUINT8(
+	NODE *			pNode,
+	FLMUINT8 *		pui8Num)
 {
-	BCD_TYPE		bcd;
 	RCODE			rc = FERR_OK;
+	BCD_TYPE		bcd;
 
 	if (pNode->ui32EncId)
 	{
@@ -479,27 +425,16 @@ Exit:
 	return( rc);
 }
 
-/*API~*********************************************************************
-Name : GedGetUINT32
-Area : GEDCOM
-Desc : Returns a 32-bit unsigned value from a GEDCOM node field.
-		 The data in the node may be a number type, text type or context type.
-Notes:
-*END************************************************************************/
-RCODE // FERR_OK
-		// FERR_CONV_ILLEGAL	- node was not a number type or had
-		// non-converatble values if a context or text type.
-		// FERR_CONV_NUM_OVERFLOW	- the value is too large to fit into FLMUINT16
-		// FERR_CONV_NUM_UNDERFLOW - the value is a negative number
-	GedGetUINT32(
-		NODE *			pNode,
-			// [IN] Pointer to a GEDCOM node.
-		FLMUINT32 *		pui32Num
-			// [OUT] Returns the 32-bit unsigned number value.
-	)
+/****************************************************************************
+Desc:	Returns a 32-bit unsigned value from a GEDCOM node field.
+		The data in the node may be a number type, text type or context type.
+****************************************************************************/
+RCODE GedGetUINT32(
+	NODE *			pNode,
+	FLMUINT32 *		pui32Num)
 {
-	BCD_TYPE		bcd;
 	RCODE			rc = FERR_OK;
+	BCD_TYPE		bcd;
 
 	if (pNode->ui32EncId)
 	{
@@ -542,24 +477,13 @@ Exit:
 	return( rc);
 }
 
-/*API~*********************************************************************
-Name : GedGetUINT16
-Area : GEDCOM
-Desc : Returns a 16-bit unsigned value from a GEDCOM node field.
-		 The data in the node may be a number type, text type or context type.
-Notes:
-*END************************************************************************/
-RCODE // FERR_OK
-		// FERR_CONV_ILLEGAL	- node was not a number type or had
-		// non-converatble values if a context or text type.
-		// FERR_CONV_NUM_OVERFLOW	- the value is too large to fit into FLMUINT16
-		// FERR_CONV_NUM_UNDERFLOW - the value is a negative number
-	GedGetUINT16(
-		NODE *			pNode,
-			// [IN] Pointer to a GEDCOM node.
-		FLMUINT16	*	pui16Num
-			// [OUT] Returns the 16-bit unsigned number value.
-	)
+/****************************************************************************
+Desc:	Returns a 16-bit unsigned value from a GEDCOM node field.
+		The data in the node may be a number type, text type or context type.
+****************************************************************************/
+RCODE GedGetUINT16(
+	NODE *			pNode,
+	FLMUINT16 *		pui16Num)
 {
 	BCD_TYPE		bcd;
 	RCODE			rc = FERR_OK;

@@ -212,7 +212,7 @@ RCODE flmDbRebuildFile(
 	FLMUINT				uiContainerNum;
 	CONTAINER_INFO *	pContainerInfo = NULL;
 	CONTAINER_INFO *	pContInfo;
-	FDB *					pDb = (FDB_p)pRebuildState->hDb;
+	FDB *					pDb = (FDB *)pRebuildState->hDb;
 
 	pRebuildState->CorruptInfo.eErrLocale = LOCALE_B_TREE;
 	pRebuildState->CorruptInfo.uiErrLfType = LF_CONTAINER;
@@ -412,7 +412,7 @@ FSTATIC RCODE bldAdjustNextDrn(
 	}
 	else
 	{
-		BTSK_p		pStack = StackBuf;				
+		BTSK *		pStack = StackBuf;				
 		FLMBYTE		KeyBuf [DIN_KEY_SIZ + 4];
 		FLMBYTE		DrnMarker [DIN_KEY_SIZ];
 		FLMBYTE *	pNextDrnBuf;

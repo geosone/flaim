@@ -34,17 +34,10 @@
 	#define f_new			new
 #endif
 
-#ifdef FLM_DEBUG
-	#define RC_SET( rc) \
-		flmMakeErr(rc, __FILE__, __LINE__)
-
-	RCODE	flmMakeErr(
-		RCODE				rc,
-		const char *	pszFile,
-		int				iLine);
-#else
-	#define RC_SET(rc)		(rc)
-#endif
+FLMUINT flmStrHashBucket(
+	const char *		pszStr,
+	struct FBUCKET *	pHashTbl,
+	FLMUINT				uiNumBuckets);
 
 class FResultSet;
 class F_Thread;
@@ -76,44 +69,13 @@ class F_FixedAlloc;
 class F_BufferAlloc;
 class F_CCS;
 
-typedef struct Kref_Entry *			KREF_ENTRY_p;
-typedef struct Kref_Cntrl *			KREF_CNTRL_p;
-typedef struct F_Event *				FEVENT_p;
-typedef struct FBucket *				FBUCKET_p;
-typedef struct Itt *						ITT_p;
-typedef struct Ixd *						IXD_p;
-typedef struct Ifd *						IFD_p;
-typedef struct Cdl *						CDL_p;
-typedef struct FDict *					FDICT_p;
-typedef struct FNotify *				FNOTIFY_p;
-typedef struct File_Hdr *				FILE_HDR_p;
-typedef struct Log_Hdr *				LOG_HDR_p;
-typedef struct FFile *					FFILE_p;
-typedef struct FDb *						FDB_p;
-typedef struct FlmBlob_Tag *			FBLOB_p;
-typedef struct FlmBlobInfo *			FBLOBINFO_p;
-typedef struct Din_State *				DIN_STATE_p;
-typedef struct Btsk *					BTSK_p;
-typedef struct SCache_Mgr *			SCACHE_MGR_p;
-typedef struct CP_Info *				CP_INFO_p;
-typedef struct RCache_Mgr_Tag *		RCACHE_MGR_p;
-typedef struct CS_Context *			CS_CONTEXT_p;
-typedef struct F_BkgndIx *				F_BKGND_IX_p;
-typedef struct QueryHdrTag *			QUERY_HDR_p;
-
-FLMUINT flmStrHashBucket(
-	const char *		pszStr,
-	FBUCKET_p			pHashTbl,
-	FLMUINT				uiNumBuckets);
-
 #include "ftk.h"
 #include "ftkmem.h"
 #include "ftknsem.h"
 #include "ftksem.h"
-#include "ftkwptxt.h"
 #include "ftkthrd.h"
 #include "fstructs.h"
-#include "fddpcode.h"
+#include "fdict.h"
 #include "flist.h"
 #include "fmutxref.h"
 #include "ffilehdl.h"
@@ -175,6 +137,239 @@ FLMUINT flmStrHashBucket(
 	#define os_free			free
 
 #endif
+
+// Language definitions
+
+#define US_LANG							0		// English, United States
+#define AF_LANG							1		// Afrikaans
+#define AR_LANG							2		// Arabic
+#define CA_LANG							3		// Catalan
+#define HR_LANG							4		// Croatian
+#define CZ_LANG							5		// Czech
+#define DK_LANG							6		// Danish
+#define _NL_LANG							7		// Dutch
+#define OZ_LANG							8		// English, Australia
+#define CE_LANG							9		// English, Canada
+#define UK_LANG							10		// English, United Kingdom
+#define FA_LANG 							11		// Farsi
+#define SU_LANG							12		// Finnish
+#define CF_LANG							13		// French, Canada
+#define FR_LANG							14		// French, France
+#define GA_LANG							15		// Galician
+#define DE_LANG							16		// German, Germany
+#define SD_LANG							17		// German, Switzerland
+#define GR_LANG							18		// Greek
+#define HE_LANG							19		// Hebrew
+#define HU_LANG							20		// Hungarian
+#define IS_LANG							21		// Icelandic
+#define IT_LANG							22		// Italian
+#define NO_LANG							23		// Norwegian
+#define PL_LANG							24		// Polish
+#define BR_LANG							25		// Portuguese, Brazil
+#define PO_LANG							26		// Portuguese, Portugal
+#define RU_LANG							27		// Russian
+#define SL_LANG							28		// Slovak
+#define ES_LANG							29		// Spanish
+#define SV_LANG							30		// Swedish
+#define YK_LANG							31		// Ukrainian
+#define UR_LANG							32		// Urdu
+#define TK_LANG							33		// Turkey
+#define JP_LANG							34		// Japanese
+#define KO_LANG							35		// Korean
+#define CT_LANG							36		// Chinese-Traditional
+#define CS_LANG							37		// Chinese-Simplified
+#define LA_LANG							38		// another asian language 
+
+#define LAST_LANG 						(LA_LANG + 1)
+#define FIRST_DBCS_LANG					(JP_LANG)
+#define LAST_DBCS_LANG					(LA_LANG)
+
+// Character code high byte values for character sets
+
+#define CHSASCI							0			// ASCII
+#define CHSMUL1							1			// Multinational 1
+#define CHSMUL2							2			// Multinational 2
+#define CHSBOXD							3			// Box drawing
+#define CHSSYM1							4			// Typographic Symbols
+#define CHSSYM2							5			// Iconic Symbols
+#define CHSMATH							6			// Math
+#define CHMATHX							7			// Math Extension
+#define CHSGREK							8			// Greek
+#define CHSHEB								9			// Hebrew
+#define CHSCYR								10			// Cyrillic
+#define CHSKANA							11			// Japanese Kana
+#define CHSUSER							12			// User-defined
+#define CHSARB1							13			// Arabic
+#define CHSARB2							14			// Arabic script
+
+#define NCHSETS							15			// # of character sets (excluding asian)
+#define ACHSETS							0x0E0		// maximum character set value - asian
+#define ACHSMIN							0x024		// minimum character set value - asian
+#define ACHCMAX							0x0FE		// maxmimum character value in asian sets
+
+// Bit patterns for codes in internal text type
+
+#define ASCII_CHAR_CODE					0x00		// 0nnnnnnn
+#define ASCII_CHAR_MASK					0x80  	// 10000000
+#define CHAR_SET_CODE	 				0x80		// 10nnnnnn
+#define CHAR_SET_MASK	 				0xC0		// 11000000
+#define WHITE_SPACE_CODE				0xC0		// 110nnnnn
+#define WHITE_SPACE_MASK				0xE0		// 11100000
+
+// UNK_GT_255 is an outdated code not part of 3x or newer
+
+#define UNK_GT_255_CODE					0xE0		// 11100nnn
+#define UNK_GT_255_MASK					0xF8		// 11111000
+#define UNK_EQ_1_CODE	 				0xF0		// 11110nnn
+#define UNK_EQ_1_MASK	 				0xF8		// 11111000
+
+// UNK_LE_255 is an outdated code not part of 3x or newer
+
+#define UNK_LE_255_CODE					0xF8		// 11111nnn
+#define UNK_LE_255_MASK					0xF8		// 11111000
+#define EXT_CHAR_CODE	 				0xE8		// 11101000
+#define OEM_CODE			 				0xE9		// 11101001
+#define UNICODE_CODE						0xEA		// 11101010
+
+// Text type defines
+
+#define WP60_TYPE							1
+#define NATIVE_TYPE						2
+
+// Misc. character constants
+
+#define HARD_HYPHEN		 				3
+#define HARD_HYPHEN_EOL	 				4
+#define HARD_HYPHEN_EOP	 				5
+#define HARD_RETURN		 				7
+#define NATIVE_TAB		 				12
+#define NATIVE_LINEFEED	 				13
+#define UNICODE_UNCONVERTABLE_CHAR	0x03
+
+// Collation bits
+
+#define HAD_SUB_COLLATION				0x01		// Set if had sub-collating values-diacritics
+#define HAD_LOWER_CASE					0x02		// Set if you hit a lowercase character
+#define COMPOUND_MARKER					0x02		// Compound key marker between each piece
+#define END_COMPOUND_MARKER			0x01		// Last of all compound markers - for post
+#define NULL_KEY_MARKER					0x03
+#define COLL_FIRST_SUBSTRING			0x03		// First substring marker
+#define COLL_MARKER 						0x04		// Marks place of sub-collation
+#define SC_LOWER							0x00		// Only lowercase characters exist
+#define SC_MIXED							0x01		// Lower/uppercase flags follow in next byte
+#define SC_UPPER							0x02		// Only upper characters exist
+#define SC_SUB_COL						0x03		// Sub-collation follows (diacritics|extCh)
+#define UNK_UNICODE_CODE				0xFFFE	// Used for collation
+#define COLL_TRUNCATED					0x0C		// This key piece has been truncated from original
+#define MAX_COL_OPCODE					COLL_TRUNCATED
+
+// Numeric collation
+
+#define SIG_POS							0x80
+#define COLLATED_DIGIT_OFFSET			0x05
+#define COLLATED_NUM_EXP_BIAS 		64
+#define MIN_7BIT_EXP						0x08
+#define MAX_7BIT_EXP						0x78
+
+// Definitions for diacritics
+
+#define grave								0
+#define centerd							1
+#define tilde								2
+#define circum								3	
+#define crossb								4
+#define slash								5	
+#define acute								6
+#define umlaut								7
+#define macron								8
+#define aposab								9
+#define aposbes							10
+#define aposba								11
+#define ring								14
+#define dota								15
+#define dacute								16
+#define cedilla							17
+#define ogonek								18
+#define caron								19
+#define stroke								20
+#define breve								22
+#define dotlesi							239
+#define dotlesj							25
+#define gacute								83		// greek acute
+#define gdia								84		// greek diaeresis
+#define gactdia							85		// acute diaeresis
+#define ggrvdia							86		// grave diaeresis
+#define ggrave								87		// greek grave
+#define gcircm								88		// greek circumflex
+#define gsmooth							89		// smooth breathing
+#define grough								90		// rough breathing
+#define giota								91		// iota subscript
+#define gsmact								92		// smooth breathing acute
+#define grgact								93		// rough breathing acute
+#define gsmgrv								94		// smooth breathing grave
+#define grggrv								95		// rough breathing grave
+#define gsmcir								96		// smooth breathing circumflex
+#define grgcir								97		// rough breathing circumflex
+#define gactio								98		// acute iota
+#define ggrvio								99		// grave iota
+#define gcirio								100	// circumflex iota
+#define gsmio								101	// smooth iota
+#define grgio								102	// rough iota
+#define gsmaio								103	// smooth acute iota
+#define grgaio								104	// rough acute iota
+#define gsmgvio							105	// smooth grave iota
+#define grggvio							106	// rough grave iota
+#define gsmcio								107	// smooth circumflex iota
+#define grgcio								108	// rough circumflex iota
+#define ghprime							81		// high prime
+#define glprime							82		// low prime
+#define racute								200	// russian acute
+#define rgrave								201	// russian grave
+#define rrtdesc							204	// russian right descender
+#define rogonek							205	// russian ogonek
+#define rmacron							206	// russian macron
+
+/****************************************************************************
+Desc:
+****************************************************************************/
+#define flmTextObjType(c) ( 										\
+	(((c & ASCII_CHAR_MASK) == ASCII_CHAR_CODE) 				\
+	 ? ASCII_CHAR_CODE 												\
+	 : (((c & WHITE_SPACE_MASK) == WHITE_SPACE_CODE) 		\
+			? WHITE_SPACE_CODE 										\
+			: (((c & UNK_EQ_1_MASK) == UNK_EQ_1_CODE) 		\
+				 ? UNK_EQ_1_CODE 										\
+				 : (((c & CHAR_SET_MASK) == CHAR_SET_CODE) 	\
+						 ? CHAR_SET_CODE 								\
+						 : c 												\
+					 ) 													\
+				) 															\
+		 ) 																\
+	) 																		\
+)
+
+FLMBOOL flmIsUpper(	
+	FLMUINT16			ui16Char);
+			
+FLMUINT16 flmCh6Upper(
+	FLMUINT16			ui16WpChar);
+
+FLMUINT16 flmCh6Lower(
+	FLMUINT16			ui16WpChar);
+			
+FLMBOOL flmCh6Brkcar(	
+	FLMUINT16			ui16WpChar, 
+	FLMUINT16 *			pui16BaseChar,
+	FLMUINT16 *			pui16DiacriticChar);
+
+FLMBOOL flmCh6Cmbcar(	
+	FLMUINT16 *			pui16WpChar, 
+	FLMUINT16			ui16BaseChar,
+	FLMINT16				i16DiacriticChar);
+
+FLMUINT flmUnicodeToWP(
+	const FLMUNICODE *	pUniStr,
+	FLMUINT16 *				pWPChr);
 
 /****************************************************************************
 										General FLAIM
@@ -567,17 +762,17 @@ FLMINT gedCopyValue(
 #define KY_CONTEXT_LEN			3			// Length of each context index
 
 FINLINE RCODE KYFlushKeys(
-	FDB_p					pDb);
+	FDB *					pDb);
 
 RCODE KrefCntrlCheck(
 	FDB *					pDb);
 
 void KrefCntrlFree(
-	FDB_p					pDb);
+	FDB *					pDb);
 
 RCODE flmProcessRecFlds(
 	FDB *		  			pDb,
-	IXD_p					pIxd,
+	IXD *					pIxd,
 	FLMUINT				uiContainerNum,
 	FLMUINT  			uiDrn,
 	FlmRecord *			pRecord,
@@ -609,9 +804,9 @@ FLMBOOL flmCheckIfdPath(
 
 RCODE KYAddToKrefTbl(
 	FDB *					pDb,
-	IXD_p					pIxd,
+	IXD *					pIxd,
 	FLMUINT				uiContainer,
-	IFD_p					pIfd,
+	IFD *					pIfd,
 	FLMUINT				uiAction,
 	FLMUINT				uiDrn,
 	FLMBOOL *			pbHadUniqueKeys,
@@ -634,15 +829,15 @@ RCODE KYKeysCommit(
 
 void KYGetIxAndCdlEntries(
 	FDB *					pDb,
-	IXD_p					pIxd,
-	IFD_p					pIfd,
+	IXD *					pIxd,
+	IFD *					pIfd,
 	FLMUINT * 			puiIxEntryRV,
 	FLMUINT * 			puiCdlEntryRV);
 
 RCODE KYCmpKeyAdd2Lst(
 	FDB *					pDb,
-	IXD_p					pIxd,
-	IFD_p					pIfd,
+	IXD *					pIxd,
+	IFD *					pIfd,
 	void *				pFld,
 	void *				pRootContext);
 
@@ -677,7 +872,7 @@ RCODE KYVerifyMatchingPaths(
 
 RCODE KYTreeToKey(
 	FDB *					pDb,
-	IXD_p 				pIxd,
+	IXD * 				pIxd,
 	FlmRecord *			pRecord,
 	FLMUINT				uiContainerNum,
 	FLMBYTE *			pKeyBuf,
@@ -733,7 +928,7 @@ FLMBOOL KYEachWordParse(
 #define CJK_CHR		0x0010			// CJK word chr
 
 RCODE flmBuildFromAndUntilKeys(
-	IXD_p       		pIxd,
+	IXD *       		pIxd,
 	QPREDICATE ** 		ppQPredicate,
 	FLMBYTE *			pFromKey,	
 	FLMUINT *			puiFromKeyLen,
@@ -786,7 +981,7 @@ void flmUnlockDbMutex(
 	f_mutexUnlock( (pDb)->hShareMutex);
 
 FLMUINT flmGetDbTransType(
-	FDB_p					pDb);
+	FDB *					pDb);
 
 #define flmGetDbTransType( pDb) \
 	((pDb)->uiTransType)
@@ -813,7 +1008,7 @@ void fdbInitCS(
 	FDB *					pDb);
 
 RCODE	fdbInit(
-	FDB_p					pDb,
+	FDB *					pDb,
 	FLMUINT				uiTransType,
 	FLMUINT				uiFlags,
 	FLMUINT				uiAutoTrans,
@@ -897,13 +1092,13 @@ RCODE fdictGetIndex(
 	FLMBOOL				bInLimitedMode,
 	FLMUINT				uiIxdId,
 	LFILE **				ppLFileRV,
-	IXD_p * 				ppIxdRV,
+	IXD ** 				ppIxdRV,
 	FLMBOOL				bOfflineOk = FALSE);
 
 RCODE fdictGetNextIXD(
 	FDICT *				pDict,
 	FLMUINT				uiIxdId,
-	IXD_p  *				ppIxdRV);
+	IXD **				ppIxdRV);
 
 RCODE  fdictReadLFiles( 
 	FDB *					pDb,
@@ -930,7 +1125,7 @@ RCODE flmSendCSOp(
 	CS_CONTEXT *		pCSContext,
 	FLMUINT				uiClass,
 	FLMUINT				uiOp,
-	FDB_p					pDb);
+	FDB *					pDb);
 
 RCODE flmUnicodeToAscii(
 	FLMUNICODE *		puzString);
@@ -940,14 +1135,14 @@ LFILE_STATS * fdbGetLFileStatPtr(
 	LFILE *				pLFile);
 
 RCODE flmIxKeyOutput(
-	IXD_p					pIxd,
+	IXD *					pIxd,
 	FLMBYTE *			pucFromKey,
 	FLMUINT				uiKeyLen,
 	FlmRecord **		ppKeyRV,
 	FLMBOOL				bFullFldPaths);
 
 RCODE flmBuildKeyPaths(
-	IFD_p					pIfd,
+	IFD *					pIfd,
 	FLMUINT				uiFldNum,
 	FLMUINT				uiDataType,
 	FLMBOOL				bFullFldPaths,
@@ -1008,20 +1203,20 @@ RCODE BlkCheckSum(
 #define	CHECKSUM_CHECK				1
 
 #define IsInCSMode(pDb) \
-	(FLMBOOL)((((FDB_p)pDb)->pCSContext != NULL) \
+	(FLMBOOL)((((FDB *)pDb)->pCSContext != NULL) \
 											  ? (FLMBOOL)TRUE \
 											  : (FLMBOOL)FALSE)
 
 RCODE flmGetCSConnection(
 	const char *		pszUrlName,
-	CS_CONTEXT_p *		ppCSContextRV);
+	CS_CONTEXT **		ppCSContextRV);
 
 void flmCloseCSConnection(
-	CS_CONTEXT_p *		ppCSContext);
+	CS_CONTEXT **		ppCSContext);
 
 RCODE flmAllocHashTbl(
 	FLMUINT        	uiHashTblSize,
-	FBUCKET_p  *		ppHashTblRV);
+	FBUCKET **			ppHashTblRV);
 
 RCODE flmGetTmpDir(
 	char *				pszOutputTmpDir);
@@ -1035,40 +1230,40 @@ F_BKGND_IX * flmBackgroundIndexGet(
 FLMUINT flmBinHashBucket(
 	void *				pBuf,
 	FLMUINT				uiBufLen,
-	FBUCKET_p			pHashTbl,
+	FBUCKET *			pHashTbl,
 	FLMUINT				uiNumBuckets);
 
 RCODE flmWaitNotifyReq(
 	F_MUTEX				hMutex,
-	FNOTIFY_p  *		ppNotifyListRV,
+	FNOTIFY **			ppNotifyListRV,
 	void *				UserData);
 
 RCODE flmLinkFileToBucket(
-	FFILE_p				pFile);
+	FFILE *				pFile);
 	
 void flmLinkFileToNUList(
-	FFILE_p				pFile,
+	FFILE *				pFile,
 	FLMBOOL				bQuickTimeout = FALSE);
 	
 void flmUnlinkFileFromNUList(
-	FFILE_p				pFile);
+	FFILE *				pFile);
 
 void flmCheckNUStructs(
 	FLMUINT				uiCurrTime);
 
 void flmUnlinkDict(
-	FDICT_p				pDict);
+	FDICT *				pDict);
 
 void flmReleaseDict(
 	FDB *					pDb,
 	FDICT *				pDict);
 
 RCODE flmLinkFdbToFile(
-	FDB_p					pDb,
-	FFILE_p				pFile);
+	FDB *					pDb,
+	FFILE *				pFile);
 	
 void flmUnlinkFdbFromFile(
-	FDB_p					pDb);
+	FDB *					pDb);
 	
 void flmDoEventCallback(
 	FEventCategory		eCategory,
@@ -1097,7 +1292,7 @@ void flmRcaExit( void);
 void flmRcaFindRec(
 	FLMUINT				uiContainer,
 	FLMUINT				uiDrn,
-	FFILE_p				pFile,
+	FFILE *				pFile,
 	FLMUINT				uiVersionNeeded,
 	FLMBOOL				bDontPoisonCache,
 	FLMUINT *			puiNumLooks,
@@ -1111,7 +1306,7 @@ RCODE flmRcaRetrieveRec(
 	FLMUINT				uiContainer,
 	FLMUINT				uiDrn,
 	FLMBOOL				bOkToGetFromDisk,
-	BTSK_p				pStack,
+	BTSK *				pStack,
 	LFILE *				pLFile,
 	FlmRecord **		ppRecord);
 
@@ -1134,7 +1329,7 @@ RCODE flmRcaRemoveRec(
 	FLMUINT				uiDrn);
 
 void flmRcaFreeFileRecs(
-	FFILE_p				pFile);
+	FFILE *				pFile);
 
 void flmRcaAbortTrans(
 	FDB *					pDb);
@@ -1196,10 +1391,10 @@ RCODE flmOpenFile(
 	F_Restore *			pRestoreObj,
 	F_FileHdlImp *		pLockFileHdl,
 	const char *		pszPassword,
-	FDB_p *				ppDb);
+	FDB **				ppDb);
 
 RCODE flmCompleteOpenOrCreate(
-	FDB_p *				ppDb,
+	FDB **				ppDb,
 	RCODE					rc,
 	FLMBOOL				bNewFile,
 	FLMBOOL				bAllocatedFdb);
@@ -1214,21 +1409,21 @@ RCODE flmOpenOrCreateDbClientServer(
 	CREATE_OPTS *		pCreateOpts,
 	FLMBOOL				bOpening,
 	CS_CONTEXT *		pCSContext,
-	FDB_p *				ppDb);
+	FDB **				ppDb);
 
 RCODE flmAllocFdb(
-	FDB_p *				ppDb);
+	FDB **				ppDb);
 
 RCODE flmNewFileFinish(
 	FFILE *				pFile,
 	RCODE					OpenRc);
 
 RCODE flmUnregisterFile(
-	FFILE_p				pFile	);
+	FFILE *				pFile	);
 
 RCODE flmVerifyFileUse(
 	F_MUTEX				hMutex,
-	FFILE_p *			ppFileRV);
+	FFILE **				ppFileRV);
 
 RCODE flmCreateLckFile(
 	const char *		pszFilePath,
@@ -1241,15 +1436,18 @@ RCODE flmGetExclAccess(
 RCODE flmFindFile(
 	const char *		pDbPath,
 	const char *		pszDataDir,
-	FFILE_p  *			ppFileRV);
+	FFILE **				ppFileRV);
 
 RCODE flmAllocFile(
 	const char *		pDbPath,
 	const char *		pszDataDir,
 	const char *		pszDbPassword,
-	FFILE_p *			ppFile);
+	FFILE **				ppFile);
 
 RCODE flmStartCPThread(
+	FFILE *				pFile);
+
+RCODE flmStartDbMonitorThread(
 	FFILE *				pFile);
 
 RCODE flmStartMaintThread(
@@ -1267,9 +1465,9 @@ RCODE flmMaintFreeBlockChain(
 	FLMUINT64 *			pui64BlocksFreed);
 
 RCODE flmGetHdrInfo(
-	F_SuperFileHdl_p 	pSFileHdl,
-	FILE_HDR_p			pFileHdrRV,
-	LOG_HDR_p			pLogHdrRV,
+	F_SuperFileHdl * 	pSFileHdl,
+	FILE_HDR *			pFileHdrRV,
+	LOG_HDR *			pLogHdrRV,
 	FLMBYTE *			pLogHdr);
 
 void flmGetCreateOpts(
@@ -1287,24 +1485,24 @@ FLMUINT flmAdjustBlkSize(
 
 void flmInitFileHdrInfo(
 	CREATE_OPTS *		pCreateOpts,
-	FILE_HDR_p			pFileHdr,
+	FILE_HDR *			pFileHdr,
 	FLMBYTE *			pFileHdrBuf);
 
 RCODE flmWriteVersionNum(
-	F_SuperFileHdl_p 	pSFileHdl,
+	F_SuperFileHdl * 	pSFileHdl,
 	FLMUINT				uiVersionNum);
 
 RCODE flmGetFileHdrInfo(
 	FLMBYTE *			pPrefixBuf,
 	FLMBYTE *			pFileHdrBuf,
-	FILE_HDR_p			pFileHdrRV);
+	FILE_HDR *			pFileHdrRV);
 
 RCODE flmReadAndVerifyHdrInfo(
 	DB_STATS *			pDbStats,
 	F_FileHdl *			pFileHdl,
 	FLMBYTE *			pReadBuf,
-	FILE_HDR_p			pFileHdrRV,
-	LOG_HDR_p			pLogHdrRV,
+	FILE_HDR *			pFileHdrRV,
+	LOG_HDR *			pLogHdrRV,
 	FLMBYTE *			pLogHdr);
 
 RCODE flmStartIndexBuild(
@@ -1328,7 +1526,7 @@ void flmIndexingAfterAbort(
 RCODE flmLFileIndexBuild(
 	FDB *					pDb,
 	LFILE *				pIxLFile,
-	IXD_p					pIxd,
+	IXD *					pIxd,
 	FLMBOOL				bDoInBackground,
 	FLMBOOL				bCreateSuspended,
 	FLMBOOL *			pbLogCompleteIndexSet);
@@ -1426,29 +1624,29 @@ RCODE tokenGetUnicode(
 RCODE expImpInit(
 	F_FileHdl *			pFileHdl,
 	FLMUINT				uiFlag,
-	EXP_IMP_INFO_p		pExpImpInfoRV);
+	EXP_IMP_INFO *		pExpImpInfoRV);
 
 	#define	EXPIMP_IMPORT_DICTIONARY		1
 	#define	EXPIMP_EXPORT_DICTIONARY		2
 	#define	EXPIMP_IMPORT_EXPORT_GEDCOM	3
 
 void expImpFree(
-	EXP_IMP_INFO_p		pExpImpInfo);
+	EXP_IMP_INFO *		pExpImpInfo);
 
 RCODE expFlush(
-	EXP_IMP_INFO_p		pExpImpInfo);
+	EXP_IMP_INFO *		pExpImpInfo);
 
 RCODE expImpSeek(
-	EXP_IMP_INFO_p		pExpImpInfo,
+	EXP_IMP_INFO *		pExpImpInfo,
 	FLMUINT				uiSeekPos);
 
 RCODE expWriteRec(
-	EXP_IMP_INFO_p		pExpImpInfo,
+	EXP_IMP_INFO *		pExpImpInfo,
 	FlmRecord *			pRecord,
 	FLMUINT				uiDrn);
 
 RCODE impReadRec(
-	EXP_IMP_INFO_p		pExpImpInfo,
+	EXP_IMP_INFO *		pExpImpInfo,
 	FlmRecord **		ppRecordRV);
 
 RCODE impFileIsExpImp(
@@ -1499,7 +1697,7 @@ Desc:	Extracts the information from a log header.
 ****************************************************************************/
 FINLINE void flmGetLogHdrInfo(
 	FLMBYTE *			pucLogHdr,
-	LOG_HDR_p			pLogHdr)
+	LOG_HDR *			pLogHdr)
 {
 	pLogHdr->uiCurrTransID =
 		(FLMUINT)FB2UD( &pucLogHdr [LOG_CURR_TRANS_ID]);
@@ -1726,7 +1924,7 @@ Desc:	Flush all keys in KREF table, if any.  This is called by routines
 		flushed to the index.
 ****************************************************************************/
 FINLINE RCODE KYFlushKeys(
-	FDB_p					pDb)
+	FDB *					pDb)
 {
 	RCODE	rc = FERR_OK;
 
@@ -1849,6 +2047,7 @@ FINLINE RCODE flmCheckVersionNum(
 		case FLM_VER_4_51:
 		case FLM_VER_4_52:
 		case FLM_VER_4_60:
+		case FLM_VER_4_61:
 			break;
 		default:
 			if( uiVersionNum > FLM_CURRENT_VERSION_NUM)
@@ -1965,7 +2164,7 @@ Exit:
 /****************************************************************************
 Desc:
 ****************************************************************************/
-typedef struct RSIxKeyTag
+typedef struct RS_IX_KEY
 {
 	FLMUINT			uiRSIxNum;
 		#define RS_KEY_OVERHEAD				6
@@ -1980,7 +2179,7 @@ typedef struct RSIxKeyTag
 /****************************************************************************
 Desc:
 ****************************************************************************/
-typedef struct
+typedef struct LF_HDR
 {
 	LFILE *			pLFile;
 	IXD *				pIxd;
@@ -1991,7 +2190,7 @@ typedef struct
 /****************************************************************************
 Desc:
 ****************************************************************************/
-typedef struct Db_Info
+typedef struct DB_INFO
 {
 	FILE_HDR						FileHdr;
 	LF_HDR *						pLogicalFiles;
@@ -2010,7 +2209,7 @@ typedef struct Db_Info
 /****************************************************************************
 Desc:
 ****************************************************************************/
-typedef struct
+typedef struct IX_CHK_INFO
 {
 	POOL					pool;
 	FLMUINT				uiIxCount;
@@ -2026,10 +2225,12 @@ typedef struct
 	FLMUINT				uiRSIxRefCount;
 	FLMUINT				uiFlags;
 	DB_INFO *			pDbInfo;
-
 } IX_CHK_INFO;
 
-typedef struct State_Info
+/****************************************************************************
+Desc:
+****************************************************************************/
+typedef struct STATE_INFO
 {
 	FLMUINT				uiVersionNum;
 	FDB *					pDb;
@@ -2070,6 +2271,7 @@ typedef struct State_Info
 #define FLM_FOP_NEXT_DRN		7
 #define FLM_FOP_REC_INFO		8
 #define FLM_FOP_ENCRYPTED		9
+#define FLM_FOP_LARGE			10
 #define FLM_FOP_BAD				0xFF
 	FLMUINT				uiFieldLen;
 	FLMUINT				uiFieldProcessedLen;
@@ -2090,13 +2292,19 @@ typedef struct State_Info
 	FLMUINT				uiEncFieldLen;
 } STATE_INFO;
 
-typedef struct
+/****************************************************************************
+Desc:
+****************************************************************************/
+typedef struct HDR_INFO
 {
 	FILE_HDR				FileHdr;
 	LOG_HDR				LogHdr;
 } HDR_INFO;
 
-typedef struct Rebuild_State
+/****************************************************************************
+Desc:
+****************************************************************************/
+typedef struct REBUILD_STATE
 {
 	STATUS_HOOK			fnStatusFunc;
 	void *				AppArg;
@@ -2121,7 +2329,7 @@ RCODE flmCreateNewFile(
 	const char *		pszDictBuf,
 	CREATE_OPTS *		pCreateOpts,
 	FLMUINT				uiStartCheckpoint,
-	FDB_p *				ppDb,
+	FDB **				ppDb,
 	REBUILD_STATE *	pvRebuildState = NULL);
 
 RCODE flmDbRebuildFile(
@@ -2275,6 +2483,12 @@ void flmGetCPInfo(
 	void *				pFile,
 	CHECKPOINT_INFO *	pCheckpointInfo);
 
+RCODE flmSetRflSizeThreshold(
+	HFDB					hDb,
+	FLMUINT				uiSizeThreshold,
+	FLMUINT				uiTimeInterval,
+	FLMUINT				uiSizeInterval);
+	
 /****************************************************************************
 Desc:
 ****************************************************************************/

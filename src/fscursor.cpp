@@ -185,7 +185,7 @@ Desc: 	Setup the from and until keys in the cursor.  Return counts
 ****************************************************************************/
 RCODE FSIndexCursor::setupKeys(
 	FDB *				pDb,
-	IXD_p				pIxd,
+	IXD *				pIxd,
 	QPREDICATE **	ppQPredicateList,
 	FLMBOOL *		pbDoRecMatch,			// [out] Leave alone or set to TRUE.
 	FLMBOOL *		pbDoKeyMatch,			// [out] Set to TRUE or FALSE
@@ -332,7 +332,7 @@ Desc: 	Setup a cursor with just a single FROM/UNTIL key.
 
 RCODE	FSIndexCursor::setupKeys(
 	FDB *			pDb,
-	IXD_p       pIxd,
+	IXD *       pIxd,
 	FLMBYTE *	pFromKey,
 	FLMUINT		uiFromKeyLen,
 	FLMUINT		uiFromRecordId,

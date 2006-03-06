@@ -1466,7 +1466,7 @@ RCODE viewRflMainKeyHook(
 	NODE *			pNewNd;
 	POOL				tmpPool;
 	POOL				tmp2Pool;
-	FTX_WINDOW *	pWindow = NULL;
+	FTX_WINDOW_p	pWindow = NULL;
 	NODE *			pLastNd;
 	NODE *			pFirstNd;
 	RFL_PACKET *	pPacket;

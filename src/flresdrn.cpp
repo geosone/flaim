@@ -24,16 +24,14 @@
 
 #include "flaimsys.h"
 
-/*API~***********************************************************************
-Desc : Returns the next DRN that record ADD would return.  The database/store
-		 must be in an existing update transaction.
-Notes: 
-*END************************************************************************/
+/****************************************************************************
+Desc:		Returns the next DRN that record ADD would return.  The database
+			must be in an existing update transaction.
+****************************************************************************/
 FLMEXP RCODE FLMAPI FlmReserveNextDrn(
 	HFDB			hDb,
 	FLMUINT		uiContainer,
-	FLMUINT *	puiDrnRV
-	)
+	FLMUINT *	puiDrnRV)
 {
 	RCODE			rc;
 	FDB *			pDb = (FDB *)hDb;
@@ -45,7 +43,7 @@ FLMEXP RCODE FLMAPI FlmReserveNextDrn(
 	{
 		fdbInitCS( pDb);
 
-		CS_CONTEXT_p	pCSContext = pDb->pCSContext;
+		CS_CONTEXT *	pCSContext = pDb->pCSContext;
 		FCL_WIRE			Wire( pCSContext, pDb);
 
 		// Send the request
@@ -133,7 +131,7 @@ Exit:
 			RFL_RESERVE_DRN_PACKET, uiContainer, *puiDrnRV, 0);
 	}
 
-	if( gv_FlmSysData.EventHdrs[ F_EVENT_UPDATES].pEventCBList)
+	if( gv_FlmSysData.UpdateEvents.pEventCBList)
 	{
 		flmUpdEventCallback( pDb, F_EVENT_RESERVE_DRN, hDb, rc, *puiDrnRV,
 								uiContainer, NULL, NULL);
@@ -151,13 +149,11 @@ ExitCS:
 	return( rc);
 }
 
-
-/*API~***********************************************************************
-Desc : Searches for an available DRN in the dictionary container.  Differs
-		 from FlmReserveNextDrn in that it will attempt to reuse dictionary
-		 DRNS.  The database/store must be in an existing update transaction.
-Notes: 
-*END************************************************************************/
+/****************************************************************************
+Desc:		Searches for an available DRN in the dictionary container.
+			Differs from FlmReserveNextDrn in that it will attempt to reuse
+			dictionary DRNS.
+****************************************************************************/
 FLMEXP RCODE FLMAPI FlmFindUnusedDictDrn(
 	HFDB					hDb,
 	FLMUINT				uiStartDrn,
@@ -167,7 +163,7 @@ FLMEXP RCODE FLMAPI FlmFindUnusedDictDrn(
 	RCODE			rc;
 	FDB *			pDb = (FDB *)hDb;
 	FLMBOOL		bIgnore = FALSE;
-	FDICT_p		pDict;
+	FDICT *		pDict;
 	FLMUINT		uiCurrDrn;
 	FLMUINT		uiStopSearch;
 

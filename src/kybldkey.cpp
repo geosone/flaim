@@ -90,7 +90,7 @@ Desc:		Build the from and until keys given a field list with operators and
 Notes:	The knowledge of query definitions is limited in these routines.
 ****************************************************************************/
 RCODE flmBuildFromAndUntilKeys(
-	IXD_p				pIxd,
+	IXD *				pIxd,
 	QPREDICATE **	ppQPredicate,		// List of field predicates that are parallel
 												// with the IFD list for the index.  
 												// Same number of elements as the IFD list.
@@ -612,7 +612,7 @@ FSTATIC FLMBOOL flmFindWildcard(
 		  *pVal; 
 		  pVal += uiObjLength, uiLen = (uiObjLength < uiLen) ? uiLen - uiObjLength : 0)
 	{
-		switch( (FLMUINT)(GedTextObjType( *pVal)))
+		switch( (FLMUINT)(flmTextObjType( *pVal)))
 		{
 			case ASCII_CHAR_CODE:  		// 0nnnnnnn
 				if( *pVal == ASCII_WILDCARD)
@@ -1157,7 +1157,7 @@ FSTATIC FLMUINT flmCountCharacters(		// Returns number of characters in key
 		  pValue += uiObjLength,
 			uiValueLen = (uiValueLen >= uiObjLength) ? uiValueLen - uiObjLength : 0)
 	{
-		switch( (FLMUINT)(GedTextObjType( *pValue)))
+		switch( (FLMUINT)(flmTextObjType( *pValue)))
 		{
 			case ASCII_CHAR_CODE:  		// 0nnnnnnn
 				uiObjLength = 1;

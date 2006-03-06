@@ -177,10 +177,10 @@ Exit:
 	return( rc);
 }
 
-/*API~***********************************************************************
+/****************************************************************************
 Desc:	Returns an unknown stream object - suitable for writing unknown
 		streams into the roll-forward log.
-*END************************************************************************/
+****************************************************************************/
 FLMEXP RCODE FLMAPI FlmDbGetUnknownStreamObj(
 	HFDB						hDb,
 	F_UnknownStream **	ppUnknownStream)
@@ -350,9 +350,7 @@ RCODE F_FSRestore::openRflFile(
 	flmAssert( uiFileNum);
 	flmAssert( !m_pFileHdl);
 
-	/*
-	Read the database header to determine the version number
-	*/
+	// Read the database header to determine the version number
 	
 	if( !m_uiDbVersion)
 	{
@@ -362,8 +360,7 @@ RCODE F_FSRestore::openRflFile(
 		}
 
 		if( RC_BAD( rc = gv_FlmSysData.pFileSystem->Open( 
-			m_szDbPath, F_IO_RDWR | F_IO_SH_DENYNONE | F_IO_DIRECT,
-			&pFileHdl)))
+			m_szDbPath, F_IO_RDWR | F_IO_SH_DENYNONE, &pFileHdl)))
 		{
 			goto Exit;
 		}

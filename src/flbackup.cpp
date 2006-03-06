@@ -410,9 +410,9 @@ Exit:
 	return( rc);
 }
 
-/*API~***********************************************************************
+/****************************************************************************
 Desc : Returns information about a backup
-*END************************************************************************/
+****************************************************************************/
 FLMEXP RCODE FLMAPI FlmBackupGetConfig(
 	HFBACKUP					hBackup,
 	eBackupGetConfigType	eConfigType,
@@ -449,14 +449,14 @@ Exit:
 	return( rc);
 }
 
-/*API~***********************************************************************
+/****************************************************************************
 Desc : Streams the contents of a database to the write hook supplied by
 		 the application.
 Notes: This routine attempts to create a backup of a database without
 		 excluding any readers or updaters.  However, if the backup runs
 		 too long in an environment where extensive updates are happening,
 		 an old view error could be returned.
-*END************************************************************************/
+****************************************************************************/
 FLMEXP RCODE FLMAPI FlmDbBackup(
 	HFBACKUP					hBackup,
 	const char *			pszBackupPath,
@@ -464,8 +464,7 @@ FLMEXP RCODE FLMAPI FlmDbBackup(
 	BACKER_WRITE_HOOK		fnWrite,
 	STATUS_HOOK				fnStatus,
 	void *					pvAppData,
-	FLMUINT *				puiIncSeqNum
-	)
+	FLMUINT *				puiIncSeqNum)
 {
 	FDB *						pDb = NULL;
 	FLMBOOL					bDbInitialized = FALSE;
@@ -704,14 +703,25 @@ FLMEXP RCODE FLMAPI FlmDbBackup(
 			goto Exit;
 		}
 
-		// IMPORTANT NOTE: pucTmpBuf must be freed before going to Exit!!!
+		// Verify that the field in the log header is long enough to
+		// hold the key.
+		
+		if( ui32KeyLen > FLM_MAX_DB_ENC_KEY_LEN)
+		{
+			rc = RC_SET_AND_ASSERT( FERR_BAD_ENC_KEY);
+			goto Exit;
+		}
 
-		// Assert that the field in the log header is long enough to
-		// hold the key.  Note: This test is only valid if the key
-		// field is the last one in the log header!!
-
-		flmAssert( ui32KeyLen <= (LOG_HEADER_SIZE - LOG_DATABASE_KEY));
-
+		// Verify that the field in the log header is long enough to
+		// hold the key.
+		
+		if( ui32KeyLen > FLM_MAX_DB_ENC_KEY_LEN)
+		{
+			f_free( &pucTmpBuf);
+			rc = RC_SET_AND_ASSERT( FERR_BAD_ENC_KEY);
+			goto Exit;
+		}
+		
 		UW2FBA( ui32KeyLen, &pLogHdr[ LOG_DATABASE_KEY_LEN]);
 		f_memcpy( &pLogHdr[ LOG_DATABASE_KEY], pucTmpBuf, ui32KeyLen);
 		f_free( &pucTmpBuf);
@@ -972,9 +982,9 @@ Exit:
 	return( rc);
 }
 
-/*API~***********************************************************************
+/****************************************************************************
 Desc : Ends the backup, updating the log header if needed.
-*END************************************************************************/
+****************************************************************************/
 FLMEXP RCODE FLMAPI FlmDbBackupEnd(
 	HFBACKUP *		phBackup)
 {
@@ -1156,9 +1166,9 @@ Exit:
 	return( rc);
 }
 
-/*API~***********************************************************************
+/****************************************************************************
 Desc:	Restores a database and supporting files.
-*END************************************************************************/
+****************************************************************************/
 FLMEXP RCODE FLMAPI FlmDbRestore(
 	const char *			pszDbPath,
 	const char *			pszDataDir,
@@ -1461,7 +1471,7 @@ FLMEXP RCODE FLMAPI FlmDbRestore(
 	rc = flmOpenFile( pFile,
 		pszDbPath, pszDataDir,
 		pszRflDir, FO_DONT_RESUME_BACKGROUND_THREADS,
-		TRUE, pRestoreObj, pLockFileHdl, NULL, (FDB_p *)&hDb);
+		TRUE, pRestoreObj, pLockFileHdl, NULL, (FDB **)&hDb);
 	pLockFileHdl = NULL;
 	pFile = NULL;
 
@@ -1553,7 +1563,7 @@ Exit:
 
 /***************************************************************************
 Desc : Restores a full or incremental backup
-*END************************************************************************/
+****************************************************************************/
 FSTATIC RCODE flmRestoreFile(
 	F_Restore *				pRestoreObj,
 	const char *			pszPassword,
@@ -1682,14 +1692,14 @@ FSTATIC RCODE flmRestoreFile(
 
 	if( FB2UD( &pucBlkBuf[ FLM_BACKER_VERSION_OFFSET]) !=	FLM_BACKER_VERSION)
 	{
-		rc = RC_SET( FERR_UNSUPPORTED_VERSION);
+		rc = RC_SET_AND_ASSERT( FERR_UNSUPPORTED_VERSION);
 		goto Exit;
 	}
 
 	if( f_strncmp( (const char *)&pucBlkBuf[ FLM_BACKER_SIGNATURE_OFFSET],
 		FLM_BACKER_SIGNATURE, FLM_BACKER_SIGNATURE_SIZE) != 0)
 	{
-		rc = RC_SET( FERR_UNSUPPORTED_VERSION);
+		rc = RC_SET_AND_ASSERT( FERR_UNSUPPORTED_VERSION);
 		goto Exit;
 	}
 	
@@ -1850,13 +1860,15 @@ FSTATIC RCODE flmRestoreFile(
 			goto Exit;
 		}
 
-		// IMPORTANT NOTE: pucTmpBuf must be freed before going to Exit!!!
-
-		// Assert that the field in the log header is long enough to
-		// hold the key.  Note: This test is only valid if the key
-		// field is the last one in the log header!!
-
-		flmAssert( ui32KeyLen <= (LOG_HEADER_SIZE - LOG_DATABASE_KEY));
+		// Verify that the field in the log header is long enough to
+		// hold the key.
+		
+		if( ui32KeyLen > FLM_MAX_DB_ENC_KEY_LEN)
+		{
+			f_free( &pucTmpBuf);
+			rc = RC_SET_AND_ASSERT( FERR_BAD_ENC_KEY);
+			goto Exit;
+		}
 
 		UW2FBA( ui32KeyLen, &pLogHdr[ LOG_DATABASE_KEY_LEN]);
 		f_memcpy( &pLogHdr[LOG_DATABASE_KEY], pucTmpBuf, ui32KeyLen);
@@ -1878,14 +1890,14 @@ FSTATIC RCODE flmRestoreFile(
 				goto Exit;
 			}
 
-			f_memcpy( *ppucKeyToSave, &pLogHdr[LOG_DATABASE_KEY], ui32KeyLen);
+			f_memcpy( *ppucKeyToSave, &pLogHdr[ LOG_DATABASE_KEY], ui32KeyLen);
 			*puiKeyLen = ui32KeyLen;
 		}
 	}
 	else if( pucKeyToUse)
 	{
-		UW2FBA( *puiKeyLen, &pLogHdr[LOG_DATABASE_KEY_LEN]);
-		f_memcpy( &pLogHdr[LOG_DATABASE_KEY], pucKeyToUse, *puiKeyLen);
+		UW2FBA( *puiKeyLen, &pLogHdr[ LOG_DATABASE_KEY_LEN]);
+		f_memcpy( &pLogHdr[ LOG_DATABASE_KEY], pucKeyToUse, *puiKeyLen);
 	}
 
 	// Get the logical EOF from the log header

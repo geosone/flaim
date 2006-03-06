@@ -38,8 +38,8 @@ typedef struct CMP_KEY_ELM
 } CMP_KEY_ELM;
 
 FSTATIC RCODE flmKeyAdd(
-	FDB_p				pDb,
-	IXD_p				pIxd,
+	FDB *				pDb,
+	IXD *				pIxd,
 	FlmRecord *		pRecord,
 	FLMUINT			uiContainerNum,
 	POOL *			pPool,
@@ -47,8 +47,8 @@ FSTATIC RCODE flmKeyAdd(
 	REC_KEY **		ppKeyList);
 
 FSTATIC RCODE flmGetFieldKeys(
-	FDB_p				pDb,
-	IXD_p				pIxd,		
+	FDB *				pDb,
+	IXD *				pIxd,		
 	FlmRecord *		pRecord,
 	FLMUINT			uiContainerNum,
 	void **			ppPathFlds,
@@ -60,8 +60,8 @@ FSTATIC RCODE flmGetFieldKeys(
 	FLMBOOL  *		bHasCmpKeys);
 
 FSTATIC RCODE flmBuildCompoundKey(
-	FDB_p				pDb,
-	IXD_p				pIxd,		
+	FDB *				pDb,
+	IXD *				pIxd,		
 	CMP_KEY_ELM_p	pCmpKeyElm,
 	FLMBOOL			bRemoveDups,
 	POOL *			pPool,
@@ -69,9 +69,9 @@ FSTATIC RCODE flmBuildCompoundKey(
 	REC_KEY **		ppKeyList);
 
 FSTATIC RCODE flmGetCmpKeyElement(
-	FDB_p				pDb,
-	IXD_p				pIxd,		
-	IFD_p				pIfd,
+	FDB *				pDb,
+	IXD *				pIxd,		
+	IFD *				pIfd,
 	FLMUINT			uiCdlEntry,
 	FLMUINT			uiCompoundPos,
 	CMP_KEY_ELM_p	pParent,
@@ -83,8 +83,8 @@ FSTATIC RCODE flmGetCmpKeyElement(
 	FLD_CONTEXT *	pFldContext);
 
 FSTATIC RCODE flmGetCompoundKeys(
-	FDB_p				pDb,
-	IXD_p				pIxd,		
+	FDB *				pDb,
+	IXD *				pIxd,		
 	FLMBOOL			bRemoveDups,
 	POOL *			pPool,
 	FlmRecord *		pRecord,
@@ -96,8 +96,8 @@ FSTATIC RCODE flmGetCompoundKeys(
 Desc:	This routine adds a key to a key list.
 *****************************************************************************/
 FSTATIC RCODE flmKeyAdd(
-	FDB_p				pDb,
-	IXD_p				pIxd,
+	FDB *				pDb,
+	IXD *				pIxd,
 	FlmRecord *		pRecord,
 	FLMUINT			uiContainerNum,
 	POOL *			pPool,
@@ -165,8 +165,8 @@ Desc:	This routine gets all of the keys for a field and either saves them
 		as an element for a compound key, or saves them into the key list.
 *****************************************************************************/
 FSTATIC RCODE flmGetFieldKeys(
-	FDB_p					pDb,
-	IXD_p					pIxd,		
+	FDB *					pDb,
+	IXD *					pIxd,		
 	FlmRecord *			pRecord,
 	FLMUINT				uiContainerNum,
 	void **				ppPathFlds,
@@ -178,7 +178,7 @@ FSTATIC RCODE flmGetFieldKeys(
 	FLMBOOL  *			pbHasCmpKeys)
 {
 	RCODE					rc = FERR_OK;
-	IFD_p					pIfd;
+	IFD *					pIfd;
 	FlmRecord *			pFieldRecord = NULL;
 	void *				pvRootContext;
 	void *				pvValueField;
@@ -387,8 +387,8 @@ Exit:
 Desc:	This routine builds a compound key and saves it into the key list.
 *****************************************************************************/
 FSTATIC RCODE flmBuildCompoundKey(
-	FDB_p				pDb,
-	IXD_p				pIxd,		
+	FDB *				pDb,
+	IXD *				pIxd,		
 	CMP_KEY_ELM_p	pCmpKeyElm,
 	FLMBOOL			bRemoveDups,
 	POOL *			pPool,
@@ -478,9 +478,9 @@ Note: This routine recursively calls itself.
 		The code is very similar to KYCmpKeyElmBld() in kycompnd.cpp.
 *****************************************************************************/
 FSTATIC RCODE flmGetCmpKeyElement(
-	FDB_p				pDb,
-	IXD_p				pIxd,		
-	IFD_p				pIfd,
+	FDB *				pDb,
+	IXD *				pIxd,		
+	IFD *				pIfd,
 	FLMUINT			uiCdlEntry,
 	FLMUINT			uiCompoundPos,
 	CMP_KEY_ELM_p	pParent,
@@ -492,13 +492,13 @@ FSTATIC RCODE flmGetCmpKeyElement(
 	FLD_CONTEXT *	pFldContext)
 {
 	RCODE				rc = FERR_OK;
-	CDL_p  *			ppCdlTbl = pDb->KrefCntrl.ppCdlTbl;
-	CDL_p				pCdl = ppCdlTbl [uiCdlEntry];
+	CDL *  *			ppCdlTbl = pDb->KrefCntrl.ppCdlTbl;
+	CDL *				pCdl = ppCdlTbl [uiCdlEntry];
 	CMP_KEY_ELM		CmpKeyElm;
 	void *			pvField;
 	void *			pSaveParentAnchor;
 	FLMBYTE *		pbyTmpBuf = NULL;
-	IFD_p				pNextIfdPiece;
+	IFD *				pNextIfdPiece;
 	FLMUINT			uiNextCdlEntry;
 	FLMUINT			uiNextPiecePos;			// 0 if this is the last piece.
 	FLMUINT			uiLanguage = pIxd->uiLanguage;
@@ -517,7 +517,7 @@ FSTATIC RCODE flmGetCmpKeyElement(
 	// New 05/06/96
 	// Determine the next IFD compound piece.
 
-	for( pNextIfdPiece = (IFD_p)NULL, 
+	for( pNextIfdPiece = (IFD *)NULL, 
 			uiNextCdlEntry = uiCdlEntry + 1,
 			uiNextPiecePos = 0
 		; ((pIfd+uiNextPiecePos)->uiFlags & IFD_LAST) == 0
@@ -703,8 +703,8 @@ Desc:	This routine builds all of the compound keys whose elements have
 Note:	Already knows that there are compound keys.
 *****************************************************************************/
 FSTATIC RCODE flmGetCompoundKeys(
-	FDB_p				pDb,
-	IXD_p				pIxd,		
+	FDB *				pDb,
+	IXD *				pIxd,		
 	FLMBOOL			bRemoveDups,
 	POOL *			pPool,
 	FlmRecord *		pRecord,
@@ -712,9 +712,9 @@ FSTATIC RCODE flmGetCompoundKeys(
 	REC_KEY **		ppKeyList)
 {
 	RCODE			rc = FERR_OK;
-	IFD_p			pFirstIfd;
-	IFD_p			pIfd;
-	CDL_p  *		ppCdlTbl = pDb->KrefCntrl.ppCdlTbl;
+	IFD *			pFirstIfd;
+	IFD *			pIfd;
+	CDL *  *		ppCdlTbl = pDb->KrefCntrl.ppCdlTbl;
 	FLMUINT		uiFirstCdlEntry;
 	FLMUINT		uiCdlEntry;
 	FLMUINT		wIfdCnt;
@@ -785,8 +785,8 @@ Desc:	This routine builds all of the keys in a record for a particular
 		index in the database.
 *****************************************************************************/
 RCODE flmGetRecKeys(
-	FDB_p				pDb,
-	IXD_p				pIxd,		
+	FDB *				pDb,
+	IXD *				pIxd,		
 	FlmRecord *		pRecord,
 	FLMUINT			uiContainerNum,
 	FLMBOOL			bRemoveDups,

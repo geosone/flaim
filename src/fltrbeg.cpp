@@ -63,10 +63,8 @@ void flmUnlinkDbFromTrans(
 			flmUnlinkFdbFromDict( pDb);
 		}
 
-		/*
-		Unlink the transaction from the FFILE if it is a read
-		transaction.
-		*/
+		// Unlink the transaction from the FFILE if it is a read
+		// transaction
 
 		if( pDb->uiTransType == FLM_READ_TRANS)
 		{
@@ -167,14 +165,10 @@ Ret:	SUCCESS
 ****************************************************************************/
 RCODE flmBeginDbTrans(
 	FDB *			pDb,
-	FLMUINT		uiTransType,		/* Type of transaction to start, if one
-												has not been started. */
-	FLMUINT		uiMaxLockWait,		/* Maximum number of seconds to wait for
-												lock requests - if we have to create a
-												transaction. */
-	FLMUINT		uiFlags,				/* Transaction flags */
-	FLMBYTE *	pucLogHdr
-	)
+	FLMUINT		uiTransType,
+	FLMUINT		uiMaxLockWait,
+	FLMUINT		uiFlags,
+	FLMBYTE *	pucLogHdr)
 {
 	RCODE			rc = FERR_OK;
 	FFILE *		pFile = pDb->pFile;
@@ -198,15 +192,12 @@ RCODE flmBeginDbTrans(
 	pDb->uiThreadId = (FLMUINT)f_threadId();
 	pDb->uiTransCount++;
 
-	/*
-	Link the FDB to the file's most current FDICT structure,
-	if there is one.
-	Also, if it is a read transaction, link the FDB
-	into the list of read transactions off of
-	the FFILE structure.
-	*/
-
-	// Lock the mutex.
+	// Link the FDB to the file's most current FDICT structure,
+	// if there is one.
+	//
+	// Also, if it is a read transaction, link the FDB
+	// into the list of read transactions off of
+	// the FFILE structure.
 
 	f_mutexLock( gv_FlmSysData.hShareMutex);
 	bMutexLocked = TRUE;
@@ -218,13 +209,11 @@ RCODE flmBeginDbTrans(
 		flmLinkFdbToDict( pDb, pFile->pDictList);
 	}
 
-	/*
-	If it is a read transaction, link into the list of
-	read transactions off of the FFILE structure.  Until we
-	get the log header transaction ID below, we set uiCurrTransID
-	to zero and link this transaction in at the beginning of the
-	list.
-	*/
+	// If it is a read transaction, link into the list of
+	// read transactions off of the FFILE structure.  Until we
+	// get the log header transaction ID below, we set uiCurrTransID
+	// to zero and link this transaction in at the beginning of the
+	// list.
 
 	if (uiTransType == FLM_READ_TRANS)
 	{
@@ -258,6 +247,7 @@ RCODE flmBeginDbTrans(
 		{
 			pDb->uiFlags &= ~FDB_DONT_KILL_TRANS;
 		}
+		
 		if (pucLogHdr)
 		{
 			f_memcpy( pucLogHdr, &pDb->pFile->ucLastCommittedLogHdr[0],
@@ -277,10 +267,8 @@ RCODE flmBeginDbTrans(
 		pDb->uiFlags &= ~FDB_DONT_POISON_CACHE;
 	}
 
-	/*
-	Put an exclusive lock on the database if we are not in a read
-	transaction.  Read transactions require no lock.
-	*/
+	// Put an exclusive lock on the database if we are not in a read
+	// transaction.  Read transactions require no lock.
 
 	if (uiTransType != FLM_READ_TRANS)
 	{
@@ -332,10 +320,8 @@ RCODE flmBeginDbTrans(
 			LOG_HEADER_SIZE);
 		flmGetLogHdrInfo( pucLastCommittedLogHdr, &pDb->LogHdr);
 
-		/*
-		Need to increment the current checkpoint for update transactions
-		so that it will be correct when we go to mark cache blocks.
-		*/
+		// Need to increment the current checkpoint for update transactions
+		// so that it will be correct when we go to mark cache blocks.
 
 		if (pDb->uiFlags & FDB_REPLAYING_RFL)
 		{
@@ -413,7 +399,7 @@ Exit:
 	}
 
 	if( uiTransType == FLM_UPDATE_TRANS &&
-		 gv_FlmSysData.EventHdrs [F_EVENT_UPDATES].pEventCBList)
+		 gv_FlmSysData.UpdateEvents.pEventCBList)
 	{
 		flmTransEventCallback( F_EVENT_BEGIN_TRANS, (HFDB)pDb, rc,
 					(FLMUINT)(RC_OK( rc)
@@ -437,15 +423,14 @@ Exit:
 	return( rc);
 }
 
-/*API~***********************************************************************
-Desc : Starts a transaction.
-*END************************************************************************/
+/****************************************************************************
+Desc:	Starts a transaction.
+****************************************************************************/
 FLMEXP RCODE FLMAPI FlmDbTransBegin(
 	HFDB			hDb,
 	FLMUINT		uiTransType,
 	FLMUINT		uiMaxLockWait,
-	FLMBYTE *	pucHeader
-	)
+	FLMBYTE *	pucHeader)
 {
 	RCODE			rc = FERR_OK;
 	FLMBOOL		bIgnore;
@@ -562,9 +547,9 @@ Exit:
 	return( rc);
 }
 
-/*API~***********************************************************************
+/****************************************************************************
 Desc : Returns the type of the current database transaction.
-*END************************************************************************/
+****************************************************************************/
 FLMEXP RCODE FLMAPI FlmDbGetTransType(
 	HFDB			hDb,
 	FLMUINT *	puiTransTypeRV
@@ -604,6 +589,7 @@ FLMEXP RCODE FLMAPI FlmDbGetTransType(
 		goto Exit;
 
 Transmission_Error:
+
 		pCSContext->bConnectionGood = FALSE;
 		goto Exit;
 	}
@@ -640,15 +626,14 @@ Exit:
 	return( rc);
 }
 
-/*API~***********************************************************************
-Desc : Obtains a a lock on the database.
-*END************************************************************************/
+/****************************************************************************
+Desc:	Obtains a a lock on the database.
+****************************************************************************/
 FLMEXP RCODE FLMAPI FlmDbLock(
 	HFDB				hDb,
 	FLOCK_TYPE		eLockType,
 	FLMINT			iPriority,
-	FLMUINT			uiTimeout
-	)
+	FLMUINT			uiTimeout)
 {
 	RCODE		rc = FERR_OK;
 	FLMBOOL	bIgnore;
@@ -658,7 +643,7 @@ FLMEXP RCODE FLMAPI FlmDbLock(
 	{
 		fdbInitCS( pDb);
 
-		CS_CONTEXT_p		pCSContext = pDb->pCSContext;
+		CS_CONTEXT *		pCSContext = pDb->pCSContext;
 		FCL_WIRE				Wire( pCSContext, pDb);
 
 		if( !pCSContext->bConnectionGood)
@@ -710,6 +695,7 @@ FLMEXP RCODE FLMAPI FlmDbLock(
 		goto Exit;
 
 Transmission_Error:
+
 		pCSContext->bConnectionGood = FALSE;
 		goto Exit;
 	}
@@ -750,7 +736,9 @@ Transmission_Error:
 	{
 		goto Exit;
 	}
+	
 	pDb->uiFlags |= FDB_HAS_FILE_LOCK;
+	
 	if (eLockType == FLM_LOCK_SHARED)
 	{
 		pDb->uiFlags |= FDB_FILE_LOCK_SHARED;
@@ -762,12 +750,11 @@ Exit:
 	return( rc);
 }
 
-/*API~***********************************************************************
-Desc : Releases a lock on the database
-*END************************************************************************/
+/****************************************************************************
+Desc:	Releases a lock on the database
+****************************************************************************/
 FLMEXP RCODE FLMAPI FlmDbUnlock(
-	HFDB	hDb
-	)
+	HFDB		hDb)
 {
 	RCODE		rc = FERR_OK;
 	FDB *		pDb = (FDB *)hDb;
@@ -777,7 +764,7 @@ FLMEXP RCODE FLMAPI FlmDbUnlock(
 	{
 		fdbInitCS( pDb);
 
-		CS_CONTEXT_p		pCSContext = pDb->pCSContext;
+		CS_CONTEXT *		pCSContext = pDb->pCSContext;
 		FCL_WIRE				Wire( pCSContext, pDb);
 
 		if( !pCSContext->bConnectionGood)
@@ -812,6 +799,7 @@ FLMEXP RCODE FLMAPI FlmDbUnlock(
 		goto Exit;
 
 Transmission_Error:
+
 		pCSContext->bConnectionGood = FALSE;
 		goto Exit;
 	}
@@ -855,15 +843,14 @@ Exit:
 	return( rc);
 }
 
-/*API~***********************************************************************
+/****************************************************************************
 Desc : Returns information about current and pending locks on the
 		 database.
-*END************************************************************************/
+****************************************************************************/
 FLMEXP RCODE FLMAPI FlmDbGetLockInfo(
 	HFDB				hDb,
 	FLMINT			iPriority,
-	FLOCK_INFO *	pLockInfo
-	)
+	FLOCK_INFO *	pLockInfo)
 {
 	RCODE		rc = FERR_OK;
 	FDB *		pDb = NULL;
@@ -890,10 +877,10 @@ Exit:
 	return( rc);
 }
 
-/*API~***********************************************************************
+/****************************************************************************
 Desc : Returns information about the lock held by the specified database
 		 handle.
-*END************************************************************************/
+****************************************************************************/
 FLMEXP RCODE FLMAPI FlmDbGetLockType(
 	HFDB				hDb,
 	FLOCK_TYPE *	peLockType,
@@ -954,13 +941,12 @@ Exit:
 	return( rc);
 }
 
-/*API~***********************************************************************
-Desc : Forces a checkpoint on the database.
-*END************************************************************************/
+/****************************************************************************
+Desc:	Forces a checkpoint on the database.
+****************************************************************************/
 FLMEXP RCODE FLMAPI FlmDbCheckpoint(
 	HFDB		hDb,
-	FLMUINT	uiTimeout
-	)
+	FLMUINT	uiTimeout)
 {
 	RCODE		rc = FERR_OK;
 	FDB *		pDb = (FDB *)hDb;
@@ -972,7 +958,7 @@ FLMEXP RCODE FLMAPI FlmDbCheckpoint(
 	{
 		fdbInitCS( pDb);
 
-		CS_CONTEXT_p		pCSContext = pDb->pCSContext;
+		CS_CONTEXT *		pCSContext = pDb->pCSContext;
 		FCL_WIRE				Wire( pCSContext, pDb);
 
 		if( !pCSContext->bConnectionGood)
@@ -1012,6 +998,7 @@ FLMEXP RCODE FLMAPI FlmDbCheckpoint(
 		goto Exit;
 
 Transmission_Error:
+
 		pCSContext->bConnectionGood = FALSE;
 		goto Exit;
 	}
@@ -1032,7 +1019,9 @@ Transmission_Error:
 	{
 		goto Exit;
 	}
+	
 Exit:
+
 	if (bStartedTrans)
 	{
 		(void)flmAbortDbTrans( pDb);

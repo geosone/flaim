@@ -31,9 +31,9 @@ Return:	FERR_OK, FERR_BT_END_OF_DATA (0xFFFF) or error number
 Note:		This could be called at any level of the b-tree.
 *****************************************************************************/
 RCODE FSBtPrevElm(
-	FDB_p			pDb,
+	FDB *			pDb,
 	LFILE *		pLFile,	/* Logical file definition */
-	BTSK_p		pStack		/* Stack of variables for each level */
+	BTSK *		pStack		/* Stack of variables for each level */
 	)
 {
 	RCODE			rc = FERR_OK;						/* Return code */
@@ -125,8 +125,8 @@ Notes:	The element must be the last continued element for a key.
 			This algorithm will not work for bit-vector types.
 *****************************************************************************/
 FLMUINT FSRefLast(
-	BTSK_p		pStack,		/* Small stack to hold btree variables*/
-	DIN_STATE_p	pState,		/* Holds offset, one run number, etc.*/
+	BTSK *		pStack,		/* Small stack to hold btree variables*/
+	DIN_STATE *	pState,		/* Holds offset, one run number, etc.*/
 	FLMUINT *	puiDomainRV)		/* Returns the elements domain */
 {
 	FLMBYTE *	pCurElm = CURRENT_ELM( pStack );
@@ -148,7 +148,7 @@ Return:	previous value from target
 ***************************************************************************/
 FLMUINT FSGetPrevRef(
 	FLMBYTE *	pCurRef,			// Points to start of references 
-	DIN_STATE_p	pState,				// Holds tate information to get next
+	DIN_STATE *	pState,				// Holds tate information to get next
 	FLMUINT		uiTarget)			// Stop when the target is hit and back off
 {
 	FLMUINT		uiDin ;					/* Current din to compute and return */
@@ -199,10 +199,10 @@ Out:   	cursor updated if there is a previous reference
 Return:	RCODE FERR_OK | FERR_BT_END_OF_DATA (0xFFFF) or error
 ****************************************************************************/
 RCODE FSRefPrev(
-	FDB_p			pDb,
+	FDB *			pDb,
 	LFILE *		pLFile,	/* Logical file definition */
-	BTSK_p		pStack,	/* Small stack to hold btree variables*/
-	DIN_STATE_p	pState,	/* Holds offset, one run number, etc.*/
+	BTSK *		pStack,	/* Small stack to hold btree variables*/
+	DIN_STATE *	pState,	/* Holds offset, one run number, etc.*/
 	FLMUINT *	puiDinRV)		/* Last din used and returns din */
 {
 	RCODE			rc;			/* Return code */

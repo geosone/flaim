@@ -109,7 +109,7 @@ F_RecEditor::~F_RecEditor( void)
 Desc:
 *****************************************************************************/
 RCODE F_RecEditor::Setup(
-	FTX_SCREEN *		pScreen)
+	FTX_SCREEN_p		pScreen)
 {
 	RCODE		rc = FERR_OK;
 
@@ -1369,8 +1369,8 @@ Delete_Exit:
 					FLMUINT		uiContainer;
 					char			pucResponse[ 16];
 					FLMUINT		uiDrn;
-					FLMBOOL		bAddInBackground = FALSE;
-					FLMBOOL		bCreateSuspended = FALSE;
+					FLMBOOL		bAddInBackground;
+					FLMBOOL		bCreateSuspended;
 					
 					*pucResponse = '\0';
 					requestInput(
@@ -1636,7 +1636,7 @@ Delete_Exit:
 				{
 					FLMBOOL		bFoundMatch = FALSE;
 					FLMBOOL		bTagSearch = FALSE;
-					FLMUINT		uiTagNum = 0;
+					FLMUINT		uiTagNum;
 					FLMUINT		uiTmp;
 
 					if( m_pEditStatusWin)
@@ -1705,7 +1705,7 @@ Delete_Exit:
 				{
 					FLMBOOL		bFoundMatch = FALSE;
 					FLMBOOL		bTagSearch = FALSE;
-					FLMUINT		uiTagNum = 0;
+					FLMUINT		uiTagNum;
 					FLMUINT		uiTmp;
 
 					if( m_pEditStatusWin)
@@ -2899,7 +2899,7 @@ RCODE F_RecEditor::editNode(
 	FLMUINT			uiNumWinCols;
 	FLMUINT			uiValType = GedValType( pNd);
 	FLMBOOL			bModified = FALSE;
-	FTX_WINDOW *	pWindow = NULL;
+	FTX_WINDOW_p	pWindow = NULL;
 	RCODE				rc = FERR_OK;
 	FLMUINT			uiBack;
 	FLMUINT			uiFore;
@@ -3070,7 +3070,7 @@ Exit:
 Desc: Edit text node as text
 *****************************************************************************/
 RCODE F_RecEditor::editTextNode(
-	FTX_WINDOW *		pWindow,
+	FTX_WINDOW_p		pWindow,
 	NODE *				pNd,
 	FLMBOOL *			pbModified)
 {
@@ -3176,7 +3176,7 @@ Exit:
 Desc: Edits a numeric node as using the text editor
 *****************************************************************************/
 RCODE F_RecEditor::editNumberNode(
-	FTX_WINDOW *		pWindow,
+	FTX_WINDOW_p		pWindow,
 	NODE *				pNd,
 	FLMBOOL *			pbModified)
 {
@@ -3264,7 +3264,7 @@ Exit:
 Desc: Edits a context node as using the text editor
 *****************************************************************************/
 RCODE F_RecEditor::editContextNode(
-	FTX_WINDOW *		pWindow,
+	FTX_WINDOW_p		pWindow,
 	NODE *				pNd,
 	FLMBOOL *			pbModified)
 {
@@ -3353,7 +3353,7 @@ Exit:
 Desc: Edits a binary node
 *****************************************************************************/
 RCODE F_RecEditor::editBinaryNode(
-	FTX_WINDOW *		pWindow,
+	FTX_WINDOW_p		pWindow,
 	NODE *				pNd,
 	FLMBOOL *			pbModified)
 {
@@ -3826,7 +3826,7 @@ RCODE F_RecEditor::requestInput(
 	FLMUINT			uiNumRows;
 	FLMUINT			uiNumWinRows = 3;
 	FLMUINT			uiNumWinCols;
-	FTX_WINDOW *	pWindow = NULL;
+	FTX_WINDOW_p	pWindow = NULL;
 	F_FileHdl *		pFileHdl = NULL;
 	RCODE				rc = FERR_OK;
 
@@ -5825,7 +5825,7 @@ RCODE F_RecEditor::retrieveRecordsFromDb(
 	NODE *				pSearchStart = NULL;
 	FlmRecord *			pTmpRec = NULL;
 	void *				pvMark = GedPoolMark( &m_scratchPool);
-	FTX_WINDOW *		pWindow = NULL;
+	FTX_WINDOW_p		pWindow = NULL;
 	FLMBOOL				bDone = FALSE;
 	FLMUINT				uiRecCount = 0;
 	FLMUINT				uiRecId = 0;
@@ -6049,7 +6049,7 @@ RCODE F_RecEditor::adHocQuery(
 	FLMUINT				uiNumDeleted = 0;
 	FLMUINT				uiDispOffset;
 	FLMUINT				uiErrCount = 0;
-	FTX_WINDOW *		pWindow = NULL;
+	FTX_WINDOW_p		pWindow = NULL;
 	FLMBOOL				bReopenEditor = FALSE;
 	RCODE					lastError = FERR_OK;
 	RCODE					rc = FERR_OK;
@@ -6908,7 +6908,7 @@ RCODE F_RecEditor::refreshNameTable( void)
 {
 	NODE *					pRootNd = NULL;
 	NODE *					pTmpNd = NULL;
-	NODE *					pPriorNd = NULL;
+	NODE *					pPriorNd;
 	FLMUINT					uiFlags;
 	POOL *					pScratchPool = &m_scratchPool;
 	void *					pPoolMark = GedPoolMark( &m_scratchPool);
@@ -9165,13 +9165,13 @@ RCODE F_RecEditor::createStatusWindow(
 	FLMUINT				uiFore,
 	FLMUINT *			puiCols,
 	FLMUINT *			puiRows,
-	FTX_WINDOW **		ppWindow)
+	FTX_WINDOW_pp		ppWindow)
 {
 	FLMUINT			uiNumRows;
 	FLMUINT			uiNumCols;
 	FLMUINT			uiNumWinRows = 0;
 	FLMUINT			uiNumWinCols = 0;
-	FTX_WINDOW *	pWindow = NULL;
+	FTX_WINDOW_p	pWindow = NULL;
 	RCODE				rc = FERR_OK;
 
 	*ppWindow = NULL;
@@ -9829,7 +9829,7 @@ class LocalLockInfo : public FlmLockInfo
 {
 public:
 
-	LocalLockInfo( FTX_WINDOW * pWindow)
+	LocalLockInfo( FTX_WINDOW_p pWindow)
 	{
 		m_pWindow = pWindow;
 	}
@@ -9884,7 +9884,7 @@ public:
 
 private:
 
-	FTX_WINDOW *		m_pWindow;
+	FTX_WINDOW_p		m_pWindow;
 };
 
 /*============================================================================

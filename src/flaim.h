@@ -106,13 +106,11 @@
 			#define FLM_HPUX
 			#define FLM_BIG_ENDIAN
 			#define FLM_STRICT_ALIGNMENT
-		#elif defined( __APPLE__)
+		#elif (defined( __ppc__) || defined( __ppc64__)) && defined( __APPLE__)
 			#define FLM_UNIX
 			#define FLM_OSX
-			#if (defined( __ppc__) || defined( __ppc64__))
-				#define FLM_BIG_ENDIAN
-				#define FLM_STRICT_ALIGNMENT			
-			#endif
+			#define FLM_BIG_ENDIAN
+			#define FLM_STRICT_ALIGNMENT			
 		#else
 				#error Platform architecture is undefined.
 		#endif
@@ -298,7 +296,7 @@
 		/// \defgroup dbcreateopen Database Create, Open, Close
 		/// \ingroup database
 
-		/// \defgroup Trans Transaction Functions
+		/// \defgroup trans Transaction Functions
 		/// \ingroup database
 
 		/// \defgroup update Database Update Functions
@@ -380,10 +378,10 @@
 		#define FALSE	0
 	#endif
 
-	typedef void *				F_MUTEX;
-	typedef void *				F_SEM;
-	#define F_MUTEX_NULL		NULL
-	#define F_MAXIMUM_FILE_SIZE				0xFFFC0000
+	typedef void *							F_MUTEX;
+	typedef void *							F_SEM;
+	#define F_MUTEX_NULL					NULL
+	#define F_MAXIMUM_FILE_SIZE		0xFFFC0000
 
 	/// Return codes
 	typedef enum
@@ -636,9 +634,9 @@
 		FERR_PASSWD_INVALID,				///< 0xC329 - Invalid password passed, database could not be opened.
 	
 
-		/****************************************************************************
+		/*************************************************************************
 								Server TCP/IP Errors
-		****************************************************************************/
+		*************************************************************************/
 
 		FERR_SVR_NOIP_ADDR = 0xC900,	///< 0xC900 - IP address not found.
 		FERR_SVR_SOCK_FAIL,				///< 0xC901 - IP socket failure.
@@ -671,7 +669,7 @@
 	#endif
 
 	/***************************************************************************
-	*									Forward Declarations
+										Forward Declarations
 	***************************************************************************/
 
 	class FlmRecord;
@@ -683,42 +681,40 @@
 	class F_Restore;
 
 	/***************************************************************************
-	*                             FLAIM Types
+	                              FLAIM Types
 	***************************************************************************/
 
-	typedef void *					HFDB;				///< Database handle.
+	typedef void *					HFDB;			///< Database handle.
 		#define HFDB_NULL				NULL
-	typedef void *					HFCURSOR;		///< Query object handle.
+	typedef void *					HFCURSOR;	///< Query object handle.
 		#define HFCURSOR_NULL		NULL
-	typedef void *					HFBLOB;			///< BLOB handle.
+	typedef void *					HFBLOB;		///< BLOB handle.
 		#define HFBLOB_NULL			NULL
-	typedef void *					HFBACKUP;		///< Backup object handle.
+	typedef void *					HFBACKUP;	///< Backup object handle.
 		#define HFBACKUP_NULL		NULL
 
 	/// Header for blocks in a memory pool.  This structure is at the head of each block that belongs to a pool of
 	/// memory.
 	typedef struct MBLK
 	{
-		MBLK *		pPrevBlk;			///< Points to the previous memory block in the memory pool.
-		FLMUINT		uiBlkSize;			///< Total size of the memory block.
-		FLMUINT		uiFreeOfs;			///< Offset in block where next allocation should be made.
-		FLMUINT		uiFreeSize;			///< Amount of free memory left in block - from uiFreeOfs.
+		MBLK *			pPrevBlk;				///< Points to the previous memory block in the memory pool.
+		FLMUINT			uiBlkSize;				///< Total size of the memory block.
+		FLMUINT			uiFreeOfs;				///< Offset in block where next allocation should be made.
+		FLMUINT			uiFreeSize;				///< Amount of free memory left in block - from uiFreeOfs.
 	} MBLK;
 
 
-	/*
-	Desc:		Structure that is used my "Smart" pools to determine optimal
-				block sizes. 
-	*/
+	/// Pool statistics.  This structure is used to track statistics on
+	/// smart pools.
 	typedef struct
 	{
-		FLMUINT	uiAllocBytes;			// Total number of bytes requested from
-												// GedPoolAlloc & GedPoolCalloc calls
-		FLMUINT	uiCount;					// Number of Free/Resets performed on 
-												// the pool
+		FLMUINT			uiAllocBytes;			///< Total number of bytes requested from
+														///< GedPoolAlloc and GedPoolCalloc calls
+		FLMUINT			uiCount;					///< Number of frees and resets performed on 
+														///< the pool
 	} POOL_STATS;
 
-	/// Pool memory manager.  Thus structure is used to keep track of a pool
+	/// Pool memory manager.  This structure is used to keep track of a pool
 	/// of memory blocks that are used for pool memory allocation.
 	typedef struct
 	{
@@ -788,8 +784,10 @@
 	#define FLM_VER_4_51						451	// Added ability to permanently suspend indexes
 	#define FLM_VER_4_52						452	// Added ability to delete indexes in the background
 	#define FLM_VER_4_60						460	// Added support for encrypted attributes
-	#define FLM_CURRENT_VERSION_NUM		FLM_VER_4_60
-	#define FLM_CURRENT_VER_STR			"4.60"
+	#define FLM_VER_4_61						461	// Added support for RFL disk usage limits, large field values,
+															// and async I/O on Linux and Solaris
+	#define FLM_CURRENT_VERSION_NUM		FLM_VER_4_61
+	#define FLM_CURRENT_VER_STR			"4.61"
 
 		FLMUINT		uiMinRflFileSize;				///< Minimum bytes per RFL file.
 	#define DEFAULT_MIN_RFL_FILE_SIZE	((FLMUINT)100 * (FLMUINT)1024 * (FLMUINT)1024)
@@ -923,7 +921,7 @@
 	};
 
 	/****************************************************************************
-	Name Table Function Structures
+								Name Table Function Structures
 	****************************************************************************/
 
 	typedef struct
@@ -1239,6 +1237,14 @@
 		FlmRecord *	pNewRecord;		///< New record (adds, modifies).
 		FlmRecord *	pOldRecord;		///< Old record (modifies, deletes).
 	} FLM_UPDATE_EVENT;
+	
+	/// Structure returned to an event handler function whenever RFL size events occur.\  Specifically, this structure is
+	/// returned whenever the RFL exceeds the on-disk size threshold specified for a database.
+	typedef struct
+	{
+		const char *	pszRflDir;				///< RFL directory path
+		FLMUINT64		ui64RflDiskUsage;		///< Size of the RFL
+	} FLM_RFL_SIZE_EVENT;
 
 	/// Structure that gives the current state of the checkpoint thread.\  Returned from FlmDbGetConfig() when
 	/// eDbGetConfigType::FDB_GET_CHECKPOINT_INFO is passed in as the option.
@@ -1512,12 +1518,6 @@
 		const FLMUNICODE *	puzStr1,			///< Unicode string 1 - string must be terminated with a zero Unicode character.
 		const FLMUNICODE *	puzStr2			///< Unicode string 2 - string must be terminated with a zero Unicode character.
 		);
-
-	/*--------------------------------------------------------
-			 FLAIM Record stuff
-	**-------------------------------------------------------*/
-
-	#define FLM_MAX_FIELD_VAL_SIZE			((FLMUINT)65535)
 
 	/// This class allows an application to keep a set of ::FlmRecord objects.
 	class FLMEXP FlmRecordSet : public F_Base
@@ -2153,18 +2153,18 @@
 	/// Add a value to the query criteria.  A value is generally added where an operand would appear - such as in a comparison expression.
 	/// \ingroup querydef
 	FLMEXP RCODE FLMAPI FlmCursorAddValue(
-		HFCURSOR			hCursor,			///< Handle to query object.
-		QTYPES			eValType,		///< Type of value being added to the query criteria.
-		void *			pVal,				///< Pointer to the value being added.\  This should point to a value that corresponds to the type
-												///< specified in eValType.
-		FLMUINT			uiValLen			///< For binary values, this will contain the value length.\  It is not used for any other type of
-												///< value.\  String values are expected to be null-terminated.
+		HFCURSOR			hCursor,							///< Handle to query object.
+		QTYPES			eValType,						///< Type of value being added to the query criteria.
+		void *			pVal,								///< Pointer to the value being added.\  This should point to a value that corresponds to the type
+																///< specified in eValType.
+		FLMUINT			uiValLen							///< For binary values, this will contain the value length.\  It is not used for any other type of
+																///< value.\  String values are expected to be null-terminated.
 		);
 
 	/// Finalize and validate query syntax.  After this function has been called, no more query criteria may be added.
 	/// \ingroup querydef
 	FLMEXP RCODE FLMAPI FlmCursorValidate(
-		HFCURSOR		hCursor				///< Handle to query object.
+		HFCURSOR			hCursor							///< Handle to query object.
 		);
 
 	/// Startup FLAIM database system.
@@ -2453,7 +2453,7 @@
 		);
 
 	/****************************************************************************
-	Statistics
+											Statistics
 	****************************************************************************/
 
 	/// Structure used in gathering statistics to hold an operation count and an elapsed time.
@@ -2617,7 +2617,7 @@
 	{
 		F_EVENT_LOCKS,					///< Catch all database lock events.
 		F_EVENT_UPDATES,				///< Catch all transaction and update event events.
-		F_MAX_EVENT_CATEGORIES
+		F_EVENT_SIZE					///< Catch all size threshold events
 	} FEventCategory;
 
 	/// Types of events returned to registered event handling functions.  See FlmRegisterForEvent()
@@ -2640,7 +2640,7 @@
 		F_EVENT_INDEXING_COMPLETE, ///< Background indexing status, pvEventData1 (FLMUINT) == index number, 
 											///< pvEventData2 (FLMUINT) == last drn indexed, 
 											///< if zero indexing is complete and the index is now online.
-		F_MAX_EVENT_TYPES				// Should always be last.
+		F_EVENT_RFL_SIZE				///< RFL size threshold has been exceeded, pvEventData1 == FLM_RFL_SIZE_EVENT *.
 	} FEventType;
 
 	typedef void *					HFEVENT;	///< Handle returned from FlmRegisterForEvent() - needed when calling FlmDeregisterForEvent().
@@ -2828,10 +2828,17 @@
 		FDB_SET_APP_DATA,							///< Allows an application to have the database object remember some data.\  pvValue1 contains a
 														///< pointer to the data to be remembered.\  An application may retrieve this pointer at any time
 														///< by calling FlmDbGetConfig() with the eDbGetConfigType::FDB_GET_APP_DATA option.
-		FDB_SET_COMMIT_CALLBACK					///< Set a callback function that is to be called whenever this database handle commits an
+		FDB_SET_COMMIT_CALLBACK,				///< Set a callback function that is to be called whenever this database handle commits an
 														///< update transaction.\  pvValue1 is a pointer to the callback
 														///< function - a ::COMMIT_FUNC.\   pvValue2 is a pointer to application data that will be passed into the
 														///< function whenever it is called.
+		FDB_SET_RFL_SIZE_THRESHOLD,			///< Sets the RFL size threshold (in K bytes).  If registered to receive RFL size events, an event will
+														///< be reported when the on-disk size of the RFL exceeds this value.\  pvValue1 is a FLMUINT which
+														///< specifies the threshold value in K bytes.
+		FDB_SET_RFL_SIZE_EVENT_INTERVALS		///< Sets the criteria for determining how often to report RFL size events once the RFL exceeds the
+														///< size threshold.\  pvValue1 is a FLMUINT which specifies the minimum number of seconds between
+														///< events.\  pvValue2 is a FLMUINT  which specifies the minimum increase in K bytes of the RFL
+														///< between events.
 	} eDbConfigType;
 
 #define F_SERIAL_NUM_SIZE				16
@@ -2950,7 +2957,7 @@
 
 	#define FO_DONT_REDO_LOG						0x0040	// Used only in FlmDbOpen
 	#define FO_DONT_RESUME_BACKGROUND_THREADS	0x0080	// Used only in FlmDbOpen
-	#define FO_ALLOW_LIMITED						0X0400	// Used only in FlmDbOpen
+	#define FO_ALLOW_LIMITED						0x0400	// Used only in FlmDbOpen
 
 	/// Close a database.
 	/// \ingroup dbcreateopen
@@ -3100,11 +3107,11 @@
 		HFDB			hDb,							///< Database handle - see FlmDbOpen() or FlmDbCreate().
 		FLMUINT		uiIndexNum					///< Number of index to resume.
 		);
-
+		
 	/// Determine if a return code (RCODE) indicates a corruption.
 	/// \ingroup errhandling
 	FLMEXP FLMBOOL FLMAPI FlmErrorIsFileCorrupt(
-		RCODE	rc			///< Error code to be tested.
+		RCODE			rc								///< Error code to be tested.
 		);
 
 	/// Convert a return code (RCODE) into a string.
@@ -3150,6 +3157,12 @@
 													///< detailed information.
 		);
 
+	/// Assert the condition is TRUE.
+	/// \ingroup errhandling
+	FLMEXP void FLMAPI FlmAssert(
+		FLMBOOL				bAssertion		///< Assertion
+		);
+		
 	// Defines used for 'uiTransType' parameter
 
 	#define FLM_NO_TRANS				0
@@ -3164,7 +3177,7 @@
 	#define FLM_NO_TIMEOUT			0xFF
 
 	/// Begin a transaction on the database.
-	/// \ingroup Trans
+	/// \ingroup trans
 	FLMEXP RCODE FLMAPI FlmDbTransBegin(
 		HFDB			hDb,							///< Database handle.
 		FLMUINT		uiTransType,				///< Type of transaction to start.\  May be FLM_UPDATE_TRANS or FLM_READ_TRANS.\  The
@@ -3190,7 +3203,7 @@
 	#define F_TRANS_HEADER_SIZE		2048	// Size of buffer required for pszHeader parameter of FlmDbTransBegin
 
 	/// Commit current transaction (if any) on a database.
-	/// \ingroup Trans
+	/// \ingroup trans
 	FLMEXP RCODE FLMAPI FlmDbTransCommit(
 		HFDB			hDb,							///< Database handle.
 		FLMBOOL *	pbEmpty = NULL				///< If non-NULL, this returns a flag indicating whether or not the transaction was
@@ -3202,13 +3215,13 @@
 		);
 
 	/// Abort current transaction (if any) on a database.
-	/// \ingroup Trans
+	/// \ingroup trans
 	FLMEXP RCODE FLMAPI FlmDbTransAbort(
 		HFDB			hDb							///< Database handle.
 		);
 
 	/// Get type of current transaction (if any) on a database.
-	/// \ingroup Trans
+	/// \ingroup trans
 	FLMEXP RCODE FLMAPI FlmDbGetTransType(
 		HFDB			hDb,							///< Database handle.
 		FLMUINT *	puiTransType				///< Transaction type is returned here.\  It will be
@@ -3219,7 +3232,7 @@
 		);
 
 	/// Get current transaction ID.
-	/// \ingroup Trans
+	/// \ingroup trans
 	FLMEXP RCODE FLMAPI FlmDbGetTransId(
 		HFDB			hDb,							///< Database handle.
 		FLMUINT *	puiTransID					///< Current transaction ID is returned here.\  If no transaction is currently active,
@@ -3227,14 +3240,14 @@
 		);
 
 	/// Get number of committed transactions for a database.
-	/// \ingroup Trans
+	/// \ingroup trans
 	FLMEXP RCODE FLMAPI FlmDbGetCommitCnt(
 		HFDB			hDb,							///< Database handle.
 		FLMUINT *	puiCommitCount				///< Number of transactions that have been committed is returned here.
 		);
 
 	/// Lock a database.
-	/// \ingroup Trans
+	/// \ingroup trans
 	FLMEXP RCODE FLMAPI FlmDbLock(
 		HFDB				hDb,						///< Database handle.
 		FLOCK_TYPE		eLockType,				///< Type of lock being requested.
@@ -3245,13 +3258,13 @@
 		);
 
 	/// Unlock a database.
-	/// \ingroup Trans
+	/// \ingroup trans
 	FLMEXP RCODE FLMAPI FlmDbUnlock(
 		HFDB				hDb						///< Database handle.
 		);
 
 	/// Get the type of lock currently in effect on a database (if any).
-	/// \ingroup Trans
+	/// \ingroup trans
 	FLMEXP RCODE FLMAPI FlmDbGetLockType(
 		HFDB				hDb,						///< Database handle.
 		FLOCK_TYPE *	peLockType,				///< Type of lock currently held returned here.
@@ -3263,7 +3276,7 @@
 		);
 
 	/// Get lock information for a database.
-	/// \ingroup Trans
+	/// \ingroup trans
 	FLMEXP RCODE FLMAPI FlmDbGetLockInfo(
 		HFDB				hDb,						///< Database handle.
 		FLMINT			iPriority,				///< A count of all locks with a priority >= this value will be returned in
@@ -3272,7 +3285,7 @@
 		);
 
 	/// Perform a checkpoint on the database.
-	/// \ingroup Trans
+	/// \ingroup trans
 	FLMEXP RCODE FLMAPI FlmDbCheckpoint(
 		HFDB				hDb,						///< Database handle.
 		FLMUINT			uiTimeout				///< Specifies the maximum number of seconds to wait to obtain the database lock.\  An
@@ -3640,8 +3653,9 @@
 											///< operation.\  pvValue2 is a FLMUINT that contains the number of blocks to delete.\  pvValue3 is a 
 											///< FLMUINT that contains the block address of the last block that was deleted.
 		RESTORE_WRAP_KEY,				///< Restoring a FlmDbWrapKey() operation.\  pvValue1 is a FLMUINT that contains the length of the database key.
-		RESTORE_ENABLE_ENCRYPTION	///< Restoring a FlmEnableEncryption() operation.\  pvValue1 is a FLMUINT that contains the length of
+		RESTORE_ENABLE_ENCRYPTION,	///< Restoring a FlmEnableEncryption() operation.\  pvValue1 is a FLMUINT that contains the length of
 											///< the database key.
+		RESTORE_CONFIG_SIZE_EVENT	///< Restoring a FlmSetSizeEventThreshold() operation.\  pvValue1 is a FLMUINT .... // here
 	} eRestoreStatusType;
 
 	/// Actions that an application may want to tell FlmDbRestore() to take during a restore operation.
@@ -3753,9 +3767,9 @@
 			) = 0;	
 	};
 
-	/*--------------------------------------------------------
-				BLOB Class, Functions and Definitions
-	**-------------------------------------------------------*/
+	/****************************************************************************
+						BLOB Class, Functions and Definitions
+	****************************************************************************/
 
 	// FlmBlob::create uiBlobType values
 
@@ -3806,10 +3820,6 @@
 	FLMEXP RCODE FLMAPI FlmAllocBlob(
 		FlmBlob **		ppBlob				///< Pointer to newly allocated BLOB object is returned here.
 		);
-
-	/*
-	*** FLAIM message logging
-	*/
 
 	/// Categories of messages that FLAIM can log and that an application can request to receive.
 	typedef enum
@@ -4129,8 +4139,10 @@
 	/// Convert a native string to FLAIM's internal storage format.
 	/// \ingroup storageconversion
 	FLMEXP RCODE FLMAPI FlmNative2Storage(
-		const char *		pszStr,			///< Native string that is to be converted.\  FLAIM expects the string
-													///< to be null-terminated.
+		const char *		pszStr,			///< Native string that is to be converted.
+		FLMUINT 				uiStrLen,		///< Length (in bytes) of the native string.\  If zero, the string is
+													///< expected to be NULL-terminated.
+													///< *puiStorageLen contains number of bytes returned.
 		FLMUINT *			puiStorageLen,	///< On input, *puiStorageLen is length (in bytes) of pucStorageBuf.\  On output,
 													///< *puiStorageLen contains number of bytes returned.
 		FLMBYTE *			pucStorageBuf	///< Converted string, in FLAIM's internal storage format, is returned here.
@@ -6236,10 +6248,9 @@
 		const char *		pszFileName,
 		const char *		pszTemplate);
 
-	/*
-	*** Directories
-	*/
-
+	/****************************************************************************
+	Desc: Directory handle
+	****************************************************************************/
 	class FLMEXP F_DirHdl : public F_Base
 	{
 	public:
@@ -6267,10 +6278,6 @@
 	FLMEXP RCODE FLMAPI FlmAllocDirHdl(
 		F_DirHdl **		ppDirHdl);
 
-	/*
-	*** List item
-	*/
-
 	typedef struct
 	{
 		F_ListItem *		pPrevItem;			// Prev ListItem
@@ -6280,6 +6287,9 @@
 														// a ListItem (only used in ListMgr)
 	} F_ListNode;
 
+	/****************************************************************************
+	Desc:
+	****************************************************************************/
 	class FLMEXP F_ListItem : public F_Base
 	{
 	protected:
@@ -6357,10 +6367,9 @@
 		friend class F_ObjRefTracker;
 	};
 
-	/*
-	*** File handle
-	*/
-
+	/****************************************************************************
+	Desc:
+	****************************************************************************/
 	class FLMEXP F_FileHdl : public F_ListItem
 	{
 	public:
@@ -6418,12 +6427,9 @@
 	FLMEXP RCODE FLMAPI FlmAllocFileHandle(
 		F_FileHdl **		ppFileHandle);
 
-	/*
-	*** File flags
-	*/
+	// File flags
 
-	#define F_IO_CURRENT_POS	0xFFFFFFFF
-
+	#define F_IO_CURRENT_POS		0xFFFFFFFF
 	#define F_IO_RDONLY				0x0001
 	#define F_IO_RDWR					0x0002
 	#define F_IO_TRUNC				0x0004
@@ -6441,10 +6447,9 @@
 	#define F_IO_SEEK_CUR		1	// Current File Pointer Position
 	#define F_IO_SEEK_END		2	// End of File
 
-	/*
-	*** File system
-	*/
-
+	/****************************************************************************
+	Desc:
+	****************************************************************************/
 	class FLMEXP F_FileSystem : public F_Base
 	{
 	public:

@@ -31,21 +31,21 @@
 	
 FSTATIC FLMINT _KrefCompare(
 	FLMUINT *		puiQsortFlags,
-	KREF_ENTRY_p	pKreftA,
-	KREF_ENTRY_p	pKreftB);
+	KREF_ENTRY *	pKreftA,
+	KREF_ENTRY *	pKreftB);
 
 FSTATIC RCODE KYAddUniqueKeys(
 	FDB *				pDb);
 
 FSTATIC RCODE _KrefQuickSort(
 	FLMUINT *		puiQsortFlags,
-	KREF_ENTRY_p *	pEntryTbl,
+	KREF_ENTRY * *	pEntryTbl,
 	FLMUINT			uiLowerBounds,
 	FLMUINT			uiUpperBounds);
 
 FSTATIC RCODE _KrefKillDups(
 	FLMUINT *		puiQsortFlags,
-	KREF_ENTRY_p *	pKrefTbl,
+	KREF_ENTRY * *	pKrefTbl,
 	FLMUINT *		puiKrefTotalRV);
 
 /****************************************************************************
@@ -58,7 +58,7 @@ RCODE	KYProcessDupKeys(
 	)
 {
 	RCODE				rc = FERR_OK;
-	KREF_CNTRL_p	pKrefCntrl = &pDb->KrefCntrl;
+	KREF_CNTRL *	pKrefCntrl = &pDb->KrefCntrl;
 	FLMUINT			uiCurRecKrefCnt;
 
 	pKrefCntrl->uiTrnsSeqCntr++;	
@@ -124,7 +124,7 @@ void KYAbortCurrentRecord(
 	if (pDb->pDict->uiIfdCnt)
 	{
 		f_memset( pDb->KrefCntrl.ppCdlTbl, 0,
-					pDb->pDict->uiIfdCnt * sizeof( CDL_p));
+					pDb->pDict->uiIfdCnt * sizeof( CDL *));
 	}
 	if (pDb->pDict->uiIxdCnt)
 	{
@@ -147,7 +147,7 @@ RCODE KYKeysCommit(
 	FLMBOOL		bCommittingTrans)
 {
 	RCODE				rc = FERR_OK;
-	KREF_CNTRL_p	pKrefCntrl = &pDb->KrefCntrl;
+	KREF_CNTRL *	pKrefCntrl = &pDb->KrefCntrl;
 
 	// If KrefCntrl has not been initialized, there is no
 	// work to do.
@@ -156,8 +156,8 @@ RCODE KYKeysCommit(
 	{
 		LFILE *			pLFile = NULL;
 		FLMUINT			uiTotal = pKrefCntrl->uiLastRecEnd;
-		KREF_ENTRY_p	pKref;
-		KREF_ENTRY_p * pKrefTbl = pKrefCntrl->pKrefTbl;
+		KREF_ENTRY *	pKref;
+		KREF_ENTRY * * pKrefTbl = pKrefCntrl->pKrefTbl;
 		FLMUINT			uiKrefNum;
 		FLMUINT			uiLastIxNum;
 
@@ -247,9 +247,9 @@ FSTATIC RCODE KYAddUniqueKeys(
 	FDB *		pDb)
 {
 	RCODE				rc = FERR_OK;
-	KREF_CNTRL_p	pKrefCntrl = &pDb->KrefCntrl;
-	KREF_ENTRY_p *	pKrefTbl = pKrefCntrl->pKrefTbl;
-	KREF_ENTRY_p	pKref;
+	KREF_CNTRL *	pKrefCntrl = &pDb->KrefCntrl;
+	KREF_ENTRY * *	pKrefTbl = pKrefCntrl->pKrefTbl;
+	KREF_ENTRY *	pKref;
 	FLMUINT			uiCurKrefNum, uiPrevKrefNum;
 	FLMUINT			uiTargetCount;
 	FLMUINT			uiLastIxNum;
@@ -361,8 +361,8 @@ Note:		We must compare each item in the structure because UNIX will
 ****************************************************************************/
 FSTATIC FLMINT _KrefCompare(
 	FLMUINT *		puiQsortFlags,
-	KREF_ENTRY_p 	pKrefA,
-	KREF_ENTRY_p	pKrefB )
+	KREF_ENTRY * 	pKrefA,
+	KREF_ENTRY *	pKrefB )
 {
 	FLMUINT			uiMinLen;						/* Minimum key length of A or B */
 	FLMINT			iCompare;
@@ -430,22 +430,25 @@ FSTATIC FLMINT _KrefCompare(
 }
 
 /***************************************************************************
-Desc:		Quick sort an array of KREF_ENTRY_p values.
+Desc:		Quick sort an array of KREF_ENTRY * values.
 Notes:	Optimized the above quicksort algorithm.  This is the same code
 			as the quick sort in FRSET.C which has lots of comments.  We
 			didn't combine the code because a general quick sort would be
 			slower for the KREF and I didn't want to change that much code.
 ****************************************************************************/
-
 FSTATIC RCODE _KrefQuickSort(
 	FLMUINT *		puiQsortFlags,
-	KREF_ENTRY_p *	pEntryTbl,
+	KREF_ENTRY * *	pEntryTbl,
 	FLMUINT			uiLowerBounds,
 	FLMUINT			uiUpperBounds)
 {
-	FLMUINT			uiLBPos, uiUBPos, uiMIDPos;
-	FLMUINT			uiLeftItems, uiRightItems;
-	KREF_ENTRY_p	pCurEntry, pTempKref;
+	FLMUINT			uiLBPos;
+	FLMUINT			uiUBPos;
+	FLMUINT			uiMIDPos;
+	FLMUINT			uiLeftItems;
+	FLMUINT			uiRightItems;
+	KREF_ENTRY *	pCurEntry;
+	KREF_ENTRY *	pTempKref;
 	FLMINT			iCompare;
 
 Iterate_Larger_Half:
@@ -547,7 +550,7 @@ Notes:	This will ONLY work if EVERY kref has been compared to its neighbor.
 ****************************************************************************/
 FSTATIC RCODE _KrefKillDups(
 	FLMUINT *		puiQsortFlags,
-	KREF_ENTRY_p *	pKrefTbl,		/* Portion of KREF table where duplicates
+	KREF_ENTRY * *	pKrefTbl,		/* Portion of KREF table where duplicates
 												are to be eliminated. */
 	FLMUINT *		puiKrefTotalRV)/* Number of elements in portion of KREF table
 												where duplicates are to be eliminated.
@@ -556,7 +559,7 @@ FSTATIC RCODE _KrefKillDups(
 {
 	FLMUINT			uiTotal = (*puiKrefTotalRV);
 	FLMUINT			uiCurKrefNum;
-	KREF_ENTRY_p 	pCurKref;
+	KREF_ENTRY * 	pCurKref;
 	FLMUINT			uiLastUniqueKrefNum = 0;
 
 	for (uiCurKrefNum = 1; uiCurKrefNum < uiTotal; uiCurKrefNum++)

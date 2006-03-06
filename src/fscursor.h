@@ -29,9 +29,10 @@
 // IMPORTANT NOTE: No other include files should follow this one except
 // for fpackoff.h
 
-class F_Base;
-
-typedef struct KeyPosition
+/****************************************************************************
+Desc:
+****************************************************************************/
+typedef struct KEYPOS
 {
 	FLMUINT			uiKeyLen;
 	FLMUINT			uiRecordId;
@@ -53,16 +54,16 @@ typedef struct KeyPosition
 	FLMBYTE			pKey [MAX_KEY_SIZ + 4];	// + 4 is for safety
 } KEYPOS;
 
-typedef struct Key_Set *	KEYSET_p;
-typedef struct Key_Set
+/****************************************************************************
+Desc:
+****************************************************************************/
+typedef struct KEYSET
 {
 	KEYPOS			fromKey;
 	KEYPOS			untilKey;
-	KEYSET_p			pNext;
-	KEYSET_p			pPrev;
-
+	KEYSET *			pNext;
+	KEYSET *			pPrev;
 } KEYSET;
-
 
 /****************************************************************************
 Desc:	File system implementation of a cursor for an index.
@@ -87,8 +88,8 @@ public:
 
 	RCODE	setupKeys(
 		FDB *				pDb,
-		IXD_p				pIxd,
-		QPREDICATE_p * ppQPredicateList,
+		IXD *				pIxd,
+		QPREDICATE * * ppQPredicateList,
 		FLMBOOL *		pbDoRecMatch,
 		FLMBOOL *		pbDoKeyMatch,
 		FLMUINT *		puiLeafBlocksBetween,
@@ -98,7 +99,7 @@ public:
 
 	RCODE	setupKeys(
 		FDB *			pDb,
-		IXD_p       pIxd,
+		IXD *       pIxd,
 		FLMBYTE *	pFromKey,
 		FLMUINT		uiFromKeyLen,
 		FLMUINT		uiFromRecordId,
@@ -315,7 +316,7 @@ private:
 	KEYSET				m_DefaultSet;		// Single minimum FROM/UNTIL key
 };
 
-typedef struct RecPosition
+typedef struct RECPOS
 {
 	FLMUINT			uiRecordId;
 	FLMUINT			uiBlockTransId;
@@ -328,14 +329,13 @@ typedef struct RecPosition
 } RECPOS;
 
 // The record set will always have inclusive FROM/UNTIL values.
-typedef struct Record_Set * RECSET_p;
-typedef struct Record_Set
+
+typedef struct RECSET
 {
 	RECPOS			fromKey;
 	RECPOS			untilKey;
-	RECSET_p			pNext;
-	RECSET_p			pPrev;
-
+	RECSET *			pNext;
+	RECSET *			pPrev;
 } RECSET;
 
 /****************************************************************************

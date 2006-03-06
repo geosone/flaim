@@ -25,11 +25,8 @@
 #include "flaimsys.h"
 
 /**************************************************************************
-Name : GedNodeCopy
-Area : GEDCOM
-Desc : Allocates a new node, value, and tag and copies from the old node
-		 its attached child(ren) and sibling(s).
-Notes:	
+Desc:	Allocates a new node, value, and tag and copies from the old node
+		its attached child(ren) and sibling(s).
 ****************************************************************************/
 NODE * GedNodeCopy(
 	POOL *		pPool,
@@ -121,7 +118,7 @@ NODE * GedNodeCopy(
 	return( newNd);
 }
 
-/*API~*********************************************************************
+/***************************************************************************
 Desc:	Copies the entire contents of a tree.
 ****************************************************************************/
 NODE * GedCopy(
@@ -169,28 +166,20 @@ NODE * GedCopy(
 	return( NULL);
 }
 
-/*API~***********************************************************************
-Name : GedClip
-Area : GEDCOM/LINK
-Desc : Unlinks a node or sub-tree from its parent and/or siblings.
-Notes: Starting at the node specified by self, treeCnt sibling trees will
-		 be unlinked from their parent node (if any), as well as from their
-       previous and next sibling nodes (if any).  If the clipped siblings
-       had a previous sibling and a next sibling, the previous sibling and
-       the next sibling are reconnected as siblings.  If the clipped
-       siblings had a parent, a next sibling, but no previous sibling, the
-       next sibling be reconnected to the parent as the parent's first
-       child.
-*END************************************************************************/
-NODE * 
-		// A pointer to the input node/sub-tree (self) is returned.  This
-      // allows GedClip to be used a a parameter to other functions which
-      // require a NODE * parameter.
-	GedClip(
- 		FLMUINT	treeCnt,
-			// [IN] Number of sibling trees to unlink.
-		NODE *	self)
-   		// [IN] Pointer to the node or sub-tree which is to be unlinked.
+/****************************************************************************
+Desc:		Unlinks a node or sub-tree from its parent and/or siblings.
+Notes:	Starting at the node specified by self, treeCnt sibling trees will
+			be unlinked from their parent node (if any), as well as from their
+			previous and next sibling nodes (if any).  If the clipped siblings
+			had a previous sibling and a next sibling, the previous sibling and
+			the next sibling are reconnected as siblings.  If the clipped
+			siblings had a parent, a next sibling, but no previous sibling, the
+			next sibling be reconnected to the parent as the parent's first
+			child.
+****************************************************************************/
+NODE * GedClip(
+	FLMUINT	treeCnt,
+	NODE *	self)
 {
 	NODE *	next;
 
