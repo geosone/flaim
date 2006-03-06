@@ -596,8 +596,8 @@ RCODE flmLFileIndexBuild(
 		// Don't index now.  The RFL function INDEX_SET will 
 		// generate index keys.
 
-		if( pDb->pFile->FileHdr.uiVersionNum >= FLM_VER_3_02 &&
-			pDb->pFile->FileHdr.uiVersionNum <= FLM_VER_4_51)
+		if( pDb->pFile->FileHdr.uiVersionNum >= FLM_FILE_FORMAT_VER_3_02 &&
+			pDb->pFile->FileHdr.uiVersionNum <= FLM_FILE_FORMAT_VER_4_51)
 		{
 			if( RC_BAD( rc = flmSetIxTrackerInfo( pDb, 
 						pIxd->uiIndexNum, 1, 0, TRANS_ID_OFFLINE, FALSE)))
@@ -825,7 +825,7 @@ RCODE flmIndexSetOfRecords(
 
 	if (!pIxd->uiContainerNum && !uiContainerNum)
 	{
-		flmAssert( pDb->pFile->FileHdr.uiVersionNum >= FLM_VER_4_50);
+		flmAssert( pDb->pFile->FileHdr.uiVersionNum >= FLM_FILE_FORMAT_VER_4_50);
 		bDoAllContainers = TRUE;
 	}
 
@@ -843,7 +843,8 @@ RCODE flmIndexSetOfRecords(
 #ifdef FLM_DEBUG
 			if( !pIxd->uiContainerNum)
 			{
-				flmAssert( pDb->pFile->FileHdr.uiVersionNum >= FLM_VER_4_50);
+				flmAssert( pDb->pFile->FileHdr.uiVersionNum >= 
+							  FLM_FILE_FORMAT_VER_4_50);
 			}
 #endif
 
@@ -1463,7 +1464,7 @@ RCODE flmSetIxTrackerInfo(
 		goto Exit;
 	}
 
-	if( pDb->pFile->FileHdr.uiVersionNum >= FLM_VER_4_51)
+	if( pDb->pFile->FileHdr.uiVersionNum >= FLM_FILE_FORMAT_VER_4_51)
 	{
 		FLMUINT32	ui32IndexSuspended = bSuspended ? 1 : 0;
 		if( RC_BAD( rc = flmModField( pRecord, FLM_STATE_TAG,
@@ -2261,7 +2262,7 @@ FSTATIC RCODE flmFreeIndexBlocks(
 		goto Exit;
 	}
 
-	if( pFile->FileHdr.uiVersionNum <= FLM_VER_4_51)
+	if( pFile->FileHdr.uiVersionNum <= FLM_FILE_FORMAT_VER_4_51)
 	{
 		// Background deletion is not supported.  Must delete
 		// the blocks of the LFILE now.

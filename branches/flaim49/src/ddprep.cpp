@@ -780,7 +780,8 @@ FSTATIC RCODE DDIxParse(
 					 (f_stricmp( "ALL", szTmpBuf) == 0 ||
 					  f_stricmp( "*", szTmpBuf) == 0))
 				{
-					if (pTDict->pDb->pFile->FileHdr.uiVersionNum < FLM_VER_4_50)
+					if (pTDict->pDb->pFile->FileHdr.uiVersionNum < 
+						 FLM_FILE_FORMAT_VER_4_50)
 					{
 						rc = RC_SET( FERR_UNSUPPORTED_FEATURE);
 						goto Exit;
@@ -831,7 +832,8 @@ FSTATIC RCODE DDIxParse(
 				break;
 
 			case	FLM_POSITIONING_TAG:
-				if (pTDict->pDb->pFile->FileHdr.uiVersionNum >= FLM_VER_4_3)
+				if (pTDict->pDb->pFile->FileHdr.uiVersionNum >= 
+					 FLM_FILE_FORMAT_VER_4_3)
 				{
 					pTIxd->uiFlags |= IXD_POSITIONING;
 				}
@@ -1258,7 +1260,8 @@ FSTATIC RCODE DDBuildFldPath(
 
 		if (f_stricmp( szNameBuf, "*") == 0)
 		{
-			if (pTDict->pDb->pFile->FileHdr.uiVersionNum < FLM_VER_4_50)
+			if (pTDict->pDb->pFile->FileHdr.uiVersionNum < 
+				 FLM_FILE_FORMAT_VER_4_50)
 			{
 				rc = RC_SET( FERR_UNSUPPORTED_FEATURE);
 				goto Exit;
@@ -1367,7 +1370,7 @@ FSTATIC RCODE DDEncDefParse(
 
 	// Make sure the version of the database is correct for encryption.
 	
-	if (pTDict->pDb->pFile->FileHdr.uiVersionNum < FLM_VER_4_60)
+	if (pTDict->pDb->pFile->FileHdr.uiVersionNum < FLM_FILE_FORMAT_VER_4_60)
 	{
 		rc = RC_SET( FERR_UNSUPPORTED_FEATURE);
 		goto Exit;

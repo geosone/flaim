@@ -204,7 +204,7 @@ FSTATIC RCODE FSConvertNonLeafTree(
 
 	UW2FBA( BH_OVHD, &pStack->pBlk[ BH_BLK_END]);
 
-	if( uiNewVersion >= FLM_VER_4_0)
+	if( uiNewVersion >= FLM_FILE_FORMAT_VER_4_0)
 	{
 		pStack->pBlk[ BH_TYPE ] = BHT_NON_LEAF_DATA + BHT_ROOT_BLK;
 	}
@@ -235,7 +235,7 @@ FSTATIC RCODE FSConvertNonLeafTree(
 		FSBuildNonLeafDataElement( pOldStack, pElement, 
 			&uiElmLen, pStack->uiElmOvhd, &pKey);
 		
-		if( uiNewVersion <= FLM_VER_3_02)
+		if( uiNewVersion <= FLM_FILE_FORMAT_VER_3_02)
 		{
 			flmAssert( pStack->uiCurElm == pStack->uiBlkEnd);
 			if( pStack != stackBuf)

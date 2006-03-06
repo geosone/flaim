@@ -239,7 +239,7 @@ Exit:
 		if( RC_OK( rc = pDb->pFile->pRfl->logUpdate( 
 				uiContainer, uiDrn, uiAutoTrans, NULL, pRecord)) && 
 			 bLogCompleteIndexSet &&
-			 pDb->pFile->FileHdr.uiVersionNum <= FLM_VER_4_51)
+			 pDb->pFile->FileHdr.uiVersionNum <= FLM_FILE_FORMAT_VER_4_51)
 		{
 
 			// Log the fact that we indexed everything so the redo will also
@@ -719,7 +719,7 @@ Exit:
 		if( RC_OK( rc = pDb->pFile->pRfl->logUpdate( 
 				uiContainer, uiDrn, uiAutoTrans, pOldRecord, pRecord)) && 
 			 bLogCompleteIndexSet &&
-			 pDb->pFile->FileHdr.uiVersionNum <= FLM_VER_4_51)
+			 pDb->pFile->FileHdr.uiVersionNum <= FLM_FILE_FORMAT_VER_4_51)
 		{
 			// Log the fact that we indexed everything so the redo will also
 			// index all data records in the container.

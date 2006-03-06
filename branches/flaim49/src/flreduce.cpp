@@ -310,7 +310,7 @@ Transmission_Error:
 	// and then turn it back off after logging the packet.
 
 	if (!(pDb->uiFlags & FDB_REPLAYING_RFL) &&
-		  pDb->pFile->FileHdr.uiVersionNum >= FLM_VER_4_3)
+		  pDb->pFile->FileHdr.uiVersionNum >= FLM_FILE_FORMAT_VER_4_3)
 	{
 
 		// We would have turned logging OFF above, so we need to

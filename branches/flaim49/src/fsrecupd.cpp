@@ -286,7 +286,7 @@ FSTATIC RCODE FSBldRecElement(
 
 		// Do data sanity checks
 
-		if( pDb->pFile->FileHdr.uiVersionNum < FLM_VER_4_61)
+		if( pDb->pFile->FileHdr.uiVersionNum < FLM_FILE_FORMAT_VER_4_61)
 		{
 			if( uiValueLen > 0x0000FFFF)
 			{

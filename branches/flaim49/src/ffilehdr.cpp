@@ -94,7 +94,7 @@ RCODE flmGetFileHdrInfo(
 	pFileHdrRV->uiAppMinorVer = pPrefixBuf [11];
 	pFileHdrRV->uiDefaultLanguage = pFileHdrBuf [DB_DEFAULT_LANGUAGE];
 	pFileHdrRV->uiVersionNum = uiVersionNum =
-								((FLMUINT16)(pFileHdrBuf [FLM_VER_POS] - ASCII_ZERO) * 100 +
+								((FLMUINT16)(pFileHdrBuf [FLM_FILE_FORMAT_VER_POS] - ASCII_ZERO) * 100 +
 							 	 (FLMUINT16)(pFileHdrBuf [FLM_MINOR_VER_POS] - ASCII_ZERO) * 10 +
 							 	 (FLMUINT16)(pFileHdrBuf [FLM_SMINOR_VER_POS] - ASCII_ZERO));
 
@@ -180,9 +180,10 @@ void flmInitFileHdrInfo(
 
 	// Only allow database to be created with current version number
 
-	pFileHdr->uiVersionNum = FLM_CURRENT_VERSION_NUM;
-	f_memcpy( &pFileHdrBuf [FLM_VER_POS], (FLMBYTE *)FLM_CURRENT_VER_STR,
-					FLM_VER_LEN);
+	pFileHdr->uiVersionNum = FLM_CUR_FILE_FORMAT_VER_NUM;
+	f_memcpy( &pFileHdrBuf [FLM_FILE_FORMAT_VER_POS], 
+					(FLMBYTE *)FLM_CUR_FILE_FORMAT_VER_STR,
+					FLM_FILE_FORMAT_VER_LEN);
 
 	// Round block size up to nearest legal block size.
 
@@ -200,7 +201,7 @@ void flmInitFileHdrInfo(
 	pFileHdr->uiFirstLFHBlkAddr = FSBlkAddress(1, 0);
 	UD2FBA( pFileHdr->uiFirstLFHBlkAddr, &pFileHdrBuf [DB_1ST_LFH_ADDR]);
 
-	if (pFileHdr->uiVersionNum < FLM_VER_4_3)
+	if (pFileHdr->uiVersionNum < FLM_FILE_FORMAT_VER_4_3)
 	{
 
 		// Things to maintain for backward compatibility - pre 4.3.
@@ -349,7 +350,8 @@ RCODE flmWriteVersionNum(
 	szVersionStr[ 4] = 0;
 
 	if (RC_OK( rc = pSFileHdl->WriteHeader(
-					FLAIM_HEADER_START + FLM_VER_POS, FLM_VER_LEN,
+					FLAIM_HEADER_START + FLM_FILE_FORMAT_VER_POS, 
+					FLM_FILE_FORMAT_VER_LEN,
 					szVersionStr, &uiWriteBytes)))
 	{
 		if (RC_BAD( rc = pSFileHdl->Flush()))

@@ -52,7 +52,7 @@ void flmGetCreateOpts(
 	else
 	{
 		pCreateOpts->uiBlockSize = DEFAULT_BLKSIZ;
-		pCreateOpts->uiVersionNum = FLM_CURRENT_VERSION_NUM;
+		pCreateOpts->uiVersionNum = FLM_CUR_FILE_FORMAT_VER_NUM;
 		pCreateOpts->uiDefaultLanguage = DEFAULT_LANG;
 
 		// uiAppMajorVer and uiAppMinorVer are already zero.
@@ -336,7 +336,7 @@ FLMEXP RCODE FLMAPI FlmDbRebuild(
 
 		uiDbVersion = (FLMUINT)((rc != FERR_NOT_FLAIM)
 										? pHdrInfo->FileHdr.uiVersionNum
-										: FLM_CURRENT_VERSION_NUM);
+										: FLM_CUR_FILE_FORMAT_VER_NUM);
 		pSFileHdl->SetDbVersion( uiDbVersion);
 		pRebuildState->uiMaxFileSize = flmGetMaxFileSize( uiDbVersion,
 													pRebuildState->pLogHdr);

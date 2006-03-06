@@ -584,7 +584,7 @@ struct UCUR;
 	#define MAX_LOG_FILE_NUM_VER43	0xFFF
 
 	#define MAX_DATA_BLOCK_FILE_NUMBER(uiDbVersion) \
-					(FLMUINT)(((uiDbVersion) >= FLM_VER_4_3) \
+					(FLMUINT)(((uiDbVersion) >= FLM_FILE_FORMAT_VER_4_3) \
 								 ? MAX_DATA_FILE_NUM_VER43 \
 								 : MAX_DATA_FILE_NUM_VER40)
 
@@ -592,7 +592,7 @@ struct UCUR;
 					(FLMUINT)(MAX_DATA_BLOCK_FILE_NUMBER(uiDbVersion) + 1)
 
 	#define MAX_LOG_BLOCK_FILE_NUMBER(uiDbVersion) \
-					(FLMUINT)(((uiDbVersion) >= FLM_VER_4_3) \
+					(FLMUINT)(((uiDbVersion) >= FLM_FILE_FORMAT_VER_4_3) \
 								 ? MAX_LOG_FILE_NUM_VER43 \
 								 : MAX_LOG_FILE_NUM_VER40)
 
@@ -616,7 +616,7 @@ struct UCUR;
 	{
 		FLMUINT		uiMaxSize = MAX_FILE_SIZE_VER40;
 		
-		if( uiDbVersion >= FLM_VER_4_3)
+		if( uiDbVersion >= FLM_FILE_FORMAT_VER_4_3)
 		{
 			uiMaxSize = (FB2UW( &(pucLogHdr[ LOG_MAX_FILE_SIZE]))) << 16;
 			if( !uiMaxSize)
@@ -1429,8 +1429,8 @@ struct UCUR;
 	
 	/****************************************************************************
 	Desc: This routine gets the number of bytes to encrypt for a block.
-			For encrypted blocks (new to FLM_VER_4_6), it must return the
-			block end rounded up to the next 16 byte boundary.	 For
+			For encrypted blocks (new to FLM_FILE_FORMAT_VER_4_6), it must return
+			the block end rounded up to the next 16 byte boundary.  For
 			non-encrypted blocks, in order to maintain compatibility on
 			a database that has been converted, we must return the block
 			end rounded up to the next 4 byte boundary.	This is because

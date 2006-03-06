@@ -115,7 +115,7 @@ FLMEXP RCODE FLMAPI FlmIndexStatus(
 		// Sanity check
 
 #ifdef FLM_DEBUG
-		if( pDb->pFile->FileHdr.uiVersionNum >= FLM_VER_4_51 &&
+		if( pDb->pFile->FileHdr.uiVersionNum >= FLM_FILE_FORMAT_VER_4_51 &&
 			bSuspended != bTrackerIxSuspended)
 		{
 			flmAssert( 0);

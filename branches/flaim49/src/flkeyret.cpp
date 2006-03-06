@@ -480,7 +480,7 @@ FSTATIC RCODE	flmKeyRetrieveCS(
 		goto Exit;
 	}
 
-	if( pCSContext->uiServerFlaimVer >= FLM_VER_4_50)
+	if( pCSContext->uiServerFlaimVer >= FLM_FILE_FORMAT_VER_4_50)
 	{
 		if( uiIndex)
 		{

@@ -752,9 +752,10 @@ FLMUINT lgHdrCheckSum(
 	FLMUINT	uiTempSum2;
 	FLMUINT	uiBytesToChecksum;
 
-	uiBytesToChecksum = (FB2UW( &pucLogHdr [LOG_FLAIM_VERSION]) < FLM_VER_4_3)
-								? LOG_HEADER_SIZE_VER40
-								: LOG_HEADER_SIZE;
+	uiBytesToChecksum = (FB2UW( &pucLogHdr [LOG_FLAIM_VERSION]) < 
+									FLM_FILE_FORMAT_VER_4_3)
+										? LOG_HEADER_SIZE_VER40
+										: LOG_HEADER_SIZE;
 
 	// If we are comparing, but there is no current checksum, return
 	// zero to indicate success.  The next time the checksum is

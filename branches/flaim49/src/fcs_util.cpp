@@ -141,7 +141,7 @@ void fcsInitCreateOpts(
 	pCreateOptsRV->bKeepRflFiles = DEFAULT_KEEP_RFL_FILES_FLAG;
 	pCreateOptsRV->bLogAbortedTransToRfl = DEFAULT_LOG_ABORTED_TRANS_FLAG;
 	pCreateOptsRV->uiDefaultLanguage = DEFAULT_LANG;
-	pCreateOptsRV->uiVersionNum = FLM_CURRENT_VERSION_NUM;
+	pCreateOptsRV->uiVersionNum = FLM_CUR_FILE_FORMAT_VER_NUM;
 }
 
 /****************************************************************************

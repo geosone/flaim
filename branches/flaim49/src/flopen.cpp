@@ -1445,7 +1445,7 @@ FSTATIC RCODE flmReadFileHdr(
 	// Create the database wrapping key from the data in Log Header
 
 #ifdef FLM_USE_NICI
-	if( pFile->FileHdr.uiVersionNum >= FLM_VER_4_60)
+	if( pFile->FileHdr.uiVersionNum >= FLM_FILE_FORMAT_VER_4_60)
 	{
 		FLMUINT32	ui32KeyLen;
 	
@@ -2174,7 +2174,7 @@ Retry_Connect:
 	pCSContext->uiSessionId = Wire.getSessionId();
 	pCSContext->uiSessionCookie = Wire.getSessionCookie();
 	pCSContext->uiServerFlaimVer = Wire.getFlaimVersion();
-	if( pCSContext->uiServerFlaimVer < FLM_VER_4_3)
+	if( pCSContext->uiServerFlaimVer < FLM_FILE_FORMAT_VER_4_3)
 	{
 		// Versions of FLAIM prior to 4.3 did not send the server's code
 		// version.  However, they all supported GEDCOM as a wire format.
@@ -2312,7 +2312,7 @@ RCODE flmDbMonitor(
 			break;
 		}
 		
-		if (pFile->FileHdr.uiVersionNum >= FLM_VER_4_61)
+		if (pFile->FileHdr.uiVersionNum >= FLM_FILE_FORMAT_VER_4_61)
 		{
 			FLMUINT64			ui64RflDiskUsage;
 			FLMUINT64			ui64RflDiskThreshold;
