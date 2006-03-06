@@ -201,7 +201,7 @@ FLMEXP RCODE FLMAPI FlmDbGetUnknownStreamObj(
 
 	// This is only valid on 4.3 and greater.
 
-	if (pDb->pFile->FileHdr.uiVersionNum < FLM_VER_4_3)
+	if (pDb->pFile->FileHdr.uiVersionNum < FLM_FILE_FORMAT_VER_4_3)
 	{
 		goto Exit;	// Will return FERR_OK and a NULL pointer.
 	}

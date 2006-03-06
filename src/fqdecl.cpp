@@ -102,7 +102,7 @@ FSTATIC RCODE flmSendCursorFrom(
 
 	// Add bOkToReturnKeys flag
 
-	if( pCSContext->uiServerFlaimVer >= FLM_VER_4_3)
+	if( pCSContext->uiServerFlaimVer >= FLM_FILE_FORMAT_VER_4_3)
 	{
 		uiTmp = (FLMUINT)(pCursor->bOkToReturnKeys ? 1 : 0);
 		if (RC_BAD( rc = gedAddField( pPool, pChildNode,

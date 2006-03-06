@@ -293,7 +293,7 @@ Transmission_Error:
 
 			// This operation is not legal for pre 4.3 databases.
 
-			if (pFile->FileHdr.uiVersionNum < FLM_VER_4_3)
+			if (pFile->FileHdr.uiVersionNum < FLM_FILE_FORMAT_VER_4_3)
 			{
 				rc = RC_SET( FERR_ILLEGAL_OP);
 				goto Exit;
@@ -393,7 +393,7 @@ Transmission_Error:
 
 			// This operation is not legal for pre 4.3 databases.
 
-			if (pFile->FileHdr.uiVersionNum < FLM_VER_4_3)
+			if (pFile->FileHdr.uiVersionNum < FLM_FILE_FORMAT_VER_4_3)
 			{
 				rc = RC_SET( FERR_ILLEGAL_OP);
 				goto Exit;
@@ -484,7 +484,7 @@ Transmission_Error:
 
 			// Make sure the limits are valid.
 
-			if (pFile->FileHdr.uiVersionNum >= FLM_VER_4_3)
+			if (pFile->FileHdr.uiVersionNum >= FLM_FILE_FORMAT_VER_4_3)
 			{
 
 				// Maximum must be enough to hold at least one packet plus
@@ -522,7 +522,7 @@ Transmission_Error:
 
 			UD2FBA( (FLMUINT32)uiMinRflSize,
 				&pFile->ucUncommittedLogHdr [LOG_RFL_MIN_FILE_SIZE]);
-			if (pFile->FileHdr.uiVersionNum >= FLM_VER_4_3)
+			if (pFile->FileHdr.uiVersionNum >= FLM_FILE_FORMAT_VER_4_3)
 			{
 				UD2FBA( (FLMUINT32)uiMaxRflSize,
 					&pFile->ucUncommittedLogHdr [LOG_RFL_MAX_FILE_SIZE]);
@@ -539,7 +539,7 @@ Transmission_Error:
 		{
 			// This operation is not legal for pre 4.3 databases.
 
-			if (pFile->FileHdr.uiVersionNum < FLM_VER_4_3)
+			if (pFile->FileHdr.uiVersionNum < FLM_FILE_FORMAT_VER_4_3)
 			{
 				rc = RC_SET( FERR_ILLEGAL_OP);
 				goto Exit;
@@ -602,7 +602,7 @@ Transmission_Error:
 
 			// These operations are not legal for pre 4.3 databases.
 
-			if (pFile->FileHdr.uiVersionNum < FLM_VER_4_3)
+			if (pFile->FileHdr.uiVersionNum < FLM_FILE_FORMAT_VER_4_3)
 			{
 				rc = RC_SET( FERR_ILLEGAL_OP);
 				goto Exit;
@@ -895,7 +895,7 @@ FSTATIC RCODE flmDbGetSizes(
 		char *	pszDbFileName = pFile->pszDbPath;
 
 		*pui64RflFileSize = 0;
-		if (uiDbVersion < FLM_VER_4_3)
+		if (uiDbVersion < FLM_FILE_FORMAT_VER_4_3)
 		{
 
 			// For pre-4.3 versions, only need to get the size for one
@@ -1368,7 +1368,7 @@ Transmission_Error:
 	
 		case FDB_GET_RFL_DIR:
 		{
-			if (pDb->pFile->FileHdr.uiVersionNum < FLM_VER_4_3)
+			if (pDb->pFile->FileHdr.uiVersionNum < FLM_FILE_FORMAT_VER_4_3)
 			{
 				rc = RC_SET( FERR_NOT_IMPLEMENTED);
 				goto Exit;
@@ -1431,7 +1431,7 @@ Transmission_Error:
 			}
 			if (pvValue2)
 			{
-				if (pDb->pFile->FileHdr.uiVersionNum >= FLM_VER_4_3)
+				if (pDb->pFile->FileHdr.uiVersionNum >= FLM_FILE_FORMAT_VER_4_3)
 				{
 					*((FLMUINT *)pvValue2) = (FLMUINT)FB2UD(
 						&pDb->pFile->ucUncommittedLogHdr [LOG_RFL_MAX_FILE_SIZE]);
@@ -1456,7 +1456,7 @@ Transmission_Error:
 	
 		case FDB_GET_LAST_BACKUP_TRANS_ID:
 		{
-			if (pDb->pFile->FileHdr.uiVersionNum < FLM_VER_4_3)
+			if (pDb->pFile->FileHdr.uiVersionNum < FLM_FILE_FORMAT_VER_4_3)
 			{
 				rc = RC_SET( FERR_NOT_IMPLEMENTED);
 				goto Exit;
@@ -1468,7 +1468,7 @@ Transmission_Error:
 	
 		case FDB_GET_BLOCKS_CHANGED_SINCE_BACKUP:
 		{
-			if (pDb->pFile->FileHdr.uiVersionNum < FLM_VER_4_3)
+			if (pDb->pFile->FileHdr.uiVersionNum < FLM_FILE_FORMAT_VER_4_3)
 			{
 				rc = RC_SET( FERR_NOT_IMPLEMENTED);
 				goto Exit;
@@ -1480,7 +1480,7 @@ Transmission_Error:
 	
 		case FDB_GET_SERIAL_NUMBER:
 		{
-			if (pDb->pFile->FileHdr.uiVersionNum < FLM_VER_4_3)
+			if (pDb->pFile->FileHdr.uiVersionNum < FLM_FILE_FORMAT_VER_4_3)
 			{
 				rc = RC_SET( FERR_NOT_IMPLEMENTED);
 				goto Exit;
@@ -1495,7 +1495,7 @@ Transmission_Error:
 	
 		case FDB_GET_AUTO_TURN_OFF_KEEP_RFL_FLAG:
 		{
-			if (pDb->pFile->FileHdr.uiVersionNum < FLM_VER_4_3)
+			if (pDb->pFile->FileHdr.uiVersionNum < FLM_FILE_FORMAT_VER_4_3)
 			{
 				*((FLMBOOL *)pvValue1) = FALSE;
 			}
@@ -1511,7 +1511,7 @@ Transmission_Error:
 	
 		case FDB_GET_KEEP_ABORTED_TRANS_IN_RFL_FLAG:
 		{
-			if (pDb->pFile->FileHdr.uiVersionNum < FLM_VER_4_3)
+			if (pDb->pFile->FileHdr.uiVersionNum < FLM_FILE_FORMAT_VER_4_3)
 			{
 				*((FLMBOOL *)pvValue1) = FALSE;
 			}
@@ -1546,7 +1546,7 @@ Transmission_Error:
 	
 		case FDB_GET_NEXT_INC_BACKUP_SEQ_NUM:
 		{
-			if (pDb->pFile->FileHdr.uiVersionNum < FLM_VER_4_3)
+			if (pDb->pFile->FileHdr.uiVersionNum < FLM_FILE_FORMAT_VER_4_3)
 			{
 				rc = RC_SET( FERR_NOT_IMPLEMENTED);
 				goto Exit;
@@ -1708,7 +1708,7 @@ RCODE flmSetRflSizeThreshold(
 		goto Exit;
 	}
 			
-	if (pFile->FileHdr.uiVersionNum < FLM_VER_4_61)
+	if (pFile->FileHdr.uiVersionNum < FLM_FILE_FORMAT_VER_4_61)
 	{
 		rc = RC_SET( FERR_ILLEGAL_OP);
 		goto Exit;

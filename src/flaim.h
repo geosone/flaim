@@ -774,20 +774,19 @@
 	#define DEFAULT_BLKSIZ					4096
 
 		FLMUINT		uiVersionNum;					///< Database version number.
-	#define FLM_VER_3_0						301
-	#define FLM_VER_3_02						302
-	#define FLM_VER_3_10						310
-	#define FLM_VER_4_0						400
-	#define FLM_VER_4_3						430
-	#define FLM_VER_4_31						431	// Added last committed trans ID to the log header
-	#define FLM_VER_4_50						450	// Added ability to create cross-container indexes.
-	#define FLM_VER_4_51						451	// Added ability to permanently suspend indexes
-	#define FLM_VER_4_52						452	// Added ability to delete indexes in the background
-	#define FLM_VER_4_60						460	// Added support for encrypted attributes
-	#define FLM_VER_4_61						461	// Added support for RFL disk usage limits, large field values,
-															// and async I/O on Linux and Solaris
-	#define FLM_CURRENT_VERSION_NUM		FLM_VER_4_61
-	#define FLM_CURRENT_VER_STR			"4.61"
+	#define FLM_FILE_FORMAT_VER_3_0					301
+	#define FLM_FILE_FORMAT_VER_3_02					302
+	#define FLM_FILE_FORMAT_VER_3_10					310
+	#define FLM_FILE_FORMAT_VER_4_0					400
+	#define FLM_FILE_FORMAT_VER_4_3					430
+	#define FLM_FILE_FORMAT_VER_4_31					431	// Added last committed trans ID to the log header
+	#define FLM_FILE_FORMAT_VER_4_50					450	// Added ability to create cross-container indexes.
+	#define FLM_FILE_FORMAT_VER_4_51					451	// Added ability to permanently suspend indexes
+	#define FLM_FILE_FORMAT_VER_4_52					452	// Added ability to delete indexes in the background
+	#define FLM_FILE_FORMAT_VER_4_60					460	// Added support for encrypted attributes
+	#define FLM_FILE_FORMAT_VER_4_61					461	// Added support for RFL disk usage limits, large field values, and async I/O on Linux and Solaris
+	#define FLM_CUR_FILE_FORMAT_VER_NUM				FLM_FILE_FORMAT_VER_4_61
+	#define FLM_CUR_FILE_FORMAT_VER_STR				"4.61"
 
 		FLMUINT		uiMinRflFileSize;				///< Minimum bytes per RFL file.
 	#define DEFAULT_MIN_RFL_FILE_SIZE	((FLMUINT)100 * (FLMUINT)1024 * (FLMUINT)1024)

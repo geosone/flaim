@@ -206,7 +206,7 @@ RCODE flmCreateNewFile(
 	else
 	{
 		pDb->pSFileHdl->SetBlockSize( DEFAULT_BLKSIZ);
-		pDb->pSFileHdl->SetDbVersion( FLM_CURRENT_VERSION_NUM);
+		pDb->pSFileHdl->SetDbVersion( FLM_CUR_FILE_FORMAT_VER_NUM);
 	}
 
 #ifdef FLM_USE_NICI
@@ -214,7 +214,7 @@ RCODE flmCreateNewFile(
 	// Create a new F_CCS object for the database wrapping key if the new
 	// database version is at least ver 4.60
 	
-	if (!pCreateOpts || pCreateOpts->uiVersionNum >= FLM_VER_4_60)
+	if (!pCreateOpts || pCreateOpts->uiVersionNum >= FLM_FILE_FORMAT_VER_4_60)
 	{
 		if ((pFile->pDbWrappingKey = f_new F_CCS) == NULL)
 		{
@@ -231,8 +231,8 @@ RCODE flmCreateNewFile(
 		// Only generate a key when this is not part of a rebuild operation or
 		// the original database version was less than 4.60
 		
-		if (!pRebuildState ||
-			 pRebuildState->pHdrInfo->FileHdr.uiVersionNum < FLM_VER_4_60)
+		if (!pRebuildState || pRebuildState->pHdrInfo->FileHdr.uiVersionNum <
+										FLM_FILE_FORMAT_VER_4_60)
 		{
 			if (RC_BAD( rc = pFile->pDbWrappingKey->generateWrappingKey()))
 			{
@@ -513,7 +513,7 @@ FSTATIC RCODE flmInitFileHdrs(
 	// Reserve only room for LFH in 4.3 and above.
 
 	uiLogicalEOF = (FLMUINT)((pFile->FileHdr.uiVersionNum >=
-									  FLM_VER_4_3)
+									  FLM_FILE_FORMAT_VER_4_3)
 									 ? (FLMUINT)pFile->FileHdr.uiFirstLFHBlkAddr +
 												uiBlkSize
 									 : (FLMUINT)pFile->FileHdr.uiFirstLFHBlkAddr +
@@ -558,7 +558,7 @@ FSTATIC RCODE flmInitFileHdrs(
 										  ? pCreateOpts->uiMinRflFileSize
 										  : (FLMUINT)DEFAULT_MIN_RFL_FILE_SIZE);
 
-	if( pDb->pFile->FileHdr.uiVersionNum >= FLM_VER_4_3)
+	if( pDb->pFile->FileHdr.uiVersionNum >= FLM_FILE_FORMAT_VER_4_3)
 	{
 		FLMUINT16	ui16Tmp;
 
@@ -722,7 +722,7 @@ FSTATIC RCODE flmInitFileHdrs(
 
 	// Initialize and output the first pcode block.
 
-	if (pFile->FileHdr.uiVersionNum < FLM_VER_4_3)
+	if (pFile->FileHdr.uiVersionNum < FLM_FILE_FORMAT_VER_4_3)
 	{
 		FLMUINT	uiPcodeAddr;
 

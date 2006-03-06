@@ -212,7 +212,7 @@ FLMEXP RCODE FLMAPI FlmDbBackupBegin(
 		goto Exit;
 	}
 
-	if( uiDbVersion < FLM_VER_4_3 &&
+	if( uiDbVersion < FLM_FILE_FORMAT_VER_4_3 &&
 		eBackupType != FLM_FULL_BACKUP)
 	{
 		rc = RC_SET( FERR_NOT_IMPLEMENTED);
@@ -292,7 +292,7 @@ FLMEXP RCODE FLMAPI FlmDbBackupBegin(
 	// set of incremental backup files from being applied
 	// to a database.
 
-	if( uiDbVersion >= FLM_VER_4_3)
+	if( uiDbVersion >= FLM_FILE_FORMAT_VER_4_3)
 	{
 		if( !pFBak->bCSMode)
 		{
@@ -322,7 +322,7 @@ FLMEXP RCODE FLMAPI FlmDbBackupBegin(
 
 	// Get version 4.3+ values from the header
 
-	if( uiDbVersion >= FLM_VER_4_3)
+	if( uiDbVersion >= FLM_FILE_FORMAT_VER_4_3)
 	{
 		// Determine the transaction ID of the last backup
 
@@ -646,7 +646,7 @@ FLMEXP RCODE FLMAPI FlmDbBackup(
 
 	// Fix up the log header
 
-	if( !pLogHdr[ LOG_KEEP_RFL_FILES] || pFBak->uiDbVersion < FLM_VER_4_3)
+	if( !pLogHdr[ LOG_KEEP_RFL_FILES] || pFBak->uiDbVersion < FLM_FILE_FORMAT_VER_4_3)
 	{
 		pLogHdr[ LOG_KEEP_RFL_FILES] = 0;
 
@@ -661,7 +661,7 @@ FLMEXP RCODE FLMAPI FlmDbBackup(
 		// Create new serial numbers for the RFL.  We don't want anyone
 		// to be able to branch into a "no-keep" RFL sequence.
 
-		if( pFBak->uiDbVersion >= FLM_VER_4_3)
+		if( pFBak->uiDbVersion >= FLM_FILE_FORMAT_VER_4_3)
 		{
 			if (RC_BAD( rc = f_createSerialNumber(
 								&pLogHdr [LOG_LAST_TRANS_RFL_SERIAL_NUM])))
@@ -688,7 +688,7 @@ FLMEXP RCODE FLMAPI FlmDbBackup(
 	// Shroud the database key (stored in the log header) in the password
 	// so we can restore this backup to a different server
 
-	if ( pDb->pFile->FileHdr.uiVersionNum >= FLM_VER_4_60 &&
+	if ( pDb->pFile->FileHdr.uiVersionNum >= FLM_FILE_FORMAT_VER_4_60 &&
 		  pszPassword && *pszPassword &&
 		  FB2UW( &pLogHdr[ LOG_DATABASE_KEY_LEN]) > 0)
 	{
@@ -1008,7 +1008,7 @@ FLMEXP RCODE FLMAPI FlmDbBackupEnd(
 	// Update log header fields
 
 	if( pFBak->bCompletedBackup && 
-		pFBak->uiDbVersion >= FLM_VER_4_3)
+		pFBak->uiDbVersion >= FLM_FILE_FORMAT_VER_4_3)
 	{
 		// Start an update transaction.
 
@@ -1352,7 +1352,7 @@ FLMEXP RCODE FLMAPI FlmDbRestore(
 	// Apply any available incremental backups.  uiNextIncNum will be 0 if
 	// the database version does not support incremental backups.
 
-	if( uiNextIncNum && uiDbVersion >= FLM_VER_4_3)
+	if( uiNextIncNum && uiDbVersion >= FLM_FILE_FORMAT_VER_4_3)
 	{
 		FLMUINT		uiCurrentIncNum;
 
@@ -1828,7 +1828,7 @@ FSTATIC RCODE flmRestoreFile(
 	// create the F_CCS object when it initializes the FFILE.)
 
 	if( pszPassword && *pszPassword &&
-		  FB2UD( &pLogHdr[ LOG_FLAIM_VERSION]) >= FLM_VER_4_60 &&
+		  FB2UD( &pLogHdr[ LOG_FLAIM_VERSION]) >= FLM_FILE_FORMAT_VER_4_60 &&
 		  FB2UW( &pLogHdr[ LOG_DATABASE_KEY_LEN]) > 0 )
 	{
 		FLMBYTE *	pucTmpBuf = NULL;
@@ -1986,7 +1986,7 @@ FSTATIC RCODE flmRestoreFile(
 	// so, the log header will contain the correct serial number for a
 	// subsequent incremental backup that may have been made.
 
-	if( uiDbVersion >= FLM_VER_4_3)
+	if( uiDbVersion >= FLM_FILE_FORMAT_VER_4_3)
 	{
 		f_memcpy( &pLogHdr[ LOG_INC_BACKUP_SERIAL_NUM],
 			ucNextIncSerialNum, F_SERIAL_NUM_SIZE);

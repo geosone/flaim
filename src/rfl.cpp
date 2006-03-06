@@ -175,7 +175,7 @@ void rflGetBaseFileName(
 	FLMUINT		uiDigit;
 	char *		pszTmp = pszBaseNameOut;
 
-	if (uiDbVersion < FLM_VER_4_3)
+	if (uiDbVersion < FLM_FILE_FORMAT_VER_4_3)
 	{
 
 		// Output the database name prefix (up to three characters).
@@ -385,7 +385,7 @@ RCODE rflGetDirAndPrefix(
 
 	flmGetDbBasePath( pszDbPrefixOut, szBaseName, NULL);
 
-	if (uiDbVersionNum >= FLM_VER_4_3)
+	if (uiDbVersionNum >= FLM_FILE_FORMAT_VER_4_3)
 	{
 
 		// Determine the RFL directory. If one was specified, it is
@@ -436,7 +436,7 @@ RCODE F_Rfl::setRflDir(
 
 	flmAssert( m_pFile->FileHdr.uiVersionNum);
 
-	if (m_pFile->FileHdr.uiVersionNum < FLM_VER_4_3)
+	if (m_pFile->FileHdr.uiVersionNum < FLM_FILE_FORMAT_VER_4_3)
 	{
 
 		// Don't allow RFL directory to be specified for versions less than
@@ -447,7 +447,7 @@ RCODE F_Rfl::setRflDir(
 	}
 
 	m_bCreateRflDir =
-		(m_pFile->FileHdr.uiVersionNum >= FLM_VER_4_3)
+		(m_pFile->FileHdr.uiVersionNum >= FLM_FILE_FORMAT_VER_4_3)
 		? TRUE
 		: FALSE;
 	return( rflGetDirAndPrefix(
@@ -529,7 +529,7 @@ FLMBOOL rflGetFileNum(
 	pszTmp = &szBaseName[0];
 	*puiFileNum = 0;
 	uiCharCnt = 0;
-	if (uiDbVersion >= FLM_VER_4_3)
+	if (uiDbVersion >= FLM_FILE_FORMAT_VER_4_3)
 	{
 
 		// Name up to the period should be a hex number
@@ -844,7 +844,7 @@ RCODE F_Rfl::writeHeader(
 	UD2FBA( (FLMUINT32) uiFileNum, &ucBuf[RFL_FILE_NUMBER_POS]);
 	UD2FBA( (FLMUINT32) uiEof, &ucBuf[RFL_EOF_POS]);
 
-	if (m_pFile->FileHdr.uiVersionNum >= FLM_VER_4_3)
+	if (m_pFile->FileHdr.uiVersionNum >= FLM_FILE_FORMAT_VER_4_3)
 	{
 		f_memcpy( &ucBuf[RFL_DB_SERIAL_NUM_POS],
 					&m_pFile->ucLastCommittedLogHdr[LOG_DB_SERIAL_NUM],
@@ -923,7 +923,7 @@ RCODE F_Rfl::verifyHeader(
 		goto Exit;
 	}
 
-	if (m_pFile->FileHdr.uiVersionNum >= FLM_VER_4_3)
+	if (m_pFile->FileHdr.uiVersionNum >= FLM_FILE_FORMAT_VER_4_3)
 	{
 
 		// Verify the database serial number
@@ -2203,7 +2203,7 @@ RCODE F_Rfl::finishCurrFile(
 
 	// If DB version is less than 4.3 we cannot do this.
 
-	if (m_pFile->FileHdr.uiVersionNum < FLM_VER_4_3)
+	if (m_pFile->FileHdr.uiVersionNum < FLM_FILE_FORMAT_VER_4_3)
 	{
 		goto Exit;		// Will return FERR_OK
 	}
@@ -2651,7 +2651,7 @@ RCODE F_Rfl::setupTransaction(void)
 
 	// These can only be changed when starting a transaction.
 
-	if (m_pFile->FileHdr.uiVersionNum >= FLM_VER_4_3)
+	if (m_pFile->FileHdr.uiVersionNum >= FLM_FILE_FORMAT_VER_4_3)
 	{
 		m_bKeepRflFiles = m_pFile->ucLastCommittedLogHdr[LOG_KEEP_RFL_FILES] 
 									? TRUE 
@@ -2755,7 +2755,7 @@ RCODE F_Rfl::logBeginTransaction(
 		goto Exit;
 	}
 
-	uiPacketBodyLen = uiDbVersion >= FLM_VER_4_31 ? 12 : 8;
+	uiPacketBodyLen = uiDbVersion >= FLM_FILE_FORMAT_VER_4_31 ? 12 : 8;
 
 	// Make sure we have space in the RFL buffer for a complete packet.
 
@@ -2788,7 +2788,7 @@ RCODE F_Rfl::logBeginTransaction(
 	// RFL_TIME_LOGGED_FLAG bit in the packet type. Pre-4.3 code should be
 	// compatible.
 
-	if (uiDbVersion >= FLM_VER_4_31)
+	if (uiDbVersion >= FLM_FILE_FORMAT_VER_4_31)
 	{
 		FLMUINT	uiLastLoggedCommitID;
 
@@ -3148,7 +3148,7 @@ RCODE F_Rfl::logIndexSuspendOrResume(
 	// This call is new with 4.51 databases - not supported in older
 	// versions, so don't log it.
 
-	if (m_pFile->FileHdr.uiVersionNum < FLM_VER_4_51)
+	if (m_pFile->FileHdr.uiVersionNum < FLM_FILE_FORMAT_VER_4_51)
 	{
 		goto Exit;
 	}
@@ -3224,7 +3224,7 @@ RCODE F_Rfl::logSizeEventConfig(
 	// Don't log the operation if it isn't supported by the current database
 	// version
 
-	if (m_pFile->FileHdr.uiVersionNum < FLM_VER_4_61)
+	if (m_pFile->FileHdr.uiVersionNum < FLM_FILE_FORMAT_VER_4_61)
 	{
 		goto Exit;
 	}
@@ -3573,7 +3573,7 @@ FSTATIC void RflChangeCallback(
 		{
 			// Ignore these for versions of the database >= 4.60
 
-			if (pRflChangeData->uiVersionNum >= FLM_VER_4_60)
+			if (pRflChangeData->uiVersionNum >= FLM_FILE_FORMAT_VER_4_60)
 			{
 				goto Exit;
 			}
@@ -3586,7 +3586,7 @@ FSTATIC void RflChangeCallback(
 		{
 			// Ignore these for versions of the database < 4.60
 
-			if (pRflChangeData->uiVersionNum < FLM_VER_4_60)
+			if (pRflChangeData->uiVersionNum < FLM_FILE_FORMAT_VER_4_60)
 			{
 				goto Exit;
 			}
@@ -3946,7 +3946,7 @@ RCODE F_Rfl::logRecord(
 		}
 	}
 
-	if (m_pFile->FileHdr.uiVersionNum < FLM_VER_4_60)
+	if (m_pFile->FileHdr.uiVersionNum < FLM_FILE_FORMAT_VER_4_60)
 	{
 		uiPacketType = RFL_DATA_RECORD_PACKET;
 	}
@@ -4095,7 +4095,7 @@ RCODE F_Rfl::logUpdate(
 
 	if (pOldRecord && pNewRecord)
 	{
-		if (m_pFile->FileHdr.uiVersionNum >= FLM_VER_4_60)
+		if (m_pFile->FileHdr.uiVersionNum >= FLM_FILE_FORMAT_VER_4_60)
 		{
 			uiPacketType = RFL_MODIFY_RECORD_PACKET_VER_2;
 		}
@@ -4106,7 +4106,7 @@ RCODE F_Rfl::logUpdate(
 	}
 	else if (pNewRecord)
 	{
-		if (m_pFile->FileHdr.uiVersionNum >= FLM_VER_4_60)
+		if (m_pFile->FileHdr.uiVersionNum >= FLM_FILE_FORMAT_VER_4_60)
 		{
 			uiPacketType = RFL_ADD_RECORD_PACKET_VER_2;
 		}
@@ -4117,7 +4117,7 @@ RCODE F_Rfl::logUpdate(
 	}
 	else
 	{
-		if (m_pFile->FileHdr.uiVersionNum >= FLM_VER_4_60)
+		if (m_pFile->FileHdr.uiVersionNum >= FLM_FILE_FORMAT_VER_4_60)
 		{
 			uiPacketType = RFL_DELETE_RECORD_PACKET_VER_2;
 		}
@@ -4172,7 +4172,7 @@ RCODE F_Rfl::logIndexSet(
 	// This call is a new database version. Database better have been
 	// upgraded.
 
-	flmAssert( m_pFile->FileHdr.uiVersionNum >= FLM_VER_3_02);
+	flmAssert( m_pFile->FileHdr.uiVersionNum >= FLM_FILE_FORMAT_VER_3_02);
 
 	// Do nothing if logging is disabled.
 
@@ -4191,11 +4191,10 @@ RCODE F_Rfl::logIndexSet(
 	flmAssert( m_uiCurrTransID);
 
 	m_uiOperCount++;
-	uiPacketBodyLen = (FLMUINT)
-		(
-			(m_pFile->FileHdr.uiVersionNum >= FLM_VER_4_50) ? (FLMUINT) 16 :
-				(FLMUINT) 14
-		);
+	uiPacketBodyLen = 
+		(FLMUINT)((m_pFile->FileHdr.uiVersionNum >= FLM_FILE_FORMAT_VER_4_50) 
+											? (FLMUINT) 16 
+											: (FLMUINT) 14);
 
 	// Make sure we have space in the RFL buffer for a complete packet.
 
@@ -4218,7 +4217,7 @@ RCODE F_Rfl::logIndexSet(
 
 	// Output the container number, if db version is >= 4.50
 
-	if (m_pFile->FileHdr.uiVersionNum >= FLM_VER_4_50)
+	if (m_pFile->FileHdr.uiVersionNum >= FLM_FILE_FORMAT_VER_4_50)
 	{
 		UW2FBA( (FLMUINT16) uiContainerNum, pucPacketBody);
 		pucPacketBody += 2;
@@ -4242,9 +4241,10 @@ RCODE F_Rfl::logIndexSet(
 	// Finish the packet
 
 	if (RC_BAD( rc = finishPacket( (FLMUINT) (
-					  (m_pFile->FileHdr.uiVersionNum >= FLM_VER_4_50) ?
-					  (FLMUINT) RFL_INDEX_SET_PACKET_VER_2 :
-					  (FLMUINT) RFL_INDEX_SET_PACKET), uiPacketBodyLen, FALSE)))
+					  (m_pFile->FileHdr.uiVersionNum >= FLM_FILE_FORMAT_VER_4_50) 
+								? (FLMUINT) RFL_INDEX_SET_PACKET_VER_2
+								: (FLMUINT) RFL_INDEX_SET_PACKET), 
+					  uiPacketBodyLen, FALSE)))
 	{
 		goto Exit;
 	}
@@ -4268,7 +4268,7 @@ RCODE F_Rfl::startLoggingUnknown(void)
 	// Do nothing if logging is disabled. Also, ignore these packets if we
 	// are operating on a pre-4.3 database.
 
-	if (m_bLoggingOff || m_pFile->FileHdr.uiVersionNum < FLM_VER_4_3)
+	if (m_bLoggingOff || m_pFile->FileHdr.uiVersionNum < FLM_FILE_FORMAT_VER_4_3)
 	{
 		goto Exit;
 	}
@@ -4332,7 +4332,7 @@ RCODE F_Rfl::logUnknown(
 	// Do nothing if logging is disabled. Also, ignore these packets if we
 	// are operating on a pre-4.3 database.
 
-	if (m_bLoggingOff || m_pFile->FileHdr.uiVersionNum < FLM_VER_4_3)
+	if (m_bLoggingOff || m_pFile->FileHdr.uiVersionNum < FLM_FILE_FORMAT_VER_4_3)
 	{
 		goto Exit;
 	}
@@ -4361,7 +4361,7 @@ RCODE F_Rfl::endLoggingUnknown(void)
 	// Do nothing if logging is disabled. Also, ignore these packets if we
 	// are operating on a pre-4.3 database.
 
-	if (m_bLoggingOff || m_pFile->FileHdr.uiVersionNum < FLM_VER_4_3)
+	if (m_bLoggingOff || m_pFile->FileHdr.uiVersionNum < FLM_FILE_FORMAT_VER_4_3)
 	{
 		goto Exit;
 	}
@@ -4399,7 +4399,7 @@ RCODE F_Rfl::logReduce(
 	// This call is new with 4.3 databases - not supported in older
 	// versions, so don't log it.
 
-	if (m_pFile->FileHdr.uiVersionNum < FLM_VER_4_3)
+	if (m_pFile->FileHdr.uiVersionNum < FLM_FILE_FORMAT_VER_4_3)
 	{
 		goto Exit;
 	}
@@ -4532,7 +4532,7 @@ RCODE F_Rfl::logUpgrade(
 
 	// Output the new database version
 
-	UD2FBA( (FLMUINT32) FLM_CURRENT_VERSION_NUM, pucPacketBody);
+	UD2FBA( (FLMUINT32) FLM_CUR_FILE_FORMAT_VER_NUM, pucPacketBody);
 	pucPacketBody += 4;
 
 	// For versions >= 4.60, the next two bytes will give the length of
@@ -4746,7 +4746,7 @@ RCODE F_Rfl::logBlockChainFree(
 	// This call is new with 4.52 databases - not supported in older
 	// versions, so don't log it.
 
-	if (m_pFile->FileHdr.uiVersionNum < FLM_VER_4_60)
+	if (m_pFile->FileHdr.uiVersionNum < FLM_FILE_FORMAT_VER_4_60)
 	{
 		flmAssert( 0);
 		goto Exit;
@@ -5278,7 +5278,7 @@ Get_Next_File:
 			uiLastLoggedCommitTransID = (FLMUINT) FB2UD( pucPacketBody);
 			pucPacketBody += 4;
 
-			if (m_pFile->FileHdr.uiVersionNum >= FLM_VER_4_31 &&
+			if (m_pFile->FileHdr.uiVersionNum >= FLM_FILE_FORMAT_VER_4_31 &&
 				 m_uiLastLoggedCommitTransID != uiLastLoggedCommitTransID)
 			{
 				rc = RC_SET( FERR_RFL_TRANS_GAP);
@@ -5413,7 +5413,7 @@ RCODE F_Rfl::getRecord(
 			// This type of packet is only valid with versions of flaim >=
 			// 4.60
 
-			flmAssert( m_pFile->FileHdr.uiVersionNum >= FLM_VER_4_60);
+			flmAssert( m_pFile->FileHdr.uiVersionNum >= FLM_FILE_FORMAT_VER_4_60);
 
 			if (uiPacketBodyLen < 7)
 			{
@@ -5922,7 +5922,7 @@ RCODE F_Rfl::modifyRecord(
 			// RFL_DELETE_FIELD is to delete the entire sub-tree. Prior to
 			// that, it is to delete only a single field.
 
-			if (m_pFile->FileHdr.uiVersionNum >= FLM_VER_4_60)
+			if (m_pFile->FileHdr.uiVersionNum >= FLM_FILE_FORMAT_VER_4_60)
 			{
 				if (RC_BAD( rc = pRecord->remove( pField)))
 				{
@@ -6448,7 +6448,8 @@ RCODE F_Rfl::readOp(
 			// Only look for the wrapping key if the new database version is
 			// greater than 4.60 and there isn't already a key.
 
-			if (pOpInfo->uiEndDrn >= FLM_VER_4_60 && !m_pFile->pDbWrappingKey)
+			if (pOpInfo->uiEndDrn >= FLM_FILE_FORMAT_VER_4_60 && 
+				 !m_pFile->pDbWrappingKey)
 			{
 				if (uiPacketBodyLen < 2)
 				{
@@ -6750,7 +6751,7 @@ RCODE F_Rfl::recover(
 
 	// If we are less than version 4.3, we cannot do restore.
 
-	if (pRestore && m_pFile->FileHdr.uiVersionNum < FLM_VER_4_3)
+	if (pRestore && m_pFile->FileHdr.uiVersionNum < FLM_FILE_FORMAT_VER_4_3)
 	{
 		goto Exit;
 	}
@@ -6765,7 +6766,7 @@ RCODE F_Rfl::recover(
 
 	// Set the flag as to whether or not we are using multiple RFL files.
 
-	if (m_pFile->FileHdr.uiVersionNum < FLM_VER_4_3)
+	if (m_pFile->FileHdr.uiVersionNum < FLM_FILE_FORMAT_VER_4_3)
 	{
 		m_bKeepRflFiles = FALSE;
 	}
@@ -7034,7 +7035,7 @@ Retry_Open:
 
 	// Set the last committed trans ID if this is a 4.31+ database
 
-	if (m_pFile->FileHdr.uiVersionNum >= FLM_VER_4_31)
+	if (m_pFile->FileHdr.uiVersionNum >= FLM_FILE_FORMAT_VER_4_31)
 	{
 		m_uiLastLoggedCommitTransID = (FLMUINT) FB2UD( 
 							&m_pFile->ucLastCommittedLogHdr[LOG_LAST_RFL_COMMIT_ID]);
@@ -7483,7 +7484,7 @@ Finish_Transaction:
 					}
 				}
 
-				if (m_pFile->FileHdr.uiVersionNum < FLM_VER_4_50 &&
+				if (m_pFile->FileHdr.uiVersionNum < FLM_FILE_FORMAT_VER_4_50 &&
 					 opInfo.uiPacketType != RFL_INDEX_SET_PACKET)
 				{
 					rc = RC_SET( FERR_BAD_RFL_PACKET);
@@ -7663,7 +7664,7 @@ Skip_Unknown_Packets:
 				// the target version and the target version is less than or
 				// equal to the highest version supported by this code.
 
-				if (opInfo.uiNewVersion > FLM_CURRENT_VERSION_NUM)
+				if (opInfo.uiNewVersion > FLM_CUR_FILE_FORMAT_VER_NUM)
 				{
 					rc = RC_SET( FERR_UNALLOWED_UPGRADE);
 					goto Exit;
@@ -7673,7 +7674,7 @@ Skip_Unknown_Packets:
 					flmAssert( m_pFile->FileHdr.uiVersionNum < opInfo.uiNewVersion);
 
 					// The logged "new" version may be a lesser version than
-					// FLM_CURRENT_VERSION_NUM, which is what FlmDbUpgrade
+					// FLM_CURRENT_FILE_FORMAT_VERSION, which is what FlmDbUpgrade
 					// upgrades to. This is OK because the current version
 					// should support all packets in the RFL for versions that
 					// are less than it. Otherwise, the RFL chain would have
@@ -7810,7 +7811,7 @@ Finish_Recovery:
 
 		// Save the last logged commit transaction ID.
 
-		if (m_pFile->FileHdr.uiVersionNum >= FLM_VER_4_31 &&
+		if (m_pFile->FileHdr.uiVersionNum >= FLM_FILE_FORMAT_VER_4_31 &&
 			 m_uiLastLoggedCommitTransID)
 		{
 			UD2FBA( m_uiLastLoggedCommitTransID,

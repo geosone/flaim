@@ -435,7 +435,7 @@ FLMEXP RCODE FLMAPI FlmDbRename(
 
 	// Rename roll-forward log files.
 
-	if (FileHdr.uiVersionNum < FLM_VER_4_3)
+	if (FileHdr.uiVersionNum < FLM_FILE_FORMAT_VER_4_3)
 	{
 
 		// For pre-4.3 versions, only need to rename one RFL file.

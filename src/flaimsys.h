@@ -2037,20 +2037,20 @@ FINLINE RCODE flmCheckVersionNum(
 
 	switch( uiVersionNum)
 	{
-		case FLM_VER_3_0:
-		case FLM_VER_3_02:
-		case FLM_VER_3_10:
-		case FLM_VER_4_0:
-		case FLM_VER_4_3:
-		case FLM_VER_4_31:
-		case FLM_VER_4_50:
-		case FLM_VER_4_51:
-		case FLM_VER_4_52:
-		case FLM_VER_4_60:
-		case FLM_VER_4_61:
+		case FLM_FILE_FORMAT_VER_3_0:
+		case FLM_FILE_FORMAT_VER_3_02:
+		case FLM_FILE_FORMAT_VER_3_10:
+		case FLM_FILE_FORMAT_VER_4_0:
+		case FLM_FILE_FORMAT_VER_4_3:
+		case FLM_FILE_FORMAT_VER_4_31:
+		case FLM_FILE_FORMAT_VER_4_50:
+		case FLM_FILE_FORMAT_VER_4_51:
+		case FLM_FILE_FORMAT_VER_4_52:
+		case FLM_FILE_FORMAT_VER_4_60:
+		case FLM_FILE_FORMAT_VER_4_61:
 			break;
 		default:
-			if( uiVersionNum > FLM_CURRENT_VERSION_NUM)
+			if( uiVersionNum > FLM_CUR_FILE_FORMAT_VER_NUM)
 			{
 				rc = RC_SET( FERR_NEWER_FLAIM);
 			}

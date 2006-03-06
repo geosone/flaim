@@ -6775,7 +6775,7 @@ RCODE ScaLogPhysBlk(
 	}
 	pDb->bHadUpdOper = TRUE;
 
-	if( uiDbVersion >= FLM_VER_4_3)
+	if( uiDbVersion >= FLM_FILE_FORMAT_VER_4_3)
 	{
 		// See if the transaction ID is greater than the last backup
 		// transaction ID.  If so, we need to update our block change

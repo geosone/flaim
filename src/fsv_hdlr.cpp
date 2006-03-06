@@ -806,7 +806,7 @@ OP_EXIT:
 			}
 
 			if( RC_BAD( rc = pWire->sendNumber( WIRE_VALUE_FLAIM_VERSION, 
-				FLM_CURRENT_VERSION_NUM)))
+				FLM_CUR_FILE_FORMAT_VER_NUM)))
 			{
 				goto Exit;
 			}

@@ -346,7 +346,7 @@ RCODE flmWriteLogHdr(
 	// Only copy the part of the header that is relevant for this
 	// database version.
 
-	if( pFile->FileHdr.uiVersionNum < FLM_VER_4_3)
+	if( pFile->FileHdr.uiVersionNum < FLM_FILE_FORMAT_VER_4_3)
 	{
 		f_memcpy( pucTmpLogHdr, pucLogHdr, LOG_HEADER_SIZE_VER40);
 	}
@@ -382,13 +382,13 @@ RCODE flmWriteLogHdr(
 		f_memcpy( &pucTmpLogHdr [LOG_PF_NUM_AVAIL_BLKS],
 					 &pucCPLogHdr [LOG_PF_NUM_AVAIL_BLKS], 4);
 		
-		if( pFile->FileHdr.uiVersionNum >= FLM_VER_4_3)
+		if( pFile->FileHdr.uiVersionNum >= FLM_FILE_FORMAT_VER_4_3)
 		{
 			f_memcpy( &pucTmpLogHdr [LOG_BLK_CHG_SINCE_BACKUP],
 						 &pucCPLogHdr [LOG_BLK_CHG_SINCE_BACKUP], 4);
 		}
 		
-		if( pFile->FileHdr.uiVersionNum >= FLM_VER_4_31)
+		if( pFile->FileHdr.uiVersionNum >= FLM_FILE_FORMAT_VER_4_31)
 		{
 			f_memcpy( &pucTmpLogHdr [LOG_LAST_RFL_COMMIT_ID],
 						 &pucCPLogHdr [LOG_LAST_RFL_COMMIT_ID], 4);
@@ -398,7 +398,7 @@ RCODE flmWriteLogHdr(
 	// If this is not a 4.3 database, make sure the old values
 	// in the log header slots are preserved.
 
-	if( pFile->FileHdr.uiVersionNum < FLM_VER_4_3)
+	if( pFile->FileHdr.uiVersionNum < FLM_FILE_FORMAT_VER_4_3)
 	{
 		// Compatibility for parts that were unused.
 

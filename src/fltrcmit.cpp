@@ -237,7 +237,7 @@ RCODE flmCommitDbTrans(
 	// Set the last committed transaction ID
 
 	if( (bTransEndLogged || (pDb->uiFlags & FDB_REPLAYING_COMMIT)) &&
-		pDb->pFile->FileHdr.uiVersionNum >= FLM_VER_4_31)
+		pDb->pFile->FileHdr.uiVersionNum >= FLM_FILE_FORMAT_VER_4_31)
 	{
 		UD2FBA( (FLMUINT32)uiTransId, 
 			&pucUncommittedLogHdr [LOG_LAST_RFL_COMMIT_ID]);

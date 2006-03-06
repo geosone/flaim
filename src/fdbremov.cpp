@@ -99,7 +99,7 @@ FLMEXP RCODE FLMAPI FlmDbRemove(
 	if (RC_BAD( flmReadAndVerifyHdrInfo( NULL, pFileHdl,
 								pucBuffer, &FileHdr, NULL, NULL)))
 	{
-		uiVersionNum = FLM_CURRENT_VERSION_NUM;
+		uiVersionNum = FLM_CUR_FILE_FORMAT_VER_NUM;
 	}
 	else
 	{
@@ -238,7 +238,7 @@ FLMEXP RCODE FLMAPI FlmDbRemove(
 
 		// Delete roll-forward log files.
 
-		if (uiVersionNum < FLM_VER_4_3)
+		if (uiVersionNum < FLM_FILE_FORMAT_VER_4_3)
 		{
 
 			// For pre-4.3 versions, only need to delete one RFL file.

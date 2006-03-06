@@ -42,7 +42,7 @@ project_desc = An extensible, flexible, adaptable, embeddable database engine
 # -- Versions --
 
 major_version = 4
-minor_version = 8
+minor_version = 9
 ifneq (,$(findstring dist,$(MAKECMDGOALS)))
 
 	# Get the info for all files.

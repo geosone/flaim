@@ -1451,10 +1451,10 @@ typedef struct FDB
 
 // FLAIM Version Number Defines
 
-#define FLM_VER_POS							(FLAIM_NAME_LEN)
-#define FLM_VER_LEN							4
-#define FLM_MINOR_VER_POS 					(FLM_VER_POS + 2)
-#define FLM_SMINOR_VER_POS   				(FLM_VER_POS + 3)
+#define FLM_FILE_FORMAT_VER_POS			(FLAIM_NAME_LEN)
+#define FLM_FILE_FORMAT_VER_LEN			4
+#define FLM_MINOR_VER_POS 					(FLM_FILE_FORMAT_VER_POS + 2)
+#define FLM_SMINOR_VER_POS   				(FLM_FILE_FORMAT_VER_POS + 3)
 
 // Defines to access elements within the database version number
 

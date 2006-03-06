@@ -780,7 +780,7 @@ FSTATIC RCODE FSGetFldOverhead(
 		FLMBOOL		bENumSz;
 		FLMBOOL		bELenSz;
 
-		if( pDb->pFile->FileHdr.uiVersionNum < FLM_VER_4_60)
+		if( pDb->pFile->FileHdr.uiVersionNum < FLM_FILE_FORMAT_VER_4_60)
 		{
 			rc = RC_SET( FERR_DATA_ERROR);
 			goto Exit;
@@ -827,7 +827,7 @@ FSTATIC RCODE FSGetFldOverhead(
 	}
 	else if( FOP_IS_LARGE( pFieldOvhd))
 	{
-		if( pDb->pFile->FileHdr.uiVersionNum < FLM_VER_4_61)
+		if( pDb->pFile->FileHdr.uiVersionNum < FLM_FILE_FORMAT_VER_4_61)
 		{
 			rc = RC_SET( FERR_DATA_ERROR);
 			goto Exit;
