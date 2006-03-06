@@ -49,7 +49,7 @@ RCODE flmAbortDbTrans(
 
 	if ((uiTransType = pDb->uiTransType) == FLM_NO_TRANS)
 	{
-		goto Exit;	// Will return SUCCESS.
+		goto Exit;
 	}
 
 	// No recovery required if it is a read transaction.
@@ -264,7 +264,7 @@ Exit1:
 	}
 
 	if (uiTransType != FLM_READ_TRANS &&
-		 gv_FlmSysData.EventHdrs[ F_EVENT_UPDATES].pEventCBList)
+		 gv_FlmSysData.UpdateEvents.pEventCBList)
 	{
 		flmTransEventCallback( F_EVENT_ABORT_TRANS, (HFDB)pDb, rc,
 						uiTransId);
@@ -328,12 +328,11 @@ Exit:
 	return( rc);
 }
 
-/*API~***********************************************************************
-Desc : Aborts an active transaction.
-*END************************************************************************/
+/****************************************************************************
+Desc:	Aborts an active transaction.
+****************************************************************************/
 FLMEXP RCODE FLMAPI FlmDbTransAbort(
-	HFDB	hDb
-	)
+	HFDB			hDb)
 {
 	RCODE			rc;
 	FDB *			pDb = (FDB *)hDb;

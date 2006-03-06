@@ -32,18 +32,16 @@ FSTATIC RCODE	flmRecordRetrieveCS(
 	FlmRecord **	ppRecord,
 	FLMUINT *		puiDrnRV);
 
-
-/*API~***********************************************************************
-Desc : Retrieves a single record from a container.
-*END************************************************************************/
+/****************************************************************************
+Desc:	Retrieves a single record from a container.
+****************************************************************************/
 FLMEXP RCODE FLMAPI FlmRecordRetrieve(
 	HFDB				hDb,
 	FLMUINT 			uiContainer,
 	FLMUINT			uiDrn,
 	FLMUINT			uiFlag,
 	FlmRecord **	ppRecord,
-	FLMUINT *		puiDrnRV
-	)
+	FLMUINT *		puiDrnRV)
 {
 	FLMUINT			uiKeyRelPos;
 	FLMBOOL			bTransStarted;
@@ -51,7 +49,7 @@ FLMEXP RCODE FLMAPI FlmRecordRetrieve(
 	LFILE *			pLFile;
 	BTSK				stack[ BH_MAX_LEVELS];
 	FLMBOOL			bStackInitialized = FALSE;
-	BTSK_p			pStack;
+	BTSK *			pStack;
 	FLMBYTE			pSearchBuf[ DRN_KEY_SIZ + 4];
 	FLMBYTE			pKeyBuf[ DRN_KEY_SIZ + 4];
 	FDB *				pDb = (FDB *)hDb;
@@ -321,7 +319,7 @@ Exit:
 
 /****************************************************************************
 Desc:		Retrieves a record based on uiDrn and uiFlag client-server.
-*END************************************************************************/
+****************************************************************************/
 FSTATIC RCODE flmRecordRetrieveCS(
 	FDB *				pDb,
 	FLMUINT 			uiContainer,
@@ -331,7 +329,7 @@ FSTATIC RCODE flmRecordRetrieveCS(
 	FLMUINT *		puiDrnRV)
 {
 	RCODE				rc;
-	CS_CONTEXT_p	pCSContext = pDb->pCSContext;
+	CS_CONTEXT *	pCSContext = pDb->pCSContext;
 	void *			pvMark = GedPoolMark( &pCSContext->pool);
 	FCL_WIRE			Wire( pCSContext, pDb);
 

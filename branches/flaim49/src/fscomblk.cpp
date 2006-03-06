@@ -25,7 +25,7 @@
 #include "flaimsys.h"
 
 FSTATIC FLMINT FSBlkCompressPKC(
-	BTSK_p			pStack,
+	BTSK *			pStack,
 	FLMBYTE *		pTempPKCBuf);
 
 
@@ -71,11 +71,11 @@ Notes: 	Remember that this can be called on any level of the btree.
 RCODE FSCombineBlks(
 	FDB *				pDb,
 	LFILE *			pLFile,
-	BTSK_p *			pStackRV	/* Stack may change on you */
+	BTSK * *			pStackRV	/* Stack may change on you */
 	)
 {
 	RCODE			   rc = FERR_OK;
-	BTSK_p			pStack = *pStackRV;
+	BTSK *			pStack = *pStackRV;
 	SCACHE *			pLeftCache;
 	SCACHE *			pRightCache;
 	FLMBYTE *		pLeftBlk;
@@ -386,7 +386,7 @@ Desc:	Move 1 or more elements into the bsCurElm location within a block.
 		data down within the same block.
 ****************************************************************************/
 RCODE FSBlkMoveElms(
-	BTSK_p    	pStack,			/* Stack containing block to accept data*/
+	BTSK *    	pStack,			/* Stack containing block to accept data*/
 	FLMBYTE *  	pInsertElm,		/* Element(s) to insert into block */
 	FLMUINT   	uiInsElmLen,	/* Length of the Element(s) */
 	FLMBYTE *	pElmPkcBuf		/* PKC buffer for element if elm has PKC*/
@@ -430,14 +430,14 @@ RCODE FSBlkMoveElms(
 
 	uiMovedPkc = FSElmComparePKC( pPkcBuf, uiBytesInPkc, pInsertElmPckBuf, uiInsertElmPkcLen );
 
-	/**----------------------------------------------------------------
-	*** Compute how much area pInsertElm[] will take when moved,
-	*** compute uiBlkEnd and move most of the element except the key
-	***---------------------------------------------------------------*/
-	uiInsertElmKeyLen  = (FLMUINT)(BBE_GET_KL( pInsertElm ));
-	uiInsertElmPkc     = (FLMUINT)(BBE_GET_PKC( pInsertElm ));
+	// Compute how much area pInsertElm[] will take when moved,
+	// compute uiBlkEnd and move most of the element except the key
+	
+	uiInsertElmKeyLen = (FLMUINT)(BBE_GET_KL( pInsertElm ));
+	uiInsertElmPkc = (FLMUINT)(BBE_GET_PKC( pInsertElm ));
 	uiMovedKeyLen = (FLMUINT)(uiInsertElmKeyLen + uiInsertElmPkc - uiMovedPkc);
 	iDistanceToShiftDown = (FLMINT)(uiInsElmLen + uiMovedKeyLen - uiInsertElmKeyLen);
+	
 	if( (uiAreaToShiftDown = (FLMUINT)(pStack->uiBlkEnd - uiCurElm)) > 0)
 	{
 		shiftN( &pBlk[ uiCurElm ], uiAreaToShiftDown, iDistanceToShiftDown );
@@ -447,51 +447,58 @@ RCODE FSBlkMoveElms(
 	UW2FBA( uiNewBlkEnd, &pBlk[ BH_BLK_END ]);
 	pStack->uiBlkEnd = uiNewBlkEnd;
 
-	/* Move the first pInsertElm[] overhead values and key to where to be inserted*/
+	// Move the first pInsertElm[] overhead values and key to 
+	// where to be inserted
+	
 	FSSetElmOvhd( &pBlk[uiCurElm], uiElmOvhd, uiMovedPkc, uiMovedKeyLen, pInsertElm);
 
-	/**--------------------------------------------------------------
-	*** The tricky part is to move the key!
-	*** The key could move in 2 parts pInsertElmPckBuf and pInsertElm[]
-	***-------------------------------------------------------------*/
+	// The tricky part is to move the key!
+	// The key could move in 2 parts pInsertElmPckBuf and pInsertElm[]
 
 	if( uiMovedKeyLen + uiMovedPkc > BBE_PKC_MAX )		/* Key not entirely in pPkcBuf[] */
 	{
-		/* Move all that is in the pPkcBuf[] */
+		// Move all that is in the pPkcBuf[]
+		
 		f_memcpy( &pBlk[ uiCurElm + uiElmOvhd ],
 						&pInsertElmPckBuf[ uiMovedPkc ],
 						uiTemp = (FLMUINT)(BBE_PKC_MAX - uiMovedPkc) );
 
-		/* Move the rest that is in the element */
+		// Move the rest that is in the element
+		
 		f_memmove( &pBlk[ uiCurElm + uiElmOvhd + uiTemp ],
-						&pInsertElm[ uiElmOvhd + uiInsertElmKeyLen - (uiMovedKeyLen - uiTemp) ],
+						&pInsertElm[ uiElmOvhd + uiInsertElmKeyLen - (uiMovedKeyLen - uiTemp)],
 						uiMovedKeyLen - uiTemp );
 	}
 	else if( uiMovedKeyLen)
 	{
-		/* Entire key fits within the pPkcBuf[] */
+		// Entire key fits within the pPkcBuf[]
+		
 		f_memcpy( &pBlk[ uiCurElm + uiElmOvhd ], 
 						&pInsertElmPckBuf[ uiMovedPkc ], uiMovedKeyLen );
 	}
-	/* Move the rest of the element(s) over to the block */
+	
+	// Move the rest of the element(s) over to the block
+	
 	uiTemp = uiElmOvhd + uiInsertElmKeyLen;
 	f_memmove( &pBlk[ uiCurElm + uiElmOvhd + uiMovedKeyLen ],	/* Better move HIGH-LOW */
 						&pInsertElm[ uiTemp ], uiInsElmLen - uiTemp );
 
-	/**---------------------------------------------------------------
-	*** Now - if uiAreaToShiftDown has a value then position to the 
-	*** old uiCurElm and try to compress more out of the element
-	***--------------------------------------------------------------*/
+	// Now if uiAreaToShiftDown has a value then position to the 
+	// old uiCurElm and try to compress more out of the element
 
 	if( uiAreaToShiftDown)
 	{
 		pStack->uiCurElm = uiCurElm + iDistanceToShiftDown;
-		/* Could change pStack->wBlkEnd */
+		
+		// Could change pStack->wBlkEnd
+		
 		FSBlkCompressPKC( pStack, pPkcBuf );
 	}
-	pStack->uiCurElm = uiCurElm;	/* Points to start of inserted element(s) */
+	
+	pStack->uiCurElm = uiCurElm;	// Points to start of inserted element(s)
 
 Exit:
+
 	return( FERR_OK );
 }
 
@@ -503,10 +510,9 @@ Notes:	General routine for split and combine code.
 			This routine is fastest known way to build PKC from any element.
 ****************************************************************************/
 FLMUINT FSBlkBuildPKC(
-	BTSK_p			pStack,
+	BTSK *			pStack,
 	FLMBYTE *		pPkcBuf,
-	FLMUINT			uiFlags
-	)
+	FLMUINT			uiFlags)
 {
 	FLMUINT			uiMoveArea;
 	FLMUINT			uiPkc;
@@ -575,7 +581,7 @@ Desc:  	Compress out (or in) the PKC bytes in the current element
 Notes: 	pTempPkcBuf passed in only to save pStack space.
 ****************************************************************************/
 FSTATIC FLMINT FSBlkCompressPKC(
-	BTSK_p			pStack,
+	BTSK *			pStack,
 	FLMBYTE *		pTempPkcBuf
 	)
 {

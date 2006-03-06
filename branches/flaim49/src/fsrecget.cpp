@@ -70,14 +70,14 @@ typedef struct Locked_Block
 } LOCKED_BLOCK;
 	
 FSTATIC RCODE FSGetFldOverhead(
-	FDB_p			pDb,
+	FDB *			pDb,
 	FSTATE *		fState);
 
 /***************************************************************************
 Desc:	Retrieves a record given a DRN
 *****************************************************************************/
-RCODE FSReadRecord(						// Was FSRecordGet
-	FDB_p				pDb,
+RCODE FSReadRecord(
+	FDB *				pDb,
 	LFILE * 			pLFile,
 	FLMUINT			uiDrn,
 	FlmRecord **	ppRecord,				// [out] returned record
@@ -86,7 +86,7 @@ RCODE FSReadRecord(						// Was FSRecordGet
 {
 	RCODE			rc;
 	BTSK			stackBuf[ BH_MAX_LEVELS ];
-	BTSK_p		pStack = NULL;
+	BTSK *		pStack = NULL;
 	FLMBYTE		pKeyBuf[ DIN_KEY_SIZ ];
 	FLMBYTE		pDrnBuf[ DIN_KEY_SIZ ];
 
@@ -120,11 +120,11 @@ Ret:	FERR_OK (0)
 		FERR_DATA_ERROR - the data is somehow corrupt
 **************************************************************************/
 RCODE FSReadElement(
-	FDB_p				pDb,
+	FDB *				pDb,
 	POOL *			pPool,
 	LFILE *	  		pLFile,
 	FLMUINT			uiDrn,
-	BTSK_p			pStack,
+	BTSK *			pStack,
 	FLMBOOL			bOkToPreallocSpace,
 	FlmRecord **	ppRecord,				// [out] returned record
 	FLMUINT *		puiRecTransId,			// [out] record's transaction ID
@@ -325,10 +325,10 @@ RCODE FSReadElement(
 						{
 							// Align so that the data is aligned - not the length
 
-							uiTrueDataSpace += sizeof( FLMUINT16);
+							uiTrueDataSpace += sizeof( FLMUINT32);
 							uiTrueDataSpace = ((uiTrueDataSpace + FLM_ALLOC_ALIGN) &
 											(~(FLM_ALLOC_ALIGN) & 0x7FFFFFFF));
-							uiTrueDataSpace -= sizeof( FLMUINT16);
+							uiTrueDataSpace -= sizeof( FLMUINT32);
 						}
 						else
 						{
@@ -344,7 +344,7 @@ RCODE FSReadElement(
 
 					if (fState.uiFieldLen >= 0xFF)
 					{
-						uiTrueDataSpace += sizeof( FLMUINT16) + 1;
+						uiTrueDataSpace += sizeof( FLMUINT32) + 1;
 					}
 				}
 
@@ -653,24 +653,20 @@ Notes:The entire field overhead MUST always be together (not split).
 		The data may be in another element.
 **************************************************************************/
 FSTATIC RCODE FSGetFldOverhead(
-	FDB_p				pDb,
+	FDB *				pDb,
 	FSTATE *			fState)
 {
 	RCODE			rc = FERR_OK;
 	FLMBYTE *	pFieldOvhd = &fState->pElement[ fState->uiPosInElm ];
 	FLMBYTE *	pElement = fState->pElement;
+	FLMBYTE *	pTmp;
 	FLMBOOL		bDoesntHaveFieldDef = TRUE;
 	FLMUINT		uiFieldLen;	
 	FLMUINT		uiFieldType = 0;
 	FLMUINT		uiTagNum;
-	FLMBYTE		byTemp;
+	FLMBYTE		ucBaseFlags;
 	FLMUINT		uiEncId = 0;
 	FLMUINT		uiEncFieldLen = 0;
-
-	/**
-	***	See FO_xxx_FLD definitions in FS.H
-	***	If maintaining, see also FSRecUpd.c to see how codes were written.
-	**/
 
 	if( FOP_IS_STANDARD( pFieldOvhd))
 	{
@@ -680,8 +676,8 @@ FSTATIC RCODE FSGetFldOverhead(
 		}
 
 		uiFieldLen = FSTA_FLD_LEN( pFieldOvhd );
-		uiTagNum   = FSTA_FLD_NUM( pFieldOvhd );
-		pFieldOvhd    += FSTA_OVHD;
+		uiTagNum = FSTA_FLD_NUM( pFieldOvhd );
+		pFieldOvhd += FSTA_OVHD;
 	}
 	else if( FOP_IS_OPEN( pFieldOvhd))
 	{
@@ -690,16 +686,16 @@ FSTATIC RCODE FSGetFldOverhead(
 			fState->uiLevel++;
 		}
 
-		byTemp   = (FLMBYTE)(FOP_GET_FLD_FLAGS( pFieldOvhd++ ));
+		ucBaseFlags = (FLMBYTE)(FOP_GET_FLD_FLAGS( pFieldOvhd++));
+		uiTagNum = (FLMUINT)*pFieldOvhd++;
 
-		uiTagNum = (FLMUINT) *pFieldOvhd++;
-		if( FOP_2BYTE_FLDNUM(byTemp))
+		if( FOP_2BYTE_FLDNUM( ucBaseFlags))
 		{
 			uiTagNum += ((FLMUINT) *pFieldOvhd++) << 8;
 		}
 
 		uiFieldLen = (FLMUINT) *pFieldOvhd++;
-		if( FOP_2BYTE_FLDLEN( byTemp ))
+		if( FOP_2BYTE_FLDLEN( ucBaseFlags))
 		{
 			uiFieldLen += ((FLMUINT) *pFieldOvhd++) << 8;
 		}
@@ -711,9 +707,9 @@ FSTATIC RCODE FSGetFldOverhead(
 			fState->uiLevel++;
 		}
 
-		byTemp  = (FLMBYTE)(FOP_GET_FLD_FLAGS( pFieldOvhd++ ));
+		ucBaseFlags = (FLMBYTE)(FOP_GET_FLD_FLAGS( pFieldOvhd++));
 		uiTagNum = (FLMUINT) *pFieldOvhd++;
-		if( FOP_2BYTE_FLDNUM(byTemp))
+		if( FOP_2BYTE_FLDNUM( ucBaseFlags))
 		{
 			uiTagNum += ((FLMUINT) *pFieldOvhd++) << 8;
 		}
@@ -740,12 +736,13 @@ FSTATIC RCODE FSGetFldOverhead(
 			fState->uiLevel++;
 		}
 
-		byTemp  = (FLMBYTE)(FOP_GET_FLD_FLAGS( pFieldOvhd));
-		uiFieldType = (FLMUINT)(FTAG_FLD_TYPE( pFieldOvhd ));
-		pFieldOvhd += FTAG_OVHD;
+		ucBaseFlags = (FLMBYTE)(FOP_GET_FLD_FLAGS( pFieldOvhd));
+		pFieldOvhd++;
+		uiFieldType = (FLMUINT)(FTAG_GET_FLD_TYPE( *pFieldOvhd));
+		pFieldOvhd++;
 		uiTagNum = (FLMUINT) *pFieldOvhd++;
 
-		if( FOP_2BYTE_FLDNUM(byTemp))
+		if( FOP_2BYTE_FLDNUM( ucBaseFlags))
 		{
 			uiTagNum += ((FLMUINT) *pFieldOvhd++) << 8;
 		}
@@ -757,8 +754,8 @@ FSTATIC RCODE FSGetFldOverhead(
 		// 0x8222 is stored as 0x0222.
 
 		uiTagNum ^= 0x8000;
-		uiFieldLen = (FLMUINT) *pFieldOvhd++;
-		if( FOP_2BYTE_FLDLEN( byTemp))
+		uiFieldLen = (FLMUINT)*pFieldOvhd++;
+		if( FOP_2BYTE_FLDLEN( ucBaseFlags))
 		{
 			uiFieldLen += ((FLMUINT) *pFieldOvhd++) << 8;
 		}
@@ -766,18 +763,28 @@ FSTATIC RCODE FSGetFldOverhead(
 	else if( FOP_IS_RECORD_INFO( pFieldOvhd))
 	{
 		bDoesntHaveFieldDef = FALSE;
-		byTemp = *pFieldOvhd++;
+		ucBaseFlags = *pFieldOvhd++;
 		uiFieldLen = *pFieldOvhd++;
-		if( FOP_2BYTE_FLDLEN( byTemp ))
+
+		if( FOP_2BYTE_FLDLEN( ucBaseFlags))
+		{
 			uiFieldLen += ((FLMUINT) *pFieldOvhd++) << 8;
+		}
+
 		uiTagNum = 0;
 	}
-	else if (FOP_IS_ENCRYPTED( pFieldOvhd))
+	else if( FOP_IS_ENCRYPTED( pFieldOvhd))
 	{
 		FLMBOOL		bTagSz;
 		FLMBOOL		bLenSz;
 		FLMBOOL		bENumSz;
 		FLMBOOL		bELenSz;
+
+		if( pDb->pFile->FileHdr.uiVersionNum < FLM_VER_4_60)
+		{
+			rc = RC_SET( FERR_DATA_ERROR);
+			goto Exit;
+		}
 
 		bDoesntHaveFieldDef = FALSE;
 
@@ -818,6 +825,48 @@ FSTATIC RCODE FSGetFldOverhead(
 			uiEncFieldLen += ((FLMUINT) *pFieldOvhd++) << 8;
 		}
 	}
+	else if( FOP_IS_LARGE( pFieldOvhd))
+	{
+		if( pDb->pFile->FileHdr.uiVersionNum < FLM_VER_4_61)
+		{
+			rc = RC_SET( FERR_DATA_ERROR);
+			goto Exit;
+		}
+
+		bDoesntHaveFieldDef = FALSE;
+		pTmp = pFieldOvhd;
+
+		if( FLARGE_LEVEL( pFieldOvhd))
+		{
+			fState->uiLevel++;
+		}
+		pTmp++;
+
+		uiFieldType = FLARGE_FLD_TYPE( pFieldOvhd);
+		pTmp++;
+
+		uiTagNum = FLARGE_TAG_NUM( pFieldOvhd);
+		pTmp += 2;
+
+		if( (uiFieldLen = FLARGE_DATA_LEN( pFieldOvhd)) <= 0x0000FFFF)
+		{
+			flmAssert( 0);
+			rc = RC_SET( FERR_DATA_ERROR);
+			goto Exit;
+		}
+		pTmp += 4;
+
+		if( FLARGE_ENCRYPTED( pFieldOvhd))
+		{
+			uiEncId = FLARGE_ETAG_NUM( pFieldOvhd);
+			pTmp += 2;
+
+			uiEncFieldLen = FLARGE_EDATA_LEN( pFieldOvhd);
+			pTmp += 4;
+		}
+
+		pFieldOvhd = pTmp;
+	}
 	else
 	{
 		flmAssert( 0);
@@ -840,10 +889,10 @@ FSTATIC RCODE FSGetFldOverhead(
 	// Set the fState return values
 
 	fState->uiFieldType = uiFieldType;
-	fState->uiFieldLen  = uiFieldLen;
-	fState->uiPosInElm  = (FLMUINT) (pFieldOvhd - pElement);
-	fState->uiTagNum	  = uiTagNum;
-	fState->uiEncId	  = uiEncId;
+	fState->uiFieldLen = uiFieldLen;
+	fState->uiPosInElm = (FLMUINT) (pFieldOvhd - pElement);
+	fState->uiTagNum = uiTagNum;
+	fState->uiEncId = uiEncId;
 	fState->uiEncFieldLen = uiEncFieldLen;
 
 Exit:

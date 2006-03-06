@@ -1125,6 +1125,25 @@
 #endif
 
 /****************************************************************************
+Desc:		Internal return code macros
+****************************************************************************/
+#ifdef FLM_DEBUG
+	RCODE	flmMakeErr(
+		RCODE				rc,
+		const char *	pszFile,
+		int				iLine,
+		FLMBOOL			bAssert);
+		
+	#define RC_SET( rc)							flmMakeErr( rc, __FILE__, __LINE__, FALSE)
+	#define RC_SET_AND_ASSERT( rc)			flmMakeErr( rc, __FILE__, __LINE__, TRUE)
+	#define RC_UNEXPECTED_ASSERT( rc)		flmMakeErr( rc, __FILE__, __LINE__, TRUE)
+#else
+	#define RC_SET( rc)							(rc)
+	#define RC_SET_AND_ASSERT( rc)			(rc)
+	#define RC_UNEXPECTED_ASSERT( rc)
+#endif
+	
+/****************************************************************************
 									CROSS PLATFORM DEFINITIONS
 ****************************************************************************/
 
@@ -1730,7 +1749,7 @@ typedef struct
 	FLMUINT16   year;
 	FLMBYTE		month;
 	FLMBYTE		day;
-} F_DATE, * F_DATE_p;
+} F_DATE;
 
 typedef struct
 {
@@ -1738,7 +1757,7 @@ typedef struct
 	FLMBYTE		minute;
 	FLMBYTE		second;
 	FLMBYTE		hundredth;
-} F_TIME, * F_TIME_p;
+} F_TIME;
 
 typedef struct
 {
@@ -1749,7 +1768,7 @@ typedef struct
 	FLMBYTE		minute;
 	FLMBYTE		second;
 	FLMBYTE		hundredth;
-} F_TMSTAMP, * F_TMSTAMP_p;
+} F_TMSTAMP;
 
 void f_timeGetSeconds(
 	FLMUINT	*		puiSeconds);
@@ -1890,6 +1909,25 @@ FINLINE FLMBYTE f_getHexVal(
 	}
 
 	return( 0);
+}
+
+/***************************************************************************
+Desc:
+****************************************************************************/
+FINLINE FLMUINT64 flmRoundUp(
+	FLMUINT64		ui64ValueToRound,
+	FLMUINT64		ui64Boundary)
+{
+	FLMUINT64	ui64RetVal;
+	
+	ui64RetVal = ((ui64ValueToRound / ui64Boundary) * ui64Boundary);	
+	
+	if( ui64RetVal < ui64ValueToRound)
+	{
+		ui64RetVal += ui64Boundary;
+	}
+	
+	return( ui64RetVal);
 }
 
 /****************************************************************************

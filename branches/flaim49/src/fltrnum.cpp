@@ -24,12 +24,12 @@
 
 #include "flaimsys.h"
 
-/*API~***********************************************************************
+/****************************************************************************
 Desc : Retrieves the current transaction number of a database
 Notes: This routine should only be called only from within an update
 		 transaction since read transactions are not assigned a transaction
 		 number.
-*END************************************************************************/
+****************************************************************************/
 FLMEXP RCODE FLMAPI FlmDbGetTransId(
 	HFDB				hDb,
 	FLMUINT *		puiTrNumRV
@@ -43,7 +43,7 @@ FLMEXP RCODE FLMAPI FlmDbGetTransId(
 	{
 		fdbInitCS( pDb);
 		
-		CS_CONTEXT_p	pCSContext = pDb->pCSContext;
+		CS_CONTEXT *	pCSContext = pDb->pCSContext;
 		FCL_WIRE			Wire( pCSContext, pDb);
 
 		// Send a request to get the transaction ID.
@@ -90,13 +90,13 @@ Exit:
 }
 
 
-/*API~***********************************************************************
+/****************************************************************************
 Desc : Retrieves the last commit sequence number of a database.
 Notes: Whenever a transaction is committed, FLAIM increments the commit
 		 sequence number to indicate that the database has been modified.
 		 An application may use this routine to determine if the database
 		 has been modified.
-*END************************************************************************/
+****************************************************************************/
 FLMEXP RCODE FLMAPI FlmDbGetCommitCnt(
 	HFDB				hDb,
 	FLMUINT *		puiCommitCount
@@ -110,7 +110,7 @@ FLMEXP RCODE FLMAPI FlmDbGetCommitCnt(
 	{
 		fdbInitCS( pDb);
 
-		CS_CONTEXT_p	pCSContext = pDb->pCSContext;
+		CS_CONTEXT *	pCSContext = pDb->pCSContext;
 		FCL_WIRE			Wire( pCSContext, pDb);
 
 		/* Send a request to get the commit count. */

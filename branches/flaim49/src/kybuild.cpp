@@ -26,7 +26,7 @@
 
 FSTATIC RCODE flmProcessIndexedFld(
 	FDB *			pDb,
-	IXD_p			pUseIxd,
+	IXD *			pUseIxd,
 	IFD *			pIfdChain,
 	void **		ppPathFlds,
 	FLMUINT		uiLeafFieldLevel,
@@ -42,7 +42,7 @@ Desc:		Main driver for processing the fields in a record.
 ****************************************************************************/
 RCODE flmProcessRecFlds(
 	FDB *			pDb,						/* Operation context. */
-	IXD_p			pIxd,
+	IXD *			pIxd,
 	FLMUINT		uiContainerNum,		/* Database container number. */
 	FLMUINT		uiDrn,					/* Record Drn */
 	FlmRecord *	pRecord,					/* Record to build keys for */
@@ -55,8 +55,12 @@ RCODE flmProcessRecFlds(
 	FLMUINT		uiLeafFieldLevel;
 	void *		pvField;
 
-	/* Process each field in the record. */
-	pvField = pRecord->root();
+	if( (pvField = pRecord->root()) == NULL)
+	{
+		rc = RC_SET( FERR_ILLEGAL_OP);
+		goto Exit;
+	}
+
 	for(;;)
 	{
 		FLMUINT		uiItemType;
@@ -325,7 +329,7 @@ Desc:		Processes a field in a record - indexing, blob, etc.
 ****************************************************************************/
 FSTATIC RCODE flmProcessIndexedFld(
 	FDB *					pDb,
-	IXD_p					pUseIxd,
+	IXD *					pUseIxd,
 	IFD *					pIfdChain,
 	void **				ppPathFlds,
 	FLMUINT				uiLeafFieldLevel,
@@ -337,8 +341,8 @@ FSTATIC RCODE flmProcessIndexedFld(
 	void *				pvField)
 {
 	RCODE					rc = FERR_OK;
-	IFD_p					pIfd;
-	IXD_p					pIxd;
+	IFD *					pIfd;
+	IXD *					pIxd;
 	void *				pRootContext;
 	const FLMBYTE *	pValue;
 	const FLMBYTE *	pExportValue;
@@ -573,9 +577,9 @@ Desc:		Add an index key to the buffers
 ****************************************************************************/
 RCODE KYAddToKrefTbl(
 	FDB *					pDb,
-	IXD_p					pIxd,
+	IXD *					pIxd,
 	FLMUINT				uiContainerNum,
-	IFD_p					pIfd,
+	IFD *					pIfd,
 	FLMUINT				uiAction,
 	FLMUINT				uiDrn,
 	FLMBOOL *			pbHadUniqueKeys,
@@ -586,11 +590,11 @@ RCODE KYAddToKrefTbl(
 	FLMBOOL				bFldIsEncrypted)
 {
 	RCODE					rc = FERR_OK;
-	KREF_ENTRY_p		pKref;
+	KREF_ENTRY *		pKref;
 	FLMBYTE *			pKrefKey;
 	FLMUINT				uiKrefKeyLen;
 	FLMUINT				uiSizeNeeded;
-	KREF_CNTRL_p		pKrefCntrl = &pDb->KrefCntrl;
+	KREF_CNTRL *		pKrefCntrl = &pDb->KrefCntrl;
 
 	/*
 	Removed if( !uiKeyLen) goto Exit;
@@ -613,7 +617,7 @@ RCODE KYAddToKrefTbl(
 		FLMUINT		uiAllocSize;
 		FLMUINT		uiOrigKrefTblSize = pKrefCntrl->uiKrefTblSize;
 
-		if( pKrefCntrl->uiKrefTblSize > 0x8000 / sizeof( KREF_ENTRY_p))
+		if( pKrefCntrl->uiKrefTblSize > 0x8000 / sizeof( KREF_ENTRY *))
 		{
 			pKrefCntrl->uiKrefTblSize += 4096;
 		}
@@ -624,7 +628,7 @@ RCODE KYAddToKrefTbl(
 
 		// GWBUG #30146 1/13/97: Let the table grow until memory error.
 
-		uiAllocSize = pKrefCntrl->uiKrefTblSize * sizeof( KREF_ENTRY_p );
+		uiAllocSize = pKrefCntrl->uiKrefTblSize * sizeof( KREF_ENTRY * );
 
 		if( RC_BAD( rc = f_realloc( uiAllocSize, &pKrefCntrl->pKrefTbl)))
 		{
@@ -680,7 +684,7 @@ RCODE KYAddToKrefTbl(
 
 	uiSizeNeeded = sizeof( KREF_ENTRY) + uiKrefKeyLen + 1;
 
-	if( (pKref = (KREF_ENTRY_p)
+	if( (pKref = (KREF_ENTRY *)
 			 GedPoolAlloc( pKrefCntrl->pPool, uiSizeNeeded )) == NULL)
 	{
 		rc = RC_SET( FERR_MEM);

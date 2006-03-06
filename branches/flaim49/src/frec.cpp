@@ -685,7 +685,7 @@ RCODE FlmRecord::setNative(
 			goto Exit;
 		}
 
-		if( RC_BAD( rc = FlmNative2Storage( pszString, &uiBufLen, pucData)))
+		if( RC_BAD( rc = FlmNative2Storage( pszString, 0, &uiBufLen, pucData)))
 		{
 			goto Exit;
 		}
@@ -1471,7 +1471,7 @@ RCODE FlmRecord::compressMemory( void)
 				// Add 1 to the length to allow for the flags byte which is only
 				// present on long fields and encrypted fields.
 
-				uiTmp = uiNewDataSize + sizeof( FLMUINT16) + 1;
+				uiTmp = uiNewDataSize + sizeof( FLMUINT32) + 1;
 
 				if( getFieldDataType( pFld) == FLM_BINARY_TYPE)
 				{
@@ -1551,7 +1551,7 @@ RCODE FlmRecord::compressMemory( void)
 			}
 			else if( uiLength >= 0xFF)
 			{
-				uiTmp = uiNewDataOffset + sizeof( FLMUINT16) + 1;
+				uiTmp = uiNewDataOffset + sizeof( FLMUINT32) + 1;
 
 				if( getFieldDataType( pFld) == FLM_BINARY_TYPE)
 				{
@@ -1562,8 +1562,8 @@ RCODE FlmRecord::compressMemory( void)
 				}
 
 				flmAssert( uiTmp + uiLength <= uiNewDataSize);
-				pucNewData[ uiNewDataOffset] = 0;  // Set the flags byte.
-				UW2FBA( (FLMUINT32)uiLength, &pucNewData[ uiNewDataOffset + FLD_ENC_ENCID]);
+				pucNewData[ uiNewDataOffset + FLD_ENC_FLAGS] = 0;  // Set the flags byte.
+				UD2FBA( (FLMUINT32)uiLength, &pucNewData[ uiNewDataOffset + FLD_ENC_ENCID]);
 				f_memcpy( &pucNewData[ uiTmp], getDataPtr( pFld), uiLength);
 				pFld->ui32DataOffset = (FLMUINT32)uiNewDataOffset;
 				uiNewDataOffset = uiTmp + uiLength;
@@ -1599,8 +1599,8 @@ RCODE FlmRecord::compressMemory( void)
 			flmAssert( uiEncTmp + uiEncLength + (uiPicketFenceSize / 2) <= uiNewDataSize);
 			pucNewData[ uiNewDataOffset + FLD_ENC_FLAGS] = ( FLMBYTE)uiFlags;
 			UW2FBA( (FLMUINT32)uiEncId, &pucNewData[ uiNewDataOffset + FLD_ENC_ENCID]);
-			UW2FBA( (FLMUINT32)uiLength, &pucNewData[ uiNewDataOffset + FLD_ENC_DATA_LEN]);
-			UW2FBA( (FLMUINT32)uiEncLength, &pucNewData[ uiNewDataOffset + FLD_ENC_ENCRYPTED_DATA_LEN]);
+			UD2FBA( (FLMUINT32)uiLength, &pucNewData[ uiNewDataOffset + FLD_ENC_DATA_LEN]);
+			UD2FBA( (FLMUINT32)uiEncLength, &pucNewData[ uiNewDataOffset + FLD_ENC_ENCRYPTED_DATA_LEN]);
 #ifdef FLM_PICKET_FENCE
 			// Set the picket fence
 			f_sprintf( (char *)&pucNewData[ uiTmp], FLD_RAW_FENCE);
@@ -1742,7 +1742,7 @@ RCODE FlmRecord::compactMemory( void)
 			{
 				// Add one extra byte for the flags byte.
 
-				uiTmp = uiNewDataSize + sizeof( FLMUINT16) + 1;
+				uiTmp = uiNewDataSize + sizeof( FLMUINT32) + 1;
 
 				if( getFieldDataType( pFld) == FLM_BINARY_TYPE)
 				{
@@ -1827,7 +1827,7 @@ RCODE FlmRecord::compactMemory( void)
 			}
 			else if( uiLength >= 0xFF)
 			{
-				uiTmp = uiNewDataOffset + sizeof( FLMUINT16) + 1;
+				uiTmp = uiNewDataOffset + sizeof( FLMUINT32) + 1;
 
 				if( getFieldDataType( pFld) == FLM_BINARY_TYPE)
 				{
@@ -1838,8 +1838,8 @@ RCODE FlmRecord::compactMemory( void)
 				}
 
 				flmAssert( uiTmp + uiLength <= uiNewDataSize);
-				pucNewData[ uiNewDataOffset] = 0;	// Flags
-				UW2FBA( (FLMUINT32)uiLength, &pucNewData[ uiNewDataOffset + FLD_ENC_ENCID]);
+				pucNewData[ uiNewDataOffset + FLD_ENC_FLAGS] = 0;	// Flags
+				UD2FBA( (FLMUINT32)uiLength, &pucNewData[ uiNewDataOffset + FLD_ENC_ENCID]);
 				f_memcpy( &pucNewData[ uiTmp], getDataPtr( pFld), uiLength);
 				pNewFld->ui32DataOffset = (FLMUINT32)uiNewDataOffset;
 				uiNewDataOffset = uiTmp + uiLength;
@@ -1873,10 +1873,10 @@ RCODE FlmRecord::compactMemory( void)
 			uiEncTmp = uiTmp + uiLength + (uiPicketFenceSize / 2);
 
 			flmAssert( uiEncTmp + uiEncLength + (uiPicketFenceSize / 2) <= uiNewDataSize);
-			pucNewData[ uiNewDataOffset + FLD_ENC_FLAGS] = ( FLMBYTE)uiFlags;
+			pucNewData[ uiNewDataOffset + FLD_ENC_FLAGS] = (FLMBYTE)uiFlags;
 			UW2FBA( (FLMUINT16)uiEncId, &pucNewData[ uiNewDataOffset + FLD_ENC_ENCID]);
-			UW2FBA( (FLMUINT16)uiLength, &pucNewData[ uiNewDataOffset + FLD_ENC_DATA_LEN]);
-			UW2FBA( (FLMUINT16)uiEncLength, &pucNewData[ uiNewDataOffset + FLD_ENC_ENCRYPTED_DATA_LEN]);
+			UD2FBA( (FLMUINT32)uiLength, &pucNewData[ uiNewDataOffset + FLD_ENC_DATA_LEN]);
+			UD2FBA( (FLMUINT32)uiEncLength, &pucNewData[ uiNewDataOffset + FLD_ENC_ENCRYPTED_DATA_LEN]);
 
 #ifdef FLM_PICKET_FENCE
 			f_sprintf( (char *)&pucNewData[ uiTmp], FLD_RAW_FENCE);
@@ -2164,25 +2164,14 @@ RCODE	FlmRecord::getNewDataPtr(
 		goto Exit;
 	}
 
-	// Make sure the requested size doesn't exceed the maximum
-	// field value size
-
-	if( uiNewLength > FLM_MAX_FIELD_VAL_SIZE ||
-		 uiEncNewLength > FLM_MAX_FIELD_VAL_SIZE)
-	{
-		rc = RC_SET( FERR_VALUE_TOO_LARGE);
-		goto Exit;
-	}
-	
 	bOldEncrypted = isEncryptedField( pField);
 
 	// If the new field is encrypted, we need to prefix the value
-	// with the encryption overhead.
-	// Otherwise, if the new length is >= 0xFF, we need to prefix the value
-	// with a 2-byte length
+	// with the encryption overhead.  Otherwise, if the new length
+	// is >= 0xFF, we need to prefix the value with a 4-byte length
 
 	uiHeader = (bNewEncrypted ? FLM_ENC_FLD_OVERHEAD
-									  : (uiNewLength >= 0xFF ? sizeof( FLMUINT16) + 1
+									  : (uiNewLength >= 0xFF ? sizeof( FLMUINT32) + 1
 									  								 : 0));
 	// Determine the true original data length
 
@@ -2194,7 +2183,8 @@ RCODE	FlmRecord::getNewDataPtr(
 		flmAssert( pField->ui8DataLen == 0xFF);
 
 		// Account for the header
-		uiOldHeader = (bOldEncrypted ? FLM_ENC_FLD_OVERHEAD : sizeof( FLMUINT16) + 1);
+		
+		uiOldHeader = (bOldEncrypted ? FLM_ENC_FLD_OVERHEAD : sizeof( FLMUINT32) + 1);
 		uiOldLength += uiOldHeader;
 
 		// Special work if this is a binary field
@@ -2369,7 +2359,7 @@ RCODE	FlmRecord::getNewDataPtr(
 					pucTmp = getDataBufPtr() + uiAllocStart;
 					*pucTmp = 0;	// Flags
 					pucTmp++;
-					UW2FBA( (FLMUINT16)uiNewLength, pucTmp);
+					UD2FBA( (FLMUINT32)uiNewLength, pucTmp);
 					pField->ui8DataLen = 0xFF;
 					pField->ui32DataOffset = (FLMUINT32)uiAllocStart;
 				}
@@ -2423,7 +2413,7 @@ RCODE	FlmRecord::getNewDataPtr(
 						pucTmp = getDataBufPtr() + pField->ui32DataOffset;
 						*pucTmp = 0;	// Flags
 						pucTmp++;
-						UW2FBA( (FLMUINT16)uiNewLength, pucTmp);
+						UD2FBA( (FLMUINT32)uiNewLength, pucTmp);
 						pField->ui8DataLen = 0xFF;
 					}
 					else
@@ -2521,7 +2511,7 @@ RCODE	FlmRecord::getNewDataPtr(
 						pucTmp = getDataBufPtr() + uiAllocStart;
 						*pucTmp = 0;	// Flags
 						pucTmp++;
-						UW2FBA( (FLMUINT16)uiNewLength, pucTmp);
+						UD2FBA( (FLMUINT32)uiNewLength, pucTmp);
 						pField->ui8DataLen = 0xFF;
 						pField->ui32DataOffset = (FLMUINT32)uiAllocStart;
 					}
@@ -3890,7 +3880,7 @@ FLMBYTE * FlmRecord::getDataPtr(
 		}
 		else
 		{
-			FLMUINT	uiOffset = pField->ui32DataOffset + sizeof( FLMUINT16) + 1;
+			FLMUINT	uiOffset = pField->ui32DataOffset + sizeof( FLMUINT32) + 1;
 
 			if( getFieldDataType( pField) == FLM_BINARY_TYPE)
 			{
@@ -4089,11 +4079,11 @@ FLMUINT FlmRecord::getFieldDataLength(
 		pucLength += 2;
 	}
 
-	uiDataLen = FB2UW( pucLength);
+	uiDataLen = FB2UD( pucLength);
 
 Exit:
 
-	return uiDataLen;
+	return( uiDataLen);
 }
 
 /*****************************************************************************
@@ -4152,8 +4142,7 @@ Exit:
 Desc:	Function to get the length of the encrypted data.
 *****************************************************************************/
 FLMUINT FlmRecord::getEncryptedDataLength(
-	FlmField *			pField
-	)
+	FlmField *			pField)
 {
 	FLMBYTE *		pucBuffer = NULL;
 	FLMUINT			uiEncDataLength = 0;
@@ -4166,7 +4155,7 @@ FLMUINT FlmRecord::getEncryptedDataLength(
 	}
 
 	pucBuffer = getDataBufPtr() + pField->ui32DataOffset;
-	uiEncDataLength = FB2UW( &pucBuffer[ FLD_ENC_ENCRYPTED_DATA_LEN]);
+	uiEncDataLength = FB2UD( &pucBuffer[ FLD_ENC_ENCRYPTED_DATA_LEN]);
 
 Exit:
 
@@ -4206,8 +4195,7 @@ Exit:
 Desc:
 *****************************************************************************/
 FLMUINT FlmRecord::getEncFlags(
-	FlmField *			pField
-	)
+	FlmField *			pField)
 {
 	FLMBYTE *	pucBuffer;
 
@@ -4220,7 +4208,6 @@ FLMUINT FlmRecord::getEncFlags(
 	pucBuffer = getDataBufPtr() + pField->ui32DataOffset;
 
 	return( (FLMUINT)pucBuffer[ FLD_ENC_FLAGS]);
-
 }
 
 /*****************************************************************************
@@ -4228,8 +4215,7 @@ Desc:
 *****************************************************************************/
 void FlmRecord::setEncFlags(
 	FlmField *		pField,
-	FLMUINT			uiFlags
-	)
+	FLMUINT			uiFlags)
 {
 	FLMBYTE *	pucBuffer;
 
@@ -4669,8 +4655,8 @@ RCODE FlmRecord::checkField(
 {
 	RCODE				rc = FERR_OK;
 	FLMBYTE *		pucFldBuffer;
-	FLMUINT16		ui16DataLen;
-	FLMUINT16		ui16EncDataLen;
+	FLMUINT32		ui32DataLen;
+	FLMUINT32		ui32EncDataLen;
 	FLMUINT			uiAlignment = 0;
 	FLMBYTE *		pucDataFence = NULL;
 	FLMBYTE *		pucEncFence = NULL;
@@ -4722,16 +4708,16 @@ RCODE FlmRecord::checkField(
 		goto Exit;
 	}
 
-	ui16DataLen = FB2UW( &pucFldBuffer[ FLD_ENC_DATA_LEN]);
-	if (!ui16DataLen)
+	ui32DataLen = FB2UD( &pucFldBuffer[ FLD_ENC_DATA_LEN]);
+	if (!ui32DataLen)
 	{
 		flmAssert( 0);
 		rc = RC_SET( FERR_FAILURE);
 		goto Exit;
 	}
 
-	ui16EncDataLen = FB2UW( &pucFldBuffer[ FLD_ENC_ENCRYPTED_DATA_LEN]);
-	if (!ui16EncDataLen)
+	ui32EncDataLen = FB2UD( &pucFldBuffer[ FLD_ENC_ENCRYPTED_DATA_LEN]);
+	if (!ui32EncDataLen)
 	{
 		flmAssert( 0);
 		rc = RC_SET( FERR_FAILURE);
@@ -4756,7 +4742,7 @@ RCODE FlmRecord::checkField(
 	// Verify the picket fences.
 
 	pucDataFence = pucFldBuffer + FLM_ENC_FLD_OVERHEAD + uiAlignment;
-	pucEncFence = pucDataFence + ui16DataLen + 4;
+	pucEncFence = pucDataFence + ui32DataLen + 4;
 
 	if ( f_memcmp( pucDataFence, FLD_RAW_FENCE, FLD_PICKET_FENCE_SIZE / 2))
 	{
@@ -4783,7 +4769,7 @@ RCODE FlmRecord::checkField(
 		// Let's try to get this as unicode.
 		// Allocate a temporary buffer.
 
-		uiBufLen = (ui16DataLen * 2) + 2;
+		uiBufLen = (ui32DataLen * 2) + 2;
 		if (RC_BAD( rc = f_alloc( uiBufLen, &pUnicode)))
 		{
 			goto Exit;

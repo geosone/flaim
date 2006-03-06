@@ -50,13 +50,12 @@
 #define FSV_OBJECT_ROPS							0x0007
 #define FSV_OBJECT_POOL							0x0008
 
-typedef struct
+typedef struct FSV_RECORD_ID
 {
 	FLMUINT		uiDatabaseId;
 	FLMUINT		uiStore;
 	FLMUINT		uiContainer;
 	FLMUINT		uiDrn;
-
 } FSV_RECORD_ID;
 
 #ifdef FLM_NLM
@@ -550,7 +549,7 @@ RCODE	fsvGetStreamedResponse(
 	FLMBOOL *			pbLastPacket);
 
 RCODE fsvStreamLoopback(
-	FCS_BIOS_p			pStream,
+	FCS_BIOS *			pStream,
 	FLMUINT				uiEvent,
 	void *				UserData);
 

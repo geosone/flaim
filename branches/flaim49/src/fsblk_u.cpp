@@ -28,7 +28,7 @@
 Desc:	Need to use the current avail block - free up and point to next
 *****************************************************************************/
 RCODE FSBlockUseNextAvail(
-	FDB_p			pDb,
+	FDB *			pDb,
 	LFILE *		pLFile,
 	SCACHE **	ppSCacheRV)
 {
@@ -165,7 +165,7 @@ Notes:	This routine assumes that the block pointed to by pSCache has
 			cached block should NOT be accessed after a call to FSBlockFree.
 *****************************************************************************/
 RCODE FSBlockFree(
-	FDB_p			pDb,
+	FDB *			pDb,
 	SCACHE *		pSCache	// Pointer to pointer of cache block
 							// that is to be freed.  NOTE: Regardless of whether
 							// or not the block is actually freed, it will be
@@ -288,7 +288,7 @@ Notes:	This routine assumes that the block pointed to by pSCache has
 			cached block should NOT be accessed after a call to FSBlockFree.
 *****************************************************************************/
 RCODE FSBlockFixLinks(
-	FDB_p			pDb,
+	FDB *			pDb,
 	LFILE *		pLFile,		// Logical file.
 	SCACHE *		pSCache		// Pointer to pointer of block that
 							 		// is to be unlinked. NOTE: Regardless of whether

@@ -24,9 +24,9 @@
 
 #include "flaimsys.h"
 
-/*API~***********************************************************************
+/****************************************************************************
 Desc:	Upgrades a database to the latest FLAIM version.
-*END************************************************************************/
+****************************************************************************/
 FLMEXP RCODE FLMAPI FlmDbUpgrade(
 	HFDB				hDb,		
 	FLMUINT			uiNewVersion,
@@ -97,6 +97,7 @@ FLMEXP RCODE FLMAPI FlmDbUpgrade(
 		case FLM_VER_4_31:
 		case FLM_VER_4_50:
 		case FLM_VER_4_51:
+		case FLM_VER_4_60:
 
 			// Upgrades from these versions are supported.
 
@@ -112,8 +113,9 @@ FLMEXP RCODE FLMAPI FlmDbUpgrade(
 		case FLM_VER_4_31:
 		case FLM_VER_4_50:
 		case FLM_VER_4_51:
+		case FLM_VER_4_60:
 		case FLM_CURRENT_VERSION_NUM:
-
+		{
 			// Verify that we can do the upgrade
 
 			if (uiNewVersion < uiOldVersion)
@@ -123,15 +125,19 @@ FLMEXP RCODE FLMAPI FlmDbUpgrade(
 			}
 			else if (uiNewVersion == uiOldVersion)
 			{
-
 				// No need to do upgrade - already there.
 
 				goto Exit;
 			}
+			
 			break;
+		}
+		
 		default:
+		{
 			rc = RC_SET( FERR_UNALLOWED_UPGRADE);
 			goto Exit;
+		}
 	}
 
 	// Save the state of RFL logging flag.
@@ -547,9 +553,9 @@ Exit:
 	return( rc );
 }
 
-/*API~***********************************************************************
+/****************************************************************************
 Desc : Adds an encryption key to the database.
-*END************************************************************************/
+****************************************************************************/
 FLMEXP RCODE FLMAPI FlmEnableEncryption(
 	HFDB				hDb,
 	FLMBYTE **		ppucWrappingKeyRV,
@@ -565,7 +571,7 @@ FLMEXP RCODE FLMAPI FlmEnableEncryption(
 	FLMUINT		uiFlags = FLM_GET_TRANS_FLAGS( FLM_UPDATE_TRANS);
 	FLMBOOL		bTransBegun = FALSE;
 
-	// We must will start our own transaction.  Then we will force a checkpoint
+	// We must start our own transaction.  Then we will force a checkpoint
 	// when we commit the transaction
 
 	if ( pDb->uiTransType != FLM_NO_TRANS)
@@ -675,10 +681,10 @@ Exit:
 	return( rc);
 }
 
-/*API~***********************************************************************
+/****************************************************************************
 Desc:	Changes the way the database key is stored in the database.  Either
 		it is encrypted using a password or it is wrapped in the server key.
-*END************************************************************************/
+****************************************************************************/
 FLMEXP RCODE FLMAPI FlmDbWrapKey(
 	HFDB					hDb,
 	const char *		pszPassword)

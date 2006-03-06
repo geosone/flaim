@@ -56,7 +56,7 @@ Desc:		Allocate the LFILE and read in the LFile entries.  The default
 			any numeric order.
 ****************************************************************************/
 RCODE fdictReadLFiles(
-	FDB *			pDb,						/* (IN) (OUT) table pointers */
+	FDB *			pDb,
 	FDICT *		pDict)
 {
 	RCODE			rc = FERR_OK;
@@ -78,9 +78,8 @@ RCODE fdictReadLFiles(
 	f_memset( &TmpLFile, 0, sizeof( LFILE));
 
 	for( uiEstCount = 0, uiLFileCnt = 4,
-			uiBlkAddress = pDb->pFile->FileHdr.uiFirstLFHBlkAddr
-		; uiBlkAddress != BT_END
-		; )
+			uiBlkAddress = pDb->pFile->FileHdr.uiFirstLFHBlkAddr; 
+			uiBlkAddress != BT_END; )
 	{
 		if( RC_BAD( rc = ScaGetBlock( pDb, NULL, BHT_LFH_BLK,
 										uiBlkAddress, NULL, &pSCache)))
@@ -99,7 +98,10 @@ RCODE fdictReadLFiles(
 		else
 		{
 			if( uiEndPos > uiBlkSize)
+			{
 				uiEndPos = uiBlkSize;
+			}
+			
 			uiLFHCnt = (FLMUINT)((uiEndPos - BH_OVHD) / LFH_SIZE);
 			uiEndPos = (FLMUINT)(BH_OVHD + uiLFHCnt * LFH_SIZE);
 		}
@@ -107,7 +109,7 @@ RCODE fdictReadLFiles(
 		// May allocate too many like the inactive ones but OK for now.
 		// Allocate an additional 2 for the default data and dict containers.
 
-		if( !uiEstCount)				/* First time */
+		if( !uiEstCount)
 		{
 			uiEstCount = uiLFHCnt + uiLFileCnt;
 			if( uiEstCount)
@@ -128,7 +130,7 @@ RCODE fdictReadLFiles(
 			}
 		}
 
-		/* Read through all of the logical file definitions in the block */
+		// Read through all of the logical file definitions in the block
 
 		for( ; uiPos < uiEndPos; uiPos += LFH_SIZE)
 		{
@@ -238,7 +240,7 @@ RCODE fdictCreate(
 		goto Exit;
 	}
 
-	/* Create Dictionary and Default Data containers */
+	// Create Dictionary and Default Data containers
 
 	if( RC_BAD(rc = flmLFileCreate( pDb, &DictContLFile, FLM_DICT_CONTAINER,
 											 LF_CONTAINER)))
@@ -286,18 +288,14 @@ RCODE fdictCreate(
 	}
 	else
 	{
-		/*
-		Neither a dictionary buffer or file were specified.  Create will
-		be done with an empty dictionary.
-		*/
+		// Neither a dictionary buffer or file were specified.  Create will
+		// be done with an empty dictionary.
 
 		goto Done_Getting_Dict;
 	}
 
-	/*
-	Create a new FDICT so we can write the dictionary records.
-	This FDICT is temporary and will be allocated again.
-	*/
+	// Create a new FDICT so we can write the dictionary records.
+	// This FDICT is temporary and will be allocated again.
 
 	if( RC_BAD( rc = fdictCreateNewDict( pDb)))
 	{
@@ -323,14 +321,12 @@ RCODE fdictCreate(
 		goto Exit;
 	}
 
-	/*
-	Read through the dictionary records, adding them or creating dictionaries
-	as we go.
-	*/
+	// Read through the dictionary records, adding them or creating dictionaries
+	// as we go.
 
 	for( ;;)
 	{
-		/* Get records from buffer or file. */
+		// Get records from buffer or file
 
 		rc = ( pDictFileHdl)
 			  ? pDictRec->importRecord( pDictFileHdl, &nameTable)
@@ -351,6 +347,7 @@ RCODE fdictCreate(
 				pDb->Diag.uiInfoFlags |= FLM_DIAG_DRN;
 				pDb->Diag.uiDrn = uiDrn;
 			}
+			
 			goto Exit;
 		}
 
@@ -369,10 +366,8 @@ RCODE fdictCreate(
 
 		uiDrn = pDictRec->getID();
 
-		/*
-		Add the data dictionary record.  This also checks to see
-		if the record is already defined.
-		*/
+		// Add the data dictionary record.  This also checks to see
+		// if the record is already defined.
 
 		if( RC_BAD( rc = fdictRecUpdate( pDb, pDictContLFile,
 									pDictIxLFile, &uiDrn, pDictRec, NULL)))
@@ -401,6 +396,7 @@ RCODE fdictCreate(
 			{
 				goto Exit;
 			}
+			
 			uiLFileCount++;
 		}
 	}
@@ -793,12 +789,9 @@ FSTATIC RCODE DDMakeDictIxKey(
 	uiElmLen = MAX_KEY_SIZ - uiKeyLen;
 
 	if( RC_BAD( rc = KYCollateValue( &pKeyBuf [uiKeyLen], &uiElmLen,
-									pExportPtr,
-									pRecord->getDataLength( pvField), 
-									FLM_TEXT_TYPE, uiElmLen,
-									NULL, NULL,
-									pDb->pFile->FileHdr.uiDefaultLanguage,
-									FALSE, FALSE, FALSE, NULL)))
+		pExportPtr, pRecord->getDataLength( pvField), FLM_TEXT_TYPE, 
+		uiElmLen, NULL, NULL, pDb->pFile->FileHdr.uiDefaultLanguage,
+		FALSE, FALSE, FALSE, NULL)))
 	{
 		goto Exit;
 	}
@@ -815,41 +808,44 @@ Exit:
 Desc:	Checks to make sure a dictionary name has not already been used.
 ****************************************************************************/
 FSTATIC RCODE DDCheckNameConflict(
-	FDB *			pDb,
-	LFILE *		pDictIxLFile,		/* Dictionary index to check in. */
-	FlmRecord *	pNewRec,				/* Record whose name is to be checked. */
-	FLMUINT		uiDrn,				/* DRN of new record. */
-	FlmRecord *	pOldRec)				/* Old record, non-NULL indicates that this
-											is a modifiy operation. */
+	FDB *				pDb,
+	LFILE *			pDictIxLFile,
+	FlmRecord *		pNewRec,
+	FLMUINT			uiDrn,
+	FlmRecord *		pOldRec)
 {
-	RCODE		rc = FERR_OK;
-	BTSK		StackArray[ BH_MAX_LEVELS];
-	BTSK_p	pStack;
-	FLMBYTE	BtKeyBuf[ MAX_KEY_SIZ];
-	FLMBYTE	IxKeyBuf[ MAX_KEY_SIZ];
-	FLMUINT	uiKeyLen;
-	void *	pvField;
+	RCODE				rc = FERR_OK;
+	BTSK				StackArray[ BH_MAX_LEVELS];
+	BTSK *			pStack;
+	FLMBYTE			BtKeyBuf[ MAX_KEY_SIZ];
+	FLMBYTE			IxKeyBuf[ MAX_KEY_SIZ];
+	FLMUINT			uiKeyLen;
+	void *			pvField;
 
 	FSInitStackCache( &StackArray [0], BH_MAX_LEVELS);
 
 	if (RC_BAD( rc = DDMakeDictIxKey( pDb, pNewRec, IxKeyBuf, &uiKeyLen)))
+	{
 		goto Exit;
+	}
+	
 	StackArray[0].pKeyBuf = BtKeyBuf;
 	pStack = StackArray;
+	
 	if (RC_BAD( rc = FSBtSearch( pDb, pDictIxLFile, &pStack,
 						IxKeyBuf, uiKeyLen, 0L)))
+	{
 		goto Exit;
+	}
+	
 	if (pStack->uiCmpStatus == BT_EQ_KEY)
 	{
 		FLMUINT		uiElmDoman;
 		DIN_STATE	DinState;
 		FLMUINT		uiFoundDrn;
 
-		/*
-		If this is an ADD (!pOldRec), or the record found
-		is different than the one being updated, we have
-		a problem.
-		*/
+		// If this is an ADD (!pOldRec), or the record found is different than
+		// the one being updated, we have a problem.
 
 		uiFoundDrn = FSRefFirst( pStack, &DinState, &uiElmDoman);
 		if ((!pOldRec) || (uiFoundDrn != uiDrn))
@@ -863,19 +859,20 @@ FSTATIC RCODE DDCheckNameConflict(
 			goto Exit;
 		}
 	}
+	
 Exit:
+
 	FSReleaseStackCache( StackArray, BH_MAX_LEVELS, FALSE);
 	return( rc);
 }
-
 
 /**************************************************************************** 
 Desc:	Checks to make sure a dictionary DRN has not already been used.
 ****************************************************************************/
 FSTATIC RCODE DDCheckIDConflict(
 	FDB *				pDb,
-	LFILE *			pDictContLFile,	// Pointer to dictionary container LFILE.
-	FLMUINT			uiDrn)				// DRN of record.
+	LFILE *			pDictContLFile,
+	FLMUINT			uiDrn)
 {
 	RCODE				rc = FERR_OK;
 	FlmRecord *		pOldRec = NULL;
@@ -906,6 +903,7 @@ FSTATIC RCODE DDCheckIDConflict(
 	}
 
 Exit:
+
 	if( pOldRec)
 	{
 		pOldRec->Release();
@@ -919,13 +917,13 @@ Desc:	Generate a key for an index record and add or delete it from
 		the index.
 ****************************************************************************/
 FSTATIC RCODE DDIxDictRecord(
-	FDB *			pDb,
-	LFILE *		pDictIxLFile,
-	FLMUINT		uiDrn,
-	FlmRecord *	pRecord,
-	FLMUINT		uiFlags)
+	FDB *				pDb,
+	LFILE *			pDictIxLFile,
+	FLMUINT			uiDrn,
+	FlmRecord *		pRecord,
+	FLMUINT			uiFlags)
 {
-	RCODE		 	rc;
+	RCODE		 		rc;
 	union
 	{
 		FLMBYTE		KeyBuf [sizeof( KREF_ENTRY) + MAX_KEY_SIZ];
@@ -940,7 +938,7 @@ FSTATIC RCODE DDIxDictRecord(
 	KrefEntry.uiFlags = uiFlags;
 	KrefEntry.uiTrnsSeq = 1;
 
-	/* Add or delete the key/reference. */
+	// Add or delete the key/reference
 
 	if (RC_BAD( rc = DDMakeDictIxKey( pDb, pRecord,
 												&KeyBuf [sizeof( KREF_ENTRY)], &uiKeyLen)))
@@ -949,8 +947,12 @@ FSTATIC RCODE DDIxDictRecord(
 	}
 	KrefEntry.ui16KeyLen = (FLMUINT16)uiKeyLen;
 
-	rc = FSRefUpdate( pDb, pDictIxLFile, &KrefEntry);
+	if( RC_BAD( rc = FSRefUpdate( pDb, pDictIxLFile, &KrefEntry)))
+	{
+		goto Exit;
+	}
+	
 Exit:
+
 	return( rc);
 }
-

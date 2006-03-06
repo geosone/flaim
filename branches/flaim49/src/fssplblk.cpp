@@ -27,14 +27,14 @@
 FSTATIC RCODE FSBtResetStack(
 	FDB *			pDb,
 	LFILE *		pLFile,
-	BTSK_p *		ppStack,
+	BTSK * *		ppStack,
 	FLMBYTE *	pElement,
 	FLMUINT		uiElmLen);
 
 FSTATIC RCODE FSMoveToNextBlk(
 	FDB *			pDb,
 	LFILE *		pLFile,
-	BTSK_p *		ppStack,
+	BTSK * *		ppStack,
   	FLMUINT		nextBlkNum,
 	FLMBYTE *	pElement,
 	FLMUINT		elmLen,
@@ -51,13 +51,13 @@ Notes:	goto's are added to insure proper cleanup and to help maintain flow.
 RCODE FSBlkSplit(
 	FDB *			pDb,
 	LFILE *		pLFile,
-	BTSK_p *		ppStack,
+	BTSK * *		ppStack,
 	FLMBYTE *	pElement,
 	FLMUINT		elmLen)
 {
 	RCODE			rc = FERR_OK;
 	FLMUINT		uiBlockSize = pDb->pFile->FileHdr.uiBlockSize;
-	BTSK_p		pStack = *ppStack;
+	BTSK *		pStack = *ppStack;
 	FLMUINT    	oldCurElm = pStack->uiCurElm;
 	FLMUINT		uiElmOvhd = pStack->uiElmOvhd;
 	FLMUINT    	tempWord;
@@ -725,12 +725,12 @@ Notes:	Must guarantee at least 1 element in both blocks.
 FSTATIC RCODE FSBtResetStack(
 	FDB *		  	pDb,				/* Pointer to database DBC structure. */
 	LFILE *	  	pLFile,			/* Logical file definition */
-	BTSK_p *	  	ppStack,			/* Stack of variables for each level */
+	BTSK * *	  	ppStack,			/* Stack of variables for each level */
 	FLMBYTE *	pElement,		/* The input element to insert */
 	FLMUINT	  	elmLen)			/* Length of the element */
 {
 	RCODE			rc;
-	BTSK_p		pStack = *ppStack;					/* Stack holding all state info */
+	BTSK *		pStack = *ppStack;					/* Stack holding all state info */
 	FLMUINT		oldPKC = pStack->uiPKC;/* Save old PKC value */
 	FLMUINT		oldPvElmPKC = pStack->uiPrevElmPKC;/* Save old prev elm PKC value */
 	FLMUINT		oldBlock = pStack->uiBlkAddr;	/* Save old block number */
@@ -777,7 +777,7 @@ Notes: 	Stack could point to leaf or non-leaf nodes.  Parent elements
 FSTATIC RCODE FSMoveToNextBlk(
 	FDB *		  	pDb,
 	LFILE *	  	pLFile,
-	BTSK_p *	  	ppStack,
+	BTSK * *	  	ppStack,
 	FLMUINT    	nextBlkNum,
 	FLMBYTE *   pElement,
 	FLMUINT     elmLen,
@@ -786,7 +786,7 @@ FSTATIC RCODE FSMoveToNextBlk(
 	FLMUINT  *	curElmRV)
 {
 	RCODE     	rc = FERR_OK;
-	BTSK_p		pStack = *ppStack;
+	BTSK *		pStack = *ppStack;
 	FLMUINT  	uiBlkEnd = pStack->uiBlkEnd;
 	FLMUINT   	oldCurElm = pStack->uiCurElm;	// Original current element value
 	FLMBYTE *  	curElmPtr;

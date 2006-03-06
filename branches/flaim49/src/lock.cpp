@@ -26,8 +26,6 @@
 
 /****************************************************************************
 Desc:	This routine locks a database for exclusive access.
-Ret:	FERR_OK		- Indicates that the database was successfully locked.
-		FCERR_LOCK	-	Error locking database file.
 ****************************************************************************/
 RCODE dbLock(
 	FDB *		pDb,
@@ -99,9 +97,6 @@ Exit:
 /****************************************************************************
 Desc:	This routine unlocks a database that was previously locked
 		using the dbLock routine.
-Ret:	FERR_OK		- 	Indicates that the database was
-							successfully unlocked.
-		FERR_UNLOCK	-	Error unlocking file.
 ****************************************************************************/
 RCODE dbUnlock(
 	FDB *			pDb)
@@ -126,6 +121,5 @@ RCODE dbUnlock(
 		}
 	}
 
-// Exit:
 	return( rc);
 }

@@ -2160,7 +2160,7 @@ Exit:
 /****************************************************************************
 Desc:
 *****************************************************************************/
-FCL_WIRE::FCL_WIRE( CS_CONTEXT_p pCSContext, FDB_p pDb) :
+FCL_WIRE::FCL_WIRE( CS_CONTEXT * pCSContext, FDB * pDb) :
 	FCS_WIRE( pCSContext != NULL ? pCSContext->pIDataStream : NULL,
 			  pCSContext != NULL ? pCSContext->pODataStream : NULL)
 {
@@ -2177,7 +2177,7 @@ FCL_WIRE::FCL_WIRE( CS_CONTEXT_p pCSContext, FDB_p pDb) :
 Desc:	Sets the CS CONTEXT in FCL_WIRE and the I/O streams in FCS_WIRE
 *****************************************************************************/
 void FCL_WIRE::setContext(
-	CS_CONTEXT_p		pCSContext)
+	CS_CONTEXT *		pCSContext)
 {
 	m_pCSContext = pCSContext;
 	m_bSendGedcom = pCSContext->bGedcomSupport;

@@ -67,7 +67,7 @@ RCODE fdictRebuild(
 	RCODE			rc = FERR_OK;
 	TDICT			tDict;
 	FLMUINT		uiCount;
-	IXD_p			pIxd;
+	IXD *			pIxd;
  	FLMBOOL		bTDictInitialized = FALSE;
 	FLMBOOL		bSuspended;
 	FLMUINT		uiOnlineTransId;

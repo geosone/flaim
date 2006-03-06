@@ -118,10 +118,10 @@ char *	FlmCorruptStrings[ FLM_LAST_CORRUPT_ERROR]
 	"FLM_BAD_FIELD_FLAG",				// 84
 	};
 
-/*API~***********************************************************************
+/****************************************************************************
 Desc : Returns a pointer to the string representation of a corruption
 		 error code.
-*END************************************************************************/
+****************************************************************************/
 char * FlmVerifyErrToStr(
 	eCorruptionType	eCorruption
 	)

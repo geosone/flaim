@@ -372,9 +372,10 @@ RCODE fdictGetNextIXD(
 		}
 	}
 
+	// Special case -- return the dictionary index
+	
 	if( !pIxd && uiIndexNum < FLM_DICT_INDEX)
 	{
-		// Special case -- return the dictionary index
 		pIxd = pDict->pIxdTbl;
 	}
 
@@ -395,8 +396,6 @@ RCODE fdictGetNextIXD(
 	}
 
 Exit:
-
-	// Always set the return parm.
 
 	if( ppIxd)
 	{

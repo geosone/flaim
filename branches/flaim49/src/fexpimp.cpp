@@ -35,12 +35,12 @@ static FLMBYTE FlmBinaryRecHeader [BINARY_GED_HEADER_LEN]
 /* Local function prototypes. */
 
 FSTATIC RCODE expWrite(
-	EXP_IMP_INFO_p			pExpImpInfo,
+	EXP_IMP_INFO *			pExpImpInfo,
 	const FLMBYTE *		pData,
 	FLMUINT					uiDataLen);
 
 FSTATIC RCODE impRead(
-	EXP_IMP_INFO_p			pExpImpInfo,
+	EXP_IMP_INFO *			pExpImpInfo,
 	FLMBYTE *				pData,
 	FLMUINT					uiDataLen,
 	FLMUINT *				puiBytesReadRV);
@@ -56,7 +56,7 @@ RCODE expImpInit(
 												EXPIMP_IMPORT_DICTIONARY
 												EXPIMP_EXPORT_DICTIONARY
 												EXPIMP_IMPORT_EXPORT_GEDCOM */
-	EXP_IMP_INFO_p	pExpImpInfoRV	/* Export/Import info. structure that is
+	EXP_IMP_INFO *	pExpImpInfoRV	/* Export/Import info. structure that is
 												to be initialized. */
 	)
 {
@@ -118,7 +118,7 @@ Desc:	Frees up the buffers used to do reading/writing during an export or
 		import.
 ****************************************************************************/
 void expImpFree(
-	EXP_IMP_INFO_p	pExpImpInfo		/* Export/Import information. */
+	EXP_IMP_INFO *	pExpImpInfo		/* Export/Import information. */
 	)
 {
 	if (pExpImpInfo->pBuf)
@@ -130,7 +130,7 @@ void expImpFree(
 Desc:	Flush the current export buffer to disk.
 ****************************************************************************/
 RCODE expFlush(
-	EXP_IMP_INFO_p	pExpImpInfo	)	/* Export/Import information. */
+	EXP_IMP_INFO *	pExpImpInfo	)	/* Export/Import information. */
 {
 	RCODE		rc = FERR_OK;
 	FLMUINT	uiBytesWritten;
@@ -159,7 +159,7 @@ Exit:
 Desc:	Seek to an absolute offset in the export/import file.
 ****************************************************************************/
 RCODE expImpSeek(
-	EXP_IMP_INFO_p	pExpImpInfo,	/* Export/Import information. */
+	EXP_IMP_INFO *	pExpImpInfo,	/* Export/Import information. */
 	FLMUINT			uiSeekPos		/* Absolute offset to seek to. */
 	)
 {
@@ -189,7 +189,7 @@ Exit:
 Desc:	Writes data to the export file via the export buffer.
 ****************************************************************************/
 FSTATIC RCODE expWrite(
-	EXP_IMP_INFO_p			pExpImpInfo,
+	EXP_IMP_INFO *			pExpImpInfo,
 	const FLMBYTE *		pData,
 	FLMUINT					uiDataLen)
 {
@@ -223,7 +223,7 @@ Exit:
 Desc:		Writes one FLAIM record to a binary GEDCOM file.
 ****************************************************************************/
 RCODE expWriteRec(
-	EXP_IMP_INFO_p	pExpImpInfo,	/* Buffer info. for export file. */
+	EXP_IMP_INFO *	pExpImpInfo,	/* Buffer info. for export file. */
 	FlmRecord *		pRecord,			/* record to be written out. */
 	FLMUINT			uiDrn)			/* DRN of GEDCOM record being written out. */
 {
@@ -352,7 +352,7 @@ Exit:
 Desc:	Reads data from the import file via the import buffer.
 ****************************************************************************/
 FSTATIC RCODE impRead(
-	EXP_IMP_INFO_p	pExpImpInfo,	/* Export/Import information. */
+	EXP_IMP_INFO *	pExpImpInfo,	/* Export/Import information. */
 	FLMBYTE *		pData,			/* Buffer where data is to be read into. */
 	FLMUINT			uiDataLen,		/* Length of data to be read in. */
 	FLMUINT *		puiBytesReadRV)	/* Returns amount of data read in. */
@@ -415,7 +415,7 @@ Exit:
 Desc:	Reads one GEDCOM record from an export/import file.
 ****************************************************************************/
 RCODE impReadRec(
-	EXP_IMP_INFO_p	pExpImpInfo,	/* Export/Import information. */
+	EXP_IMP_INFO *	pExpImpInfo,	/* Export/Import information. */
 	FlmRecord **	ppRecordRV)		/* Returns record that was read in. */
 {
 	RCODE			rc = FERR_OK;

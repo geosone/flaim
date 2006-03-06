@@ -24,33 +24,18 @@
 
 #include "flaimsys.h"
 
-/*API~***********************************************************************
-Name : GedGetBINARY
-Area : GEDCOM
-Desc : Gets binary data from a GEDCOM TEXT node or a GEDCOM
-		 BINARY node.  If the node is a TEXT node, it converts each two
-	    hex digits to one byte of BINARY.
-Notes: If the buffer pointer is NULL, the routine just determines how
-		 much buffer space is needed to return the data in binary
-		 format.
-*END************************************************************************/
-RCODE // SUCCESS - No problems in processing
-		// FERR_CONV_DEST_OVERFLOW - number of bytes specified by *bufLenRV is
-		// not sufficient
-		// FERR_CONV_ILLEGAL - the GEDCOM node is not a BINARY or TEXT type node
-		// FERR_CONV_BAD_DIGIT - only hexadecimal values in a TEXT type node
-		// are allowed for conversion.
-	GedGetBINARY(
-		NODE *		node,
-			// [IN] Pointer to a GEDCOM node containing binary or hexadecimal
-			// text data.
-		void *		buffer,
-			// [OUT} Pointer to the output buffer that will contain the binary
-			// data.
-		FLMUINT  *	bufLenRV
-			// [IN] Specifies the length of buffer.
-			// [OUT] Returns the number of bytes used in buffer.
-	)
+/****************************************************************************
+Desc:		Gets binary data from a GEDCOM TEXT node or a GEDCOM
+			BINARY node.  If the node is a TEXT node, it converts each two
+			hex digits to one byte of BINARY.
+Notes:	If the buffer pointer is NULL, the routine just determines how
+			much buffer space is needed to return the data in binary
+			format.
+****************************************************************************/
+RCODE GedGetBINARY(
+	NODE *		node,
+	void *		buffer,
+	FLMUINT  *	bufLenRV)
 {
 	RCODE			rc = FERR_OK;
 	FLMBYTE *	ptr;
@@ -104,9 +89,9 @@ Exit:
 	return( rc);
 }
 
-/*API~*********************************************************************
+/***************************************************************************
 Desc:	Copies a binary string of bytes into a GEDCOM node.
-*END************************************************************************/
+****************************************************************************/
 RCODE GedPutBINARY(
 	POOL * 			pPool,
 	NODE * 			node,

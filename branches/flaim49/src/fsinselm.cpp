@@ -25,7 +25,7 @@
 #include "flaimsys.h"
 
 FSTATIC RCODE FSBlkInsElm(
-	BTSK_p		stk,
+	BTSK *		stk,
 	FLMBYTE * 	pElm,
 	FLMUINT		uiElmLen,
 	FLMUINT		uiBlkSize);
@@ -42,12 +42,12 @@ Notes: 	This is NOT a recursive routine like FSBtInsert() is.  Does not work
 RCODE FSBtReplace(
 	FDB *			pDb,
 	LFILE *		pLFile,
-	BTSK_p *		pStackRV,
+	BTSK * *		pStackRV,
 	FLMBYTE *	pElement,
 	FLMUINT		uiElmLen)
 {
 	RCODE			rc;
-	BTSK_p		pStack = *pStackRV;
+	BTSK *		pStack = *pStackRV;
 	FLMBYTE *	pCurElm = CURRENT_ELM( pStack );
 	FLMBYTE *	pMovePoint;
 	FLMUINT		uiCurRecOfs = (FLMUINT) BBE_REC_OFS( pCurElm);
@@ -145,12 +145,12 @@ Desc:		Insert an pElement/key into a logical b-tree with split support.
 RCODE FSBtInsert(
 	FDB *			pDb,
 	LFILE *		pLFile,
-	BTSK_p *		pStackRV,
+	BTSK * *		pStackRV,
 	FLMBYTE *	pElement,
 	FLMUINT		uiElmLen)
 {
 	RCODE			rc;
-	BTSK_p		pStack = *pStackRV;
+	BTSK *		pStack = *pStackRV;
 	FLMUINT		uiBlkSize = pDb->pFile->FileHdr.uiBlockSize;
 
 	/* Log the block before modifying it. */
@@ -192,7 +192,7 @@ Notes:	Variables on the stack are used to save referencing the stack struct.
 			and coding leaf and non-leaf elements within the same routine.
 *****************************************************************************/
 FSTATIC RCODE FSBlkInsElm(
-	BTSK_p		pStack,						/* Stack holding all state info */
+	BTSK *		pStack,						/* Stack holding all state info */
 	FLMBYTE *	pElement,						/* The input element to insert */
 	FLMUINT		uiElmLen,						/* Length of the element */
 	FLMUINT		uiBlkSize						/* Size of the stack block */

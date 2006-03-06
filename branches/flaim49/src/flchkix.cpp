@@ -890,7 +890,7 @@ RCODE
 			rc = flmDeleteRecord( pDb, pRecLFile,
 				uiDrn, &pOldRecord, TRUE);
 
-			if (gv_FlmSysData.EventHdrs [F_EVENT_UPDATES].pEventCBList)
+			if (gv_FlmSysData.UpdateEvents.pEventCBList)
 			{
 				flmUpdEventCallback( pDb,
 						F_EVENT_DELETE_RECORD, (HFDB)pDb, rc, uiDrn,

@@ -476,11 +476,6 @@ static F_WebPage * createHttpConfigParmsPage()
 	return new F_HttpConfigParmsPage;
 }
 
-static F_WebPage * createEventHdrPage()
-{
-	return new F_EventHdrPage;
-}
-
 static F_WebPage * createFlmThreadsPage()
 {
 	return new F_FlmThreadsPage;
@@ -628,13 +623,14 @@ static F_WebPage * createLogHeaderPage()
 }
 
 // Initialize the static variables in the class...
+
 CREATE_FN F_WebPageFactory::m_fnDefault = createMainFrame;
 CREATE_FN F_WebPageFactory::m_fnError = createErrorPage;
 CREATE_FN F_WebPageFactory::m_fnGblAccess = createGblAccessPage;
 CREATE_FN F_WebPageFactory::m_fnSessionAccess = createSessionAccessPage;
 
-RegistryEntry F_WebPageFactory::m_Registry[] = {
-	{"EventHdr", createEventHdrPage, FALSE},
+RegistryEntry F_WebPageFactory::m_Registry[] = 
+{
 	{"FDB", createFDBPage, FALSE},
 	{"FFile", createFFilePage, FALSE},
 	{"FileHashTbl", createFileHashTblPage, FALSE},

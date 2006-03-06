@@ -29,12 +29,9 @@
 #define NODE_CONTAINER_POS	(NODE_DRN_POS + sizeof( FLMUINT))
 #define NODE_DB_POS			(NODE_CONTAINER_POS + sizeof( FLMUINT))
 
-/*API~*********************************************************************
-Name : GedNodeCreate
-Area : GEDCOM
-Desc : Allocates space for a new GEDCOM node.  Returns a pointer to the
-		 node or NULL if an allocation error occurs.
-Notes: 
+/****************************************************************************
+Desc:	Allocates space for a new GEDCOM node.  Returns a pointer to the
+		node or NULL if an allocation error occurs.
 ****************************************************************************/
 NODE * GedNodeCreate(
 	POOL *		pPool,
@@ -420,9 +417,9 @@ Exit:
 }
 
 
-/*API~*********************************************************************
+/***************************************************************************
 Desc:	Places the suppolied DRN into a context type node.
-*END************************************************************************/
+****************************************************************************/
 RCODE GedPutRecPtr(
 	POOL *		pPool,
 	NODE *		nd,
@@ -459,12 +456,10 @@ Exit:
 	return( rc);
 }
 
-/*API~*********************************************************************
-Name : GedGetRecPtr
-Area : GEDCOM
-Desc : Obtain the DRN (database record number) from a GEDCOM context type
-		 node.  No conversion from other data types will be performed.
-*END************************************************************************/
+/****************************************************************************
+Desc:	Obtain the DRN (database record number) from a GEDCOM context type
+		node.  No conversion from other data types will be performed.
+****************************************************************************/
 RCODE  // FERR_CONV_ILLEGAL - the input node (nd) is not a context type.
 		// FERR_CONV_NULL_SRC - The input node (nd) is NULL.
 	GedGetRecPtr(
@@ -508,38 +503,15 @@ Exit:
 	return( rc);
 }
 
-
-/*API~*********************************************************************
-Name : GedWalk
-Area : GEDCOM
-Desc : Traverses a tree or forest of GEDCOM tress.  For each GEDCOM node 
-		 that is visited, a user specified callback function is called.
-
-		The passed-in function needs to accept the following parameters:
-			FLMUINT	level;		* current relative level of this node *
-			NODE *	node;			* pointer to current node *
-			void *	arg;			* user's passed-thru parameter *
-		This passed-in function is repeatedly called until its return code is
-		not SUCCESS, the tree/forest is completely processed, or the count
-		expires.
-
-Notes:This function can be extremely useful in many contexts. 									 
-*END************************************************************************/
+/***************************************************************************
+Desc:		Traverses a tree or forest of GEDCOM tress.  For each GEDCOM node 
+			that is visited, a user specified callback function is called.
+****************************************************************************/
 RCODE	GedWalk(
-	FLMUINT		treeCnt,
-		// [IN] treeCnt is the number of sibling trees to process.  
-		// Pass in GED_TREE to walk through the input node and all
-		// of its children.  Pass in GED_FOREST to walk through the input
-		// node and all of its siblings as well as all children.  A number
-		// may also be specified to limit the number of trees that are
-		// walked through.  GED_TREE has a value of one.
-	NODE * 		node,
-		// [IN] Pointer to the first node of a GEDCOM tree or forest.
+	FLMUINT			treeCnt,
+	NODE * 			node,
 	GEDWALK_FUNC_p	func,
-		// [IN] User specified callback function called on every GEDCOM
-		// node that is visited.
-	void *		arg)
-		// [IN] Argument used as an argument for the callback function func().
+	void *			arg)
 {
 	RCODE	rc;
 

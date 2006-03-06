@@ -44,7 +44,7 @@ FSTATIC RCODE chkVerifyAvailList(
 	DB_INFO *		pDbInfo,
 	FLMBOOL *		pbStartOverRV);
 
-/*API~***********************************************************************
+/****************************************************************************
 Desc:		Checks for physical corruption in a FLAIM database.
 Note:		The routine verifies the database by first reading through
 		 	the database to count certain block types which are in linked lists.
@@ -52,7 +52,7 @@ Note:		The routine verifies the database by first reading through
 			in the database.  The reason for the first pass is so that when we
 			verify the linked lists, we can keep ourselves from getting into
 			an infinite loop if there is a loop in the lists.
-*END************************************************************************/
+****************************************************************************/
 FLMEXP RCODE FLMAPI FlmDbCheck(
 	HFDB						hDb,
 	const char *			pDbFileName,

@@ -171,6 +171,9 @@ public:
 	RCODE reduceSizeTest(
 		const char *	pszDbName);
 		
+	RCODE rflSizeEventTest(
+		const char *	pszDbName);
+		
 	RCODE removeDbTest(
 		const char *	pszDbName);
 		
@@ -181,6 +184,9 @@ private:
 	HFDB	m_hDb;
 };
 
+/***************************************************************************
+Desc:
+****************************************************************************/
 const char * gv_pszFamilyNames[] =
 {
 	"Walton",
@@ -288,6 +294,9 @@ const char * gv_pszFamilyNames[] =
 	NULL
 };
 
+/***************************************************************************
+Desc:
+****************************************************************************/
 const char * gv_pszGivenNames[] =
 {
 	"Robby",
@@ -385,6 +394,26 @@ const char * gv_pszGivenNames[] =
 	"Zack",
 	NULL
 };
+
+/****************************************************************************
+Desc:
+****************************************************************************/
+void testSizeEventHandler(
+	FEventType	eEventType,
+	void *		pvAppData,
+	void *		pvEventData1,
+	void *		pvEventData2)
+{
+	(void)pvEventData2;
+	
+	if( eEventType == F_EVENT_RFL_SIZE)
+	{
+		FLM_RFL_SIZE_EVENT *		pRflSizeEvent = (FLM_RFL_SIZE_EVENT *)pvEventData1;
+		FLMUINT64 *					pui64RflSize = (FLMUINT64 *)pvAppData;
+		
+		*pui64RflSize = pRflSizeEvent->ui64RflDiskUsage;
+	}
+}
 
 /****************************************************************************
 Desc:
@@ -2054,7 +2083,7 @@ RCODE IFlmTestImpl::backupRestoreDbTest( void)
 	if (RC_BAD( rc = FlmDbRestore( DB_RESTORE_NAME_STR, NULL, BACKUP_PATH,
 								NULL, NULL, NULL)))
 	{
-		MAKE_ERROR_STRING( "calling FlmDbBackupEnd", rc, m_szFailInfo);
+		MAKE_ERROR_STRING( "calling FlmDbRestore", rc, m_szFailInfo);
 		goto Exit;
 	}
 	bPassed = TRUE;
@@ -2863,6 +2892,124 @@ Exit:
 /***************************************************************************
 Desc:
 ****************************************************************************/
+RCODE IFlmTestImpl::rflSizeEventTest(
+	const char *	pszDbName)
+{
+	RCODE				rc = FERR_OK;
+	HFDB				hDb = HFDB_NULL;
+	FLMBOOL			bPassed = FALSE;
+	FLMBOOL			bTransActive = FALSE;
+	char				szTest [200];
+	FlmRecord *		pRecord = NULL;
+	HFEVENT			hEvent = HFEVENT_NULL;
+	FLMUINT64		ui64RflSize = 0;
+	
+	f_sprintf( szTest, "RFL Size Event Test (%s)", pszDbName);
+	beginTest( szTest);
+	
+	// Register for size events
+	
+	if( RC_BAD( rc = FlmRegisterForEvent( F_EVENT_SIZE, testSizeEventHandler, 
+		&ui64RflSize, &hEvent)))
+	{
+		goto Exit;
+	}
+	
+	// Open the database
+	
+	if( RC_BAD( rc = FlmDbOpen( pszDbName, NULL, NULL, 0, NULL, &hDb)))
+	{
+		MAKE_ERROR_STRING( "calling FlmDbOpen", rc, m_szFailInfo);
+		goto Exit;
+	}
+
+	// Keep RFL files
+
+	if( RC_BAD( rc = FlmDbConfig( hDb, FDB_RFL_KEEP_FILES, 
+		(void *) TRUE, NULL)))
+	{
+		goto Exit;
+	}
+	
+	// Set the RFL size event threshold
+	
+	if( RC_BAD( rc = FlmDbConfig( hDb, FDB_SET_RFL_SIZE_THRESHOLD, 
+		(void *) 1, NULL)))
+	{
+		goto Exit;
+	}
+	
+	// Set the RFL size event intervals
+	
+	if( RC_BAD( rc = FlmDbConfig( hDb, FDB_SET_RFL_SIZE_EVENT_INTERVALS, 
+		(void *) 1, (void *) 1)))
+	{
+		goto Exit;
+	}
+	
+	for( ;;)
+	{
+		if( ui64RflSize)
+		{
+			break;
+		}
+		
+		f_sleep( 100);
+	}
+	
+	ui64RflSize = 0;
+	FlmDbClose( &hDb);
+
+	// Open the database
+	
+	if( RC_BAD( rc = FlmDbOpen( pszDbName, NULL, NULL, 0, NULL, &hDb)))
+	{
+		MAKE_ERROR_STRING( "calling FlmDbOpen", rc, m_szFailInfo);
+		goto Exit;
+	}
+	
+	for( ;;)
+	{
+		if( ui64RflSize)
+		{
+			break;
+		}
+		
+		f_sleep( 100);
+	}
+
+	bPassed = TRUE;
+	FlmDbClose( &hDb);
+	
+Exit:
+
+	if (pRecord)
+	{
+		pRecord->Release();
+	}
+
+	if (bTransActive)
+	{
+		(void)FlmDbTransAbort( hDb);
+	}
+
+	if (hDb != HFDB_NULL)
+	{
+		(void)FlmDbClose( &hDb);
+	}
+	
+	if( hEvent != HFEVENT_NULL)
+	{
+		FlmDeregisterForEvent( &hEvent);
+	}
+
+	endTest( bPassed);
+	return( rc);
+}
+
+/***************************************************************************
+Desc:
+****************************************************************************/
 RCODE IFlmTestImpl::removeDbTest(
 	const char *	pszDbName)
 {
@@ -2913,6 +3060,13 @@ RCODE IFlmTestImpl::execute( void)
 		goto Exit;
 	}
 	
+	// RFL size event test
+	
+	if (RC_BAD( rc = rflSizeEventTest( DB_NAME_STR)))
+	{
+		goto Exit;
+	}
+
 	// FlmRecordAdd test
 	
 	if (RC_BAD( rc = addRecordTest( &uiDrn)))
@@ -3063,7 +3217,7 @@ RCODE IFlmTestImpl::execute( void)
 	{
 		goto Exit;
 	}
-
+	
 	// Remove database test
 	
 	if (RC_BAD( rc = removeDbTest( DB_RENAME_NAME_STR)))
@@ -3089,4 +3243,3 @@ Exit:
 
 	return( rc);
 }
-

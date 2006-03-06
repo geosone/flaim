@@ -24,7 +24,7 @@
 
 #include "flaimsys.h"
 
-/*API~***********************************************************************
+/****************************************************************************
 Desc:	Given an input key tree a FLAIM collated key will be built and returned
 		to the user.
 ****************************************************************************/
@@ -39,7 +39,7 @@ FLMEXP RCODE FLMAPI FlmKeyBuild(
 {
 	RCODE			rc;
 	FDB *			pDb = (FDB *)hDb;
-	IXD_p			pIxd;
+	IXD *			pIxd;
 	FLMBOOL		bImplicitTrans = FALSE;
 
 	if( RC_OK( rc = fdbInit( pDb, FLM_READ_TRANS,

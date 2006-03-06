@@ -36,7 +36,7 @@ FLMBYTE SENLenArray[]
 Desc:		Go to the next data record given a stack.
 ****************************************************************************/
 RCODE FSNextRecord(
-	FDB_p			pDb,
+	FDB *			pDb,
 	LFILE *		pLFile,
 	BTSK *		pStack)
 {
@@ -82,10 +82,10 @@ Return:	RCODE FERR_OK | FERR_BT_END_OF_DATA (0xFFFF) or error
 TODO:		First call to DINNextVal() should be replaced with DINSkipVal()
 ****************************************************************************/
 RCODE FSRefNext(
-	FDB_p			pDb,
+	FDB *			pDb,
 	LFILE *		pLFile,	/* Logical file definition */
-	BTSK_p		pStack,	/* Small stack to hold btree variables*/
-	DIN_STATE_p	pState,	/* Holds offset, one run number, etc.*/
+	BTSK *		pStack,	/* Small stack to hold btree variables*/
+	DIN_STATE *	pState,	/* Holds offset, one run number, etc.*/
 	FLMUINT *	puiDin)	/* Last din used and returns din */
 {
 	RCODE			rc;						/* Return code */
@@ -138,8 +138,8 @@ Out:		Updates the state for the position of *puiDin
 Return:	FERR_OK, FERR_FAILURE -positioned to next reference or past last ref
 ****************************************************************************/
 RCODE FSRefSearch(
-	BTSK_p		pStack,		/* Small stack to hold btree variables*/
-	DIN_STATE_p	pState,		/* Holds offset, one run number, etc.*/
+	BTSK *		pStack,		/* Small stack to hold btree variables*/
+	DIN_STATE *	pState,		/* Holds offset, one run number, etc.*/
 	FLMUINT *	puiDin)		/* Target uiDin & value that is returned*/
 {
 	FLMBYTE *	pCurRef;		/* Points to current reference */
@@ -224,7 +224,7 @@ Future:	Could save the one run value as part of the state so we don't read
 ****************************************************************************/
 FLMUINT DINNextVal(
 	FLMBYTE *	puiDin,
-	DIN_STATE_p	pState)
+	DIN_STATE *	pState)
 {
 	FLMBYTE *	pOneRun;
 	FLMBYTE *	pCurDin;
@@ -308,7 +308,7 @@ Return:	value of one run - zero if bad code
 ****************************************************************************/
 FLMUINT DINOneRunVal(
 	FLMBYTE *		puiDin,
-	DIN_STATE_p		pState)
+	DIN_STATE *		pState)
 {
 	FLMBYTE *		pOneRun;
 	FLMBYTE *		pCurDin;

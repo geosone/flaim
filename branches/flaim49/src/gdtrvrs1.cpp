@@ -24,19 +24,12 @@
 
 #include "flaimsys.h"
 
-/*API~*********************************************************************
-Name : GedSibNext
-Area : GEDCOM
-Desc : Returns a pointer to the sibling node that is after the input node.
-		 NULL is returned if there is not a next sibling.
-Notes: 
-*END************************************************************************/
-NODE *  
-		// Pointer to the next sibling from node or NULL if the next
-		// sibling does not exist.
-	GedSibNext(
-		NODE *		node)
-			// [IN] Pointer to a GEDCOM node.
+/****************************************************************************
+Desc:		Returns a pointer to the sibling node that is after the input node.
+			NULL is returned if there is not a next sibling.
+****************************************************************************/
+NODE * GedSibNext(
+	NODE *		node)
 {
 	FLMUINT	lev;
 
@@ -55,18 +48,12 @@ NODE *
 		:	NULL);
 }
 
-/*API~*********************************************************************
-Name : GedSibNext
-Area : GEDCOM
-Desc : Returns a pointer to the parent of the input node.
-		 NULL is returned if there is not a parent.
-Notes: 
-*END************************************************************************/
-NODE *  
-		// Returns a pointer to the parent of the input node or NULL.
-	GedParent(
+/****************************************************************************
+Desc:		Returns a pointer to the parent of the input node.
+			NULL is returned if there is not a parent.
+****************************************************************************/
+NODE * GedParent(
 		NODE *		node)
-			// [IN] Pointer to a GEDCOM node.
 {
 	if( node)
 	{
@@ -79,19 +66,12 @@ NODE *
 	return( node);
 }
 
-/*API~*********************************************************************
-Name : GedChild
-Area : GEDCOM
-Desc : Returns a pointer to the child of the input node.
-		 NULL is returned if there is not a child.
-Notes: 
-*END************************************************************************/
-NODE *  
-		// Returns a pointer to the child of the input node or NULL.
-	GedChild(
-		NODE *		node
-			// [IN] POinter to a GEDCOM node.
-	)
+/****************************************************************************
+Desc:		Returns a pointer to the child of the input node.
+			NULL is returned if there is not a child.
+****************************************************************************/
+NODE * GedChild(
+	NODE *		node)
 {
 	return(
 		node &&
@@ -102,17 +82,11 @@ NODE *
 	);
 }
 
-/*API~*********************************************************************
-Name : GedNodeCreate
-Area : GEDCOM
-Desc : Returns a pointer to the previous sibling of the input node.
-Notes: 
-*END************************************************************************/
-NODE *  
-		// Returns a pointer to the previous sibling or NULL.
-	GedSibPrev(
-		NODE *		node)
-			// [IN] Pointer to a GEDCOM node.
+/****************************************************************************
+Desc:		Returns a pointer to the previous sibling of the input node.
+****************************************************************************/
+NODE * GedSibPrev(
+	NODE *		node)
 {
 	FLMUINT	lev;
 

@@ -115,7 +115,7 @@ FSTATIC void flmCleanup( void);
 FSTATIC void flmUnlinkFileFromBucket(
 	FFILE *			pFile);
 
-RCODE flmMonitor(
+RCODE flmSystemMonitor(
 	F_Thread *		pThread);
 
 FSTATIC RCODE flmRegisterHttpCallback(
@@ -604,17 +604,16 @@ FSTATIC void flmUnlockSysData( void)
 #endif
 }
 
-/*API~***********************************************************************
+/****************************************************************************
 Desc : Startup FLAIM.
 Notes: This routine may be called multiple times.  However, if that is done
 		 FlmShutdown() should be called for each time this is called
 		 successfully.  This routine does not handle race conditions on
 		 platforms that do not support atomic increment.
-*END************************************************************************/
+****************************************************************************/
 FLMEXP RCODE FLMAPI FlmStartup( void)
 {
 	RCODE				rc = FERR_OK;
-	FLMINT			iEventCategory;
 	FLMUINT			uiCacheBytes;
 #ifdef FLM_USE_NICI
 	int				iHandle;
@@ -688,20 +687,16 @@ FLMEXP RCODE FLMAPI FlmStartup( void)
 	gv_FlmSysData.uiMaxStratifyTime = DEFAULT_MAX_STRATIFY_TIME;
 
 	// Initialize the event categories to have no mutex.
-
-	for (iEventCategory = 0;
-		  iEventCategory < F_MAX_EVENT_CATEGORIES;
-		  iEventCategory++)
-	{
-		gv_FlmSysData.EventHdrs [iEventCategory].hMutex = F_MUTEX_NULL;
-	}
+	
+	gv_FlmSysData.UpdateEvents.hMutex = F_MUTEX_NULL;
+	gv_FlmSysData.LockEvents.hMutex = F_MUTEX_NULL;
+	gv_FlmSysData.SizeEvents.hMutex = F_MUTEX_NULL;
 
 	// Memory initialization should be first.
 
 	f_memoryInit();
 
 #if defined( FLM_NLM) || (defined( FLM_WIN) && !defined( FLM_64BIT))
-	/* Initialize the checksum code variable. */
 	InitFastBlockCheckSum();
 #endif
 
@@ -715,8 +710,6 @@ FLMEXP RCODE FLMAPI FlmStartup( void)
 #ifdef FLM_DBG_LOG
 	flmDbgLogInit();
 #endif
-
-	/* Initialize all of the fields. */
 
 	FLM_SECS_TO_TIMER_UNITS( DEFAULT_MAX_UNUSED_TIME,
 		gv_FlmSysData.uiMaxUnusedTime);
@@ -814,7 +807,7 @@ FLMEXP RCODE FLMAPI FlmStartup( void)
 		goto Exit;
 	}
 
-	/* Create the mutex for controlling access to the structure. */
+	// Create the mutex for controlling access to the structure
 
 	if (RC_BAD( rc = f_mutexCreate( &gv_FlmSysData.hShareMutex)))
 	{
@@ -846,7 +839,7 @@ FLMEXP RCODE FLMAPI FlmStartup( void)
 		goto Exit;
 	}
 
-	/* Initialize a statistics structure. */
+	// Initialize a statistics structure
 
 	if (RC_BAD( rc = flmStatInit( &gv_FlmSysData.Stats, TRUE)))
 	{
@@ -854,7 +847,7 @@ FLMEXP RCODE FLMAPI FlmStartup( void)
 	}
 	gv_FlmSysData.bStatsInitialized = TRUE;
 
-	/* Allocate memory for the file name hash table. */
+	// Allocate memory for the file name hash table
 
 	if (RC_BAD(rc = flmAllocHashTbl( FILE_HASH_ENTRIES,
 								&gv_FlmSysData.pFileHashTbl)))
@@ -864,7 +857,7 @@ FLMEXP RCODE FLMAPI FlmStartup( void)
 
 	gv_FlmSysData.uiNextFFileId = 1;
 
-	/* Allocate and Initialize FLAIM Shared File Handle Manager */
+	// Allocate and Initialize FLAIM Shared File Handle Manager
 
 	if ((gv_FlmSysData.pFileHdlMgr =
 				new F_FileHdlMgr( &gv_FlmSysData.hFileHdlMutex)) == NULL)
@@ -879,7 +872,7 @@ FLMEXP RCODE FLMAPI FlmStartup( void)
 		goto Exit;
 	}
 
-	/* Allocate and Initialize FLAIM Shared File System object */
+	// Allocate and Initialize FLAIM Shared File System object
 
 	if ((gv_FlmSysData.pFileSystem = f_new F_FileSystemImp) == NULL)
 	{
@@ -908,7 +901,7 @@ FLMEXP RCODE FLMAPI FlmStartup( void)
 	gv_FlmSysData.bOkToDoAsyncWrites = TRUE;
 #endif
 
-	/* Allocate and Initialize FLAIM Server Lock Manager. */
+	// Allocate and Initialize FLAIM Server Lock Manager
 
 	if ((gv_FlmSysData.pServerLockMgr =
 				new ServerLockManager( &gv_FlmSysData.hServerLockMgrMutex)) == NULL)
@@ -939,22 +932,29 @@ FLMEXP RCODE FLMAPI FlmStartup( void)
 
 	// Set up mutexes for the event table.
 
-	for (iEventCategory = 0;
-		  iEventCategory < F_MAX_EVENT_CATEGORIES;
-		  iEventCategory++)
+	if (RC_BAD( rc = f_mutexCreate(
+							&gv_FlmSysData.UpdateEvents.hMutex)))
 	{
-		if (RC_BAD( rc = f_mutexCreate(
-								&gv_FlmSysData.EventHdrs [iEventCategory].hMutex)))
-		{
-			goto Exit;
-		}
+		goto Exit;
 	}
-
+	
+	if (RC_BAD( rc = f_mutexCreate(
+							&gv_FlmSysData.LockEvents.hMutex)))
+	{
+		goto Exit;
+	}
+	
+	if (RC_BAD( rc = f_mutexCreate(
+							&gv_FlmSysData.SizeEvents.hMutex)))
+	{
+		goto Exit;
+	}
+	
 	// Start the monitor thread - ALWAYS DO LAST.  EVERYTHING MUST BE
 	// SETUP PROPERLY BEFORE STARTING THIS THREAD.
 
 	if (RC_BAD( rc = f_threadCreate( &gv_FlmSysData.pMonitorThrd,
-		flmMonitor, "DB Monitor")))
+		flmSystemMonitor, "FLAIM System Monitor")))
 	{
 		goto Exit;
 	}
@@ -1028,10 +1028,7 @@ DONT_PREALLOCATE:
 			// Log a message indicating that we couldn't pre-allocate
 			// the cache
 
-			flmLogMessage( 
-				FLM_DEBUG_MESSAGE,
-				FLM_YELLOW,
-				FLM_BLACK,
+			flmLogMessage( FLM_DEBUG_MESSAGE, FLM_YELLOW, FLM_BLACK,
 				"WARNING: Couldn't pre-allocate cache.");
 
 			goto DONT_PREALLOCATE;				
@@ -1070,9 +1067,9 @@ Exit:
 	return( rc);
 }
 
-/*API~***********************************************************************
+/****************************************************************************
 Desc : Configures how memory will be dynamically regulated.
-*END************************************************************************/
+****************************************************************************/
 FLMEXP RCODE FLMAPI FlmSetDynamicMemoryLimit(
 	FLMUINT			uiCacheAdjustPercent,
 	FLMUINT			uiCacheAdjustMin,
@@ -1112,9 +1109,9 @@ FLMEXP RCODE FLMAPI FlmSetDynamicMemoryLimit(
 #endif
 }
 
-/*API~***********************************************************************
+/****************************************************************************
 Desc : Sets a hard memory limit for cache.
-*END************************************************************************/
+****************************************************************************/
 FLMEXP RCODE FLMAPI FlmSetHardMemoryLimit(
 	FLMUINT	uiPercent,
 	FLMBOOL	bPercentOfAvail,
@@ -1155,9 +1152,9 @@ FLMEXP RCODE FLMAPI FlmSetHardMemoryLimit(
 	return( rc);
 }
 
-/*API~***********************************************************************
+/****************************************************************************
 Desc : Returns information about memory usage.
-*END************************************************************************/
+****************************************************************************/
 FLMEXP void FLMAPI FlmGetMemoryInfo(
 	FLM_MEM_INFO *	pMemInfo)
 {
@@ -1488,9 +1485,9 @@ Exit:
 }
 
 
-/*API~***********************************************************************
+/****************************************************************************
 Desc: Configures share attributes.
-*END************************************************************************/
+****************************************************************************/
 FLMEXP RCODE FLMAPI FlmConfig(
   	eFlmConfigTypes 	eConfigType,
 	void *				Value1,
@@ -1779,56 +1776,54 @@ FLMEXP RCODE FLMAPI FlmConfig(
 		break;
 
 	case FLM_ASSIGN_HTTP_SYMS:
-		//Note: before you attempt this, you had better have loaded the
-		//necessary shared library...
-		if (	gv_FlmSysData.HttpConfigParms.fnReg				   ||
-				gv_FlmSysData.HttpConfigParms.fnDereg				||
-				gv_FlmSysData.HttpConfigParms.fnReqPath		   ||
-				gv_FlmSysData.HttpConfigParms.fnReqQuery			||
-				gv_FlmSysData.HttpConfigParms.fnReqHdrValue		||
-				gv_FlmSysData.HttpConfigParms.fnSetHdrValue		||
-				gv_FlmSysData.HttpConfigParms.fnPrintf				||
-				gv_FlmSysData.HttpConfigParms.fnEmit				||
-				gv_FlmSysData.HttpConfigParms.fnSetNoCache		||
-				gv_FlmSysData.HttpConfigParms.fnSendHeader		||
-				gv_FlmSysData.HttpConfigParms.fnSetIOMode			||
-				gv_FlmSysData.HttpConfigParms.fnSendBuffer		||
-				gv_FlmSysData.HttpConfigParms.fnAcquireSession  ||
-				gv_FlmSysData.HttpConfigParms.fnReleaseSession  ||
-				gv_FlmSysData.HttpConfigParms.fnAcquireUser		||
-				gv_FlmSysData.HttpConfigParms.fnReleaseUser		||
-				gv_FlmSysData.HttpConfigParms.fnSetSessionValue ||
-				gv_FlmSysData.HttpConfigParms.fnGetSessionValue ||
-				gv_FlmSysData.HttpConfigParms.fnGetGblValue		||
-				gv_FlmSysData.HttpConfigParms.fnSetGblValue		||
-				gv_FlmSysData.HttpConfigParms.fnRecvBuffer )
+		if( gv_FlmSysData.HttpConfigParms.fnReg ||
+			 gv_FlmSysData.HttpConfigParms.fnDereg ||
+			 gv_FlmSysData.HttpConfigParms.fnReqPath ||
+			 gv_FlmSysData.HttpConfigParms.fnReqQuery ||
+			 gv_FlmSysData.HttpConfigParms.fnReqHdrValue ||
+			 gv_FlmSysData.HttpConfigParms.fnSetHdrValue ||
+			 gv_FlmSysData.HttpConfigParms.fnPrintf ||
+			 gv_FlmSysData.HttpConfigParms.fnEmit ||
+			 gv_FlmSysData.HttpConfigParms.fnSetNoCache ||
+			 gv_FlmSysData.HttpConfigParms.fnSendHeader ||
+			 gv_FlmSysData.HttpConfigParms.fnSetIOMode ||
+			 gv_FlmSysData.HttpConfigParms.fnSendBuffer ||
+			 gv_FlmSysData.HttpConfigParms.fnAcquireSession ||
+			 gv_FlmSysData.HttpConfigParms.fnReleaseSession ||
+			 gv_FlmSysData.HttpConfigParms.fnAcquireUser ||
+			 gv_FlmSysData.HttpConfigParms.fnReleaseUser ||
+			 gv_FlmSysData.HttpConfigParms.fnSetSessionValue ||
+			 gv_FlmSysData.HttpConfigParms.fnGetSessionValue ||
+			 gv_FlmSysData.HttpConfigParms.fnGetGblValue ||
+			 gv_FlmSysData.HttpConfigParms.fnSetGblValue ||
+			 gv_FlmSysData.HttpConfigParms.fnRecvBuffer)
 		{
 			rc = RC_SET( FERR_HTTP_SYMS_EXIST);
 			goto Exit;
 		}
 		else
 		{
-			gv_FlmSysData.HttpConfigParms.fnReg				   = ((HTTPCONFIGPARAMS *)Value1)->fnReg;
-			gv_FlmSysData.HttpConfigParms.fnDereg				= ((HTTPCONFIGPARAMS *)Value1)->fnDereg;
-			gv_FlmSysData.HttpConfigParms.fnReqPath		   = ((HTTPCONFIGPARAMS *)Value1)->fnReqPath;
-			gv_FlmSysData.HttpConfigParms.fnReqQuery			= ((HTTPCONFIGPARAMS *)Value1)->fnReqQuery;
-			gv_FlmSysData.HttpConfigParms.fnReqHdrValue		= ((HTTPCONFIGPARAMS *)Value1)->fnReqHdrValue;
-			gv_FlmSysData.HttpConfigParms.fnSetHdrValue		= ((HTTPCONFIGPARAMS *)Value1)->fnSetHdrValue;
-			gv_FlmSysData.HttpConfigParms.fnPrintf				= ((HTTPCONFIGPARAMS *)Value1)->fnPrintf;
-			gv_FlmSysData.HttpConfigParms.fnEmit				= ((HTTPCONFIGPARAMS *)Value1)->fnEmit;
-			gv_FlmSysData.HttpConfigParms.fnSetNoCache		= ((HTTPCONFIGPARAMS *)Value1)->fnSetNoCache;
-			gv_FlmSysData.HttpConfigParms.fnSendHeader		= ((HTTPCONFIGPARAMS *)Value1)->fnSendHeader;
-			gv_FlmSysData.HttpConfigParms.fnSetIOMode			= ((HTTPCONFIGPARAMS *)Value1)->fnSetIOMode;
-			gv_FlmSysData.HttpConfigParms.fnSendBuffer		= ((HTTPCONFIGPARAMS *)Value1)->fnSendBuffer;
-			gv_FlmSysData.HttpConfigParms.fnAcquireSession  = ((HTTPCONFIGPARAMS *)Value1)->fnAcquireSession;
-			gv_FlmSysData.HttpConfigParms.fnReleaseSession  = ((HTTPCONFIGPARAMS *)Value1)->fnReleaseSession;
-			gv_FlmSysData.HttpConfigParms.fnAcquireUser		= ((HTTPCONFIGPARAMS *)Value1)->fnAcquireUser;	
-			gv_FlmSysData.HttpConfigParms.fnReleaseUser		= ((HTTPCONFIGPARAMS *)Value1)->fnReleaseUser;	
+			gv_FlmSysData.HttpConfigParms.fnReg = ((HTTPCONFIGPARAMS *)Value1)->fnReg;
+			gv_FlmSysData.HttpConfigParms.fnDereg = ((HTTPCONFIGPARAMS *)Value1)->fnDereg;
+			gv_FlmSysData.HttpConfigParms.fnReqPath = ((HTTPCONFIGPARAMS *)Value1)->fnReqPath;
+			gv_FlmSysData.HttpConfigParms.fnReqQuery = ((HTTPCONFIGPARAMS *)Value1)->fnReqQuery;
+			gv_FlmSysData.HttpConfigParms.fnReqHdrValue = ((HTTPCONFIGPARAMS *)Value1)->fnReqHdrValue;
+			gv_FlmSysData.HttpConfigParms.fnSetHdrValue = ((HTTPCONFIGPARAMS *)Value1)->fnSetHdrValue;
+			gv_FlmSysData.HttpConfigParms.fnPrintf = ((HTTPCONFIGPARAMS *)Value1)->fnPrintf;
+			gv_FlmSysData.HttpConfigParms.fnEmit = ((HTTPCONFIGPARAMS *)Value1)->fnEmit;
+			gv_FlmSysData.HttpConfigParms.fnSetNoCache = ((HTTPCONFIGPARAMS *)Value1)->fnSetNoCache;
+			gv_FlmSysData.HttpConfigParms.fnSendHeader = ((HTTPCONFIGPARAMS *)Value1)->fnSendHeader;
+			gv_FlmSysData.HttpConfigParms.fnSetIOMode = ((HTTPCONFIGPARAMS *)Value1)->fnSetIOMode;
+			gv_FlmSysData.HttpConfigParms.fnSendBuffer = ((HTTPCONFIGPARAMS *)Value1)->fnSendBuffer;
+			gv_FlmSysData.HttpConfigParms.fnAcquireSession = ((HTTPCONFIGPARAMS *)Value1)->fnAcquireSession;
+			gv_FlmSysData.HttpConfigParms.fnReleaseSession = ((HTTPCONFIGPARAMS *)Value1)->fnReleaseSession;
+			gv_FlmSysData.HttpConfigParms.fnAcquireUser = ((HTTPCONFIGPARAMS *)Value1)->fnAcquireUser;	
+			gv_FlmSysData.HttpConfigParms.fnReleaseUser = ((HTTPCONFIGPARAMS *)Value1)->fnReleaseUser;	
 			gv_FlmSysData.HttpConfigParms.fnSetSessionValue = ((HTTPCONFIGPARAMS *)Value1)->fnSetSessionValue;
 			gv_FlmSysData.HttpConfigParms.fnGetSessionValue = ((HTTPCONFIGPARAMS *)Value1)->fnGetSessionValue;
-			gv_FlmSysData.HttpConfigParms.fnGetGblValue		= ((HTTPCONFIGPARAMS *)Value1)->fnGetGblValue;
-			gv_FlmSysData.HttpConfigParms.fnSetGblValue		= ((HTTPCONFIGPARAMS *)Value1)->fnSetGblValue;
-			gv_FlmSysData.HttpConfigParms.fnRecvBuffer		= ((HTTPCONFIGPARAMS *)Value1)->fnRecvBuffer;
+			gv_FlmSysData.HttpConfigParms.fnGetGblValue = ((HTTPCONFIGPARAMS *)Value1)->fnGetGblValue;
+			gv_FlmSysData.HttpConfigParms.fnSetGblValue = ((HTTPCONFIGPARAMS *)Value1)->fnSetGblValue;
+			gv_FlmSysData.HttpConfigParms.fnRecvBuffer = ((HTTPCONFIGPARAMS *)Value1)->fnRecvBuffer;
 		}
 		break;
 
@@ -1849,28 +1844,27 @@ FLMEXP RCODE FLMAPI FlmConfig(
 		break;
 	
 	case FLM_UNASSIGN_HTTP_SYMS:
-		gv_FlmSysData.HttpConfigParms.fnReg					= NULL;
-		gv_FlmSysData.HttpConfigParms.fnDereg				= NULL;
-		gv_FlmSysData.HttpConfigParms.fnReqPath			= NULL;
-		gv_FlmSysData.HttpConfigParms.fnReqQuery			= NULL;
-		gv_FlmSysData.HttpConfigParms.fnReqHdrValue		= NULL;
-		gv_FlmSysData.HttpConfigParms.fnSetHdrValue		= NULL;
-		gv_FlmSysData.HttpConfigParms.fnPrintf				= NULL;
-		gv_FlmSysData.HttpConfigParms.fnEmit				= NULL;
-		gv_FlmSysData.HttpConfigParms.fnSetNoCache		= NULL;
-		gv_FlmSysData.HttpConfigParms.fnSendHeader		= NULL;
-		gv_FlmSysData.HttpConfigParms.fnSetIOMode			= NULL;
-		gv_FlmSysData.HttpConfigParms.fnSendBuffer		= NULL;
-		gv_FlmSysData.HttpConfigParms.fnAcquireSession	= NULL;
-		gv_FlmSysData.HttpConfigParms.fnReleaseSession	= NULL;
-		gv_FlmSysData.HttpConfigParms.fnAcquireUser		= NULL;
-		gv_FlmSysData.HttpConfigParms.fnReleaseUser		= NULL;
-		gv_FlmSysData.HttpConfigParms.fnSetSessionValue	= NULL;
-		gv_FlmSysData.HttpConfigParms.fnGetSessionValue	= NULL;
-		gv_FlmSysData.HttpConfigParms.fnGetGblValue		= NULL;
-		gv_FlmSysData.HttpConfigParms.fnSetGblValue		= NULL;
-		gv_FlmSysData.HttpConfigParms.fnRecvBuffer		= NULL;
-
+		gv_FlmSysData.HttpConfigParms.fnReg = NULL;
+		gv_FlmSysData.HttpConfigParms.fnDereg = NULL;
+		gv_FlmSysData.HttpConfigParms.fnReqPath = NULL;
+		gv_FlmSysData.HttpConfigParms.fnReqQuery = NULL;
+		gv_FlmSysData.HttpConfigParms.fnReqHdrValue = NULL;
+		gv_FlmSysData.HttpConfigParms.fnSetHdrValue = NULL;
+		gv_FlmSysData.HttpConfigParms.fnPrintf = NULL;
+		gv_FlmSysData.HttpConfigParms.fnEmit = NULL;
+		gv_FlmSysData.HttpConfigParms.fnSetNoCache = NULL;
+		gv_FlmSysData.HttpConfigParms.fnSendHeader = NULL;
+		gv_FlmSysData.HttpConfigParms.fnSetIOMode = NULL;
+		gv_FlmSysData.HttpConfigParms.fnSendBuffer = NULL;
+		gv_FlmSysData.HttpConfigParms.fnAcquireSession = NULL;
+		gv_FlmSysData.HttpConfigParms.fnReleaseSession = NULL;
+		gv_FlmSysData.HttpConfigParms.fnAcquireUser = NULL;
+		gv_FlmSysData.HttpConfigParms.fnReleaseUser = NULL;
+		gv_FlmSysData.HttpConfigParms.fnSetSessionValue = NULL;
+		gv_FlmSysData.HttpConfigParms.fnGetSessionValue = NULL;
+		gv_FlmSysData.HttpConfigParms.fnGetGblValue = NULL;
+		gv_FlmSysData.HttpConfigParms.fnSetGblValue = NULL;
+		gv_FlmSysData.HttpConfigParms.fnRecvBuffer = NULL;
 		break;
 
 	case FLM_KILL_DB_HANDLES:
@@ -1972,9 +1966,9 @@ Exit:
 	return( rc);
 }
 
-/*API~***********************************************************************
+/****************************************************************************
 Desc : Gets configured shared attributes.
-*END************************************************************************/
+****************************************************************************/
 FLMEXP RCODE FLMAPI FlmGetConfig(
 	eFlmConfigTypes	eConfigType,
 	void *				Value1
@@ -2134,9 +2128,9 @@ FLMEXP RCODE FLMAPI FlmGetConfig(
 	return( rc);
 }
 
-/*API~***********************************************************************
+/****************************************************************************
 Desc:
-*END************************************************************************/
+****************************************************************************/
 FLMEXP RCODE FLMAPI FlmGetThreadInfo(
 	POOL *				pPool,
 	F_THREAD_INFO **	ppThreadInfo,
@@ -2144,7 +2138,7 @@ FLMEXP RCODE FLMAPI FlmGetThreadInfo(
 	const char *		pszUrl)
 {
 	RCODE					rc = FERR_OK;
-	CS_CONTEXT_p 		pCSContext = NULL;
+	CS_CONTEXT * 		pCSContext = NULL;
 
 	if( pszUrl)
 	{
@@ -2447,6 +2441,15 @@ void flmFreeFile(
 		pFile->pCPThrd->Release();
 		pFile->pCPThrd = NULL;
 	}
+	
+	// Shutdown the monitor thread
+	
+	if( pFile->pMonitorThrd)
+	{
+		pFile->pMonitorThrd->stopThread();
+		pFile->pMonitorThrd->Release();
+		pFile->pMonitorThrd = NULL;
+	}
 
 	f_mutexLock( gv_FlmSysData.hShareMutex);
 
@@ -2589,11 +2592,11 @@ void flmFreeFile(
 	
 	// Free the password
 	
-	if ( pFile->pszDbPassword)
+	if( pFile->pszDbPassword)
 	{
 		f_free( &pFile->pszDbPassword);
 	}
-
+	
 	// Free the FFILE
 
 	f_free( &pFile);
@@ -2647,7 +2650,6 @@ Desc : Cleans up - assumes that the spin lock has already been
 FSTATIC void flmCleanup( void)
 {
 	FLMUINT		uiCnt;
-	FLMINT		iEventCategory;
 
 	// NOTE: We are checking and decrementing a global variable here.
 	// However, on platforms that properly support atomic exchange,
@@ -2844,26 +2846,44 @@ FSTATIC void flmCleanup( void)
 		f_mutexDestroy( &gv_FlmSysData.HttpConfigParms.hMutex);
 	}
 
-
 	// Free up callbacks that have been registered for events.
 
-	for (iEventCategory = 0;
-		  iEventCategory < F_MAX_EVENT_CATEGORIES;
-		  iEventCategory++)
+	if (gv_FlmSysData.UpdateEvents.hMutex != F_MUTEX_NULL)
 	{
-		if (gv_FlmSysData.EventHdrs [iEventCategory].hMutex != F_MUTEX_NULL)
+		while (gv_FlmSysData.UpdateEvents.pEventCBList)
 		{
-			while (gv_FlmSysData.EventHdrs [iEventCategory].pEventCBList)
-			{
-				flmFreeEvent(
-					gv_FlmSysData.EventHdrs [iEventCategory].pEventCBList,
-					gv_FlmSysData.EventHdrs [iEventCategory].hMutex,
-					&gv_FlmSysData.EventHdrs [iEventCategory].pEventCBList);
-			}
-			f_mutexDestroy( &gv_FlmSysData.EventHdrs [iEventCategory].hMutex);
+			flmFreeEvent(
+				gv_FlmSysData.UpdateEvents.pEventCBList,
+				gv_FlmSysData.UpdateEvents.hMutex,
+				&gv_FlmSysData.UpdateEvents.pEventCBList);
 		}
+		f_mutexDestroy( &gv_FlmSysData.UpdateEvents.hMutex);
 	}
 
+	if (gv_FlmSysData.LockEvents.hMutex != F_MUTEX_NULL)
+	{
+		while (gv_FlmSysData.LockEvents.pEventCBList)
+		{
+			flmFreeEvent(
+				gv_FlmSysData.LockEvents.pEventCBList,
+				gv_FlmSysData.LockEvents.hMutex,
+				&gv_FlmSysData.LockEvents.pEventCBList);
+		}
+		f_mutexDestroy( &gv_FlmSysData.LockEvents.hMutex);
+	}
+
+	if (gv_FlmSysData.SizeEvents.hMutex != F_MUTEX_NULL)
+	{
+		while (gv_FlmSysData.SizeEvents.pEventCBList)
+		{
+			flmFreeEvent(
+				gv_FlmSysData.SizeEvents.pEventCBList,
+				gv_FlmSysData.SizeEvents.hMutex,
+				&gv_FlmSysData.SizeEvents.pEventCBList);
+		}
+		f_mutexDestroy( &gv_FlmSysData.SizeEvents.hMutex);
+	}
+	
 	// Free (release) FLAIM's File Shared File System Object.
 
 	if (gv_FlmSysData.pFileSystem)
@@ -2940,13 +2960,13 @@ FSTATIC void flmCleanup( void)
 #endif
 }
 
-/*API~***********************************************************************
+/****************************************************************************
 Desc : Shuts down FLAIM.
 Notes: Allows itself to be called multiple times and even before FlmStartup
 		 is called, or even if FlmStartup fails.  Warning: May not handle
 		 race conditions very well on platforms that do not support atomic
 		 exchange.
-*END************************************************************************/
+****************************************************************************/
 FLMEXP void FLMAPI FlmShutdown( void)
 {
 	flmLockSysData();
@@ -3464,7 +3484,7 @@ Desc: This routine functions as a thread.  It monitors open files and
 		frees up files which have been closed longer than the maximum
 		close time.
 ****************************************************************************/
-RCODE flmMonitor(
+RCODE flmSystemMonitor(
 	F_Thread *		pThread)
 {
 	FLMUINT		uiLastUnusedCleanupTime = 0;
@@ -3582,9 +3602,9 @@ RCODE flmMonitor(
 	return( FERR_OK);
 }
 
-/*API~***********************************************************************
+/****************************************************************************
 Desc : Registers a callback function to receive events.
-*END************************************************************************/
+****************************************************************************/
 FLMEXP RCODE FLMAPI FlmRegisterForEvent(
 	FEventCategory	eCategory,
 	FEVENT_CB		fnEventCB,
@@ -3595,14 +3615,6 @@ FLMEXP RCODE FLMAPI FlmRegisterForEvent(
 	FEVENT *	pEvent;
 
 	*phEventRV = HFEVENT_NULL;
-
-	// Make sure it is a legal event category to register for.
-
-	if (eCategory >= F_MAX_EVENT_CATEGORIES)
-	{
-		rc = RC_SET( FERR_NOT_IMPLEMENTED);
-		goto Exit;
-	}
 
 	// Allocate an event structure
 
@@ -3618,26 +3630,68 @@ FLMEXP RCODE FLMAPI FlmRegisterForEvent(
 	pEvent->eCategory = eCategory;
 	pEvent->fnEventCB = fnEventCB;
 	pEvent->pvAppData = pvAppData;
-	// pEvent->pPrev = NULL;		// done by flmAlloc above.
 
 	// Mutex should be locked to link into list.
-
-	f_mutexLock( gv_FlmSysData.EventHdrs [eCategory].hMutex);
-	if ((pEvent->pNext =
-			gv_FlmSysData.EventHdrs [eCategory].pEventCBList) != NULL)
+	
+	switch( eCategory)
 	{
-		pEvent->pNext->pPrev = pEvent;
+		case F_EVENT_UPDATES:
+		{
+			f_mutexLock( gv_FlmSysData.UpdateEvents.hMutex);
+			if ((pEvent->pNext =
+					gv_FlmSysData.UpdateEvents.pEventCBList) != NULL)
+			{
+				pEvent->pNext->pPrev = pEvent;
+			}
+			
+			gv_FlmSysData.UpdateEvents.pEventCBList = pEvent;
+			f_mutexUnlock( gv_FlmSysData.UpdateEvents.hMutex);
+			break;
+		}
+		
+		case F_EVENT_LOCKS:
+		{
+			f_mutexLock( gv_FlmSysData.LockEvents.hMutex);
+			if ((pEvent->pNext =
+					gv_FlmSysData.LockEvents.pEventCBList) != NULL)
+			{
+				pEvent->pNext->pPrev = pEvent;
+			}
+			
+			gv_FlmSysData.LockEvents.pEventCBList = pEvent;
+			f_mutexUnlock( gv_FlmSysData.LockEvents.hMutex);
+			break;
+		}
+		
+		case F_EVENT_SIZE:
+		{
+			f_mutexLock( gv_FlmSysData.SizeEvents.hMutex);
+			if ((pEvent->pNext =
+					gv_FlmSysData.SizeEvents.pEventCBList) != NULL)
+			{
+				pEvent->pNext->pPrev = pEvent;
+			}
+			
+			gv_FlmSysData.SizeEvents.pEventCBList = pEvent;
+			f_mutexUnlock( gv_FlmSysData.SizeEvents.hMutex);
+			break;
+		}
+		
+		default:
+		{
+			rc = RC_SET_AND_ASSERT( FERR_NOT_IMPLEMENTED);
+			goto Exit;
+		}
 	}
-	gv_FlmSysData.EventHdrs [eCategory].pEventCBList = pEvent;
-	f_mutexUnlock( gv_FlmSysData.EventHdrs [eCategory].hMutex);
 
 Exit:
+
 	return( rc);
 }
 
-/*API~***********************************************************************
+/****************************************************************************
 Desc : Deregisters a callback function that was registered to receive events.
-*END************************************************************************/
+****************************************************************************/
 FLMEXP void FLMAPI FlmDeregisterForEvent(
 	HFEVENT *	phEventRV)
 {
@@ -3645,12 +3699,38 @@ FLMEXP void FLMAPI FlmDeregisterForEvent(
 	{
 		FEVENT *	pEvent = (FEVENT *)(*phEventRV);
 
-		if (pEvent->eCategory < F_MAX_EVENT_CATEGORIES)
+		switch( pEvent->eCategory)
 		{
-			flmFreeEvent( pEvent,
-					gv_FlmSysData.EventHdrs [pEvent->eCategory].hMutex,
-					&gv_FlmSysData.EventHdrs [pEvent->eCategory].pEventCBList);
+			case F_EVENT_UPDATES:
+			{
+				flmFreeEvent( pEvent,
+						gv_FlmSysData.UpdateEvents.hMutex,
+						&gv_FlmSysData.UpdateEvents.pEventCBList);
+				break;
+			}
+			
+			case F_EVENT_LOCKS:
+			{
+				flmFreeEvent( pEvent,
+						gv_FlmSysData.LockEvents.hMutex,
+						&gv_FlmSysData.LockEvents.pEventCBList);
+				break;
+			}
+			
+			case F_EVENT_SIZE:
+			{
+				flmFreeEvent( pEvent,
+						gv_FlmSysData.SizeEvents.hMutex,
+						&gv_FlmSysData.SizeEvents.pEventCBList);
+				break;
+			}
+			
+			default:
+			{
+				flmAssert( 0);
+			}
 		}
+	
 		*phEventRV = HFEVENT_NULL;
 	}
 }
@@ -3667,16 +3747,58 @@ void flmDoEventCallback(
 {
 	FEVENT *	pEvent;
 
-	f_mutexLock( gv_FlmSysData.EventHdrs [eCategory].hMutex);
-	pEvent = gv_FlmSysData.EventHdrs [eCategory].pEventCBList;
-	while (pEvent)
+	switch( eCategory)
 	{
-		(*pEvent->fnEventCB)( eEventType, pEvent->pvAppData,
-										pvEventData1,
-										pvEventData2);
-		pEvent = pEvent->pNext;
+		case F_EVENT_UPDATES:
+		{
+			f_mutexLock( gv_FlmSysData.UpdateEvents.hMutex);
+			pEvent = gv_FlmSysData.UpdateEvents.pEventCBList;
+			while (pEvent)
+			{
+				(*pEvent->fnEventCB)( eEventType, pEvent->pvAppData,
+												pvEventData1,
+												pvEventData2);
+				pEvent = pEvent->pNext;
+			}
+			f_mutexUnlock( gv_FlmSysData.UpdateEvents.hMutex);
+			break;
+		}
+		
+		case F_EVENT_LOCKS:
+		{
+			f_mutexLock( gv_FlmSysData.LockEvents.hMutex);
+			pEvent = gv_FlmSysData.LockEvents.pEventCBList;
+			while (pEvent)
+			{
+				(*pEvent->fnEventCB)( eEventType, pEvent->pvAppData,
+												pvEventData1,
+												pvEventData2);
+				pEvent = pEvent->pNext;
+			}
+			f_mutexUnlock( gv_FlmSysData.LockEvents.hMutex);
+			break;
+		}
+		
+		case F_EVENT_SIZE:
+		{
+			f_mutexLock( gv_FlmSysData.SizeEvents.hMutex);
+			pEvent = gv_FlmSysData.SizeEvents.pEventCBList;
+			while (pEvent)
+			{
+				(*pEvent->fnEventCB)( eEventType, pEvent->pvAppData,
+												pvEventData1,
+												pvEventData2);
+				pEvent = pEvent->pNext;
+			}
+			f_mutexUnlock( gv_FlmSysData.SizeEvents.hMutex);
+			break;
+		}
+		
+		default:
+		{
+			flmAssert( 0);
+		}
 	}
-	f_mutexUnlock( gv_FlmSysData.EventHdrs [eCategory].hMutex);
 }
 
 /****************************************************************************
@@ -5219,8 +5341,7 @@ Exit:
 Desc:	Deletes (releases) and F_CCS objected referenced in the ITT table.
 *****************************************************************************/
 void flmDeleteCCSRefs(
-	FDICT *		pDict
-	)
+	FDICT *		pDict)
 {
 	FLMUINT		uiLoop;
 	F_CCS *		pCcs = NULL;

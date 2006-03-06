@@ -31,7 +31,7 @@ extern FLMBYTE arr[];
 
 FSTATIC RCODE tagValLenType(
 	POOL * 				pPool,
-	GED_STREAM_p		x,
+	GED_STREAM *		x,
 	NODE **				node,
 	F_NameTable *		pNameTable);
 
@@ -218,7 +218,7 @@ Desc:	Parse the tag, value, and length from a GEDCOM buffer, create a
 ***************************************************************************/
 FSTATIC RCODE tagValLenType(
 	POOL * 			pPool,
-	GED_STREAM_p	x,
+	GED_STREAM *	x,
 	NODE **			newNode,
 	F_NameTable *  pNameTable)
 {

@@ -24,14 +24,14 @@
 
 #include "flaimsys.h"
 
-/*API~*********************************************************************
+/****************************************************************************
 Desc:	Copies and formats a Unicode string into a GEDCOM node.  The Unicode
 		string must be in little endian format.  The Unicode string is 
 		converted into an internal TEXT string in the GEDCOM node.  
 		Unicode values that are not represented as WordPerfect 6.x characters
 		are preserved as non-WP characters and will be droped if any other
 		GEDCOM get routine is called other than GedGetUNICODE.
-*END************************************************************************/
+****************************************************************************/
 RCODE GedPutUNICODE(
 	POOL *	 				pPool,
 	NODE * 					node,
@@ -91,37 +91,18 @@ Exit:
 }
 
 
-/*API~*********************************************************************
-Name : GedGetUNICODE
-Area : GEDCOM
-Desc : Get Unicode data from a GEDCOM text type node.  Also supports
-		 conversions from number, date, time and time stamp types.
-		 Most WordPerfect extended characters are converted to Unicode
-		 character values.  All Unicode character values are preserved if
-		 GedPutUNICODE() is used.  The Unicode representation is ALWAYS in
-		 little endian byte order.  This may change if FLAIM moves to JAVA.
-Notes:
-*END************************************************************************/
-RCODE // SUCCESS
-		// FERR_CONV_ILLEGAL - the input node is not a text, number, date,
-		// time or time stampe type.
-		// FERR_CONV_NULL_SRC - the input node (nd) is NULL.
-		// FERR_CONV_DEST_OVERFLOW - the number of bytes
-	GedGetUNICODE(
-		NODE *			node,
-			// [IN] GEDCOM node that contains data.
-		FLMUNICODE *	uniBuf,
-			// [IN/OUT] Unicode buffer to hold the data. If uniBuf is NULL then
-			// only a count return in bufLenRV is return that is the number
-			// of bytes needed to contain the data.  Two bytes must be added
-			// to this value to account for the two bytes of null termination.
-		FLMUINT *		bufLenRV
-			// [IN] Specified the number of bytes available in buffer including
-			// the terminating two null bytes.
-			// [OUT] Returns the number of Unicode bytes that are needed to
-			// represent the data.  The two null termination bytes are not
-			// included in this value.
-	)
+/****************************************************************************
+Desc:	Get Unicode data from a GEDCOM text type node.  Also supports
+		conversions from number, date, time and time stamp types.
+		Most WordPerfect extended characters are converted to Unicode
+		character values.  All Unicode character values are preserved if
+		GedPutUNICODE() is used.  The Unicode representation is ALWAYS in
+		little endian byte order.  This may change if FLAIM moves to JAVA.
+****************************************************************************/
+RCODE GedGetUNICODE(
+	NODE *			node,
+	FLMUNICODE *	uniBuf,
+	FLMUINT *		bufLenRV)
 {
 	FLMUINT		nodeType;
 	RCODE			rc = FERR_OK;

@@ -265,7 +265,7 @@ Desc:	Returns the amount of data available for reading
 FLMUINT FCS_BIOS::getAvailable( void)
 {
 	FLMUINT				uiAvail = 0;
-	FCSBIOSBlock *		pBlk;
+	FCSBIOSBLOCK *		pBlk;
 
 	if( m_bAcceptingData)
 	{

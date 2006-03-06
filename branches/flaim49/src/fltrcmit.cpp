@@ -36,8 +36,7 @@ RCODE flmCommitDbTrans(
 												// set by the FlmDbReduceSize function when
 												// it is truncating the file.
 	FLMBOOL		bForceCheckpoint,		// Force a checkpoint?
-	FLMBOOL *	pbEmpty					// May be NULL
-	)
+	FLMBOOL *	pbEmpty)					// May be NULL
 {
 	RCODE	  			rc = FERR_OK;
 	FLMBYTE *		pucUncommittedLogHdr;
@@ -363,7 +362,7 @@ Exit1:
 		bInvisibleTrans = (pDb->uiFlags & FDB_INVISIBLE_TRANS) ? TRUE : FALSE;
 		if (uiTransType == FLM_UPDATE_TRANS)
 		{
-			if (gv_FlmSysData.EventHdrs [F_EVENT_UPDATES].pEventCBList)
+			if (gv_FlmSysData.UpdateEvents.pEventCBList)
 			{
 				flmTransEventCallback( F_EVENT_COMMIT_TRANS, (HFDB)pDb, rc,
 							uiTransId);
@@ -511,13 +510,12 @@ Exit:
 	return( rc);
 }
 
-/*API~***********************************************************************
-Desc : Commits an active transaction.
-*END************************************************************************/
+/****************************************************************************
+Desc:	Commits an active transaction.
+****************************************************************************/
 FLMEXP RCODE FLMAPI FlmDbTransCommit(
 	HFDB			hDb,
-	FLMBOOL *	pbEmpty				// May be NULL
-	)
+	FLMBOOL *	pbEmpty)
 {
 	RCODE			rc = FERR_OK;
 	FDB *			pDb = (FDB *)hDb;

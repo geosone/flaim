@@ -25,224 +25,224 @@
 #include "flaimsys.h"
 
 FSTATIC RCODE OpSyntaxError(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpUUBitAND(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpUUBitOR(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpUUBitXOR(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpUUMult(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpUSMult(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpSSMult(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpSUMult(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpURMult(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpRUMult(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpSRMult(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpRSMult(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpRRMult(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpUUDiv(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpUSDiv(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpSSDiv(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpSUDiv(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpURDiv(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpRUDiv(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpSRDiv(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpRSDiv(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpRRDiv(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpUUMod(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpUSMod(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpSSMod(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpSUMod(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpUUPlus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpUSPlus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpSSPlus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpSUPlus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpURPlus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpRUPlus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpSRPlus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpRSPlus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpRRPlus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpUUMinus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpUSMinus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpSSMinus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpSUMinus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpURMinus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpRUMinus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpSRMinus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpRSMinus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 FSTATIC RCODE OpRRMinus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult);
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult);
 
 
 /****************************************************************************
@@ -251,9 +251,9 @@ Desc:		Returns a syntax error on the operation.  The combined values are
 Ret:		FERR_CURSOR_SYNTAX
 ****************************************************************************/
 FSTATIC RCODE OpSyntaxError(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {
 	F_UNREFERENCED_PARM( pLhs);
 	F_UNREFERENCED_PARM( pRhs);
@@ -271,9 +271,9 @@ Notes:	The signed and unsigned values better take up the same location
 ****************************************************************************/
 
 FSTATIC RCODE OpUUBitAND(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {
 	pResult->val.uiVal = pLhs->val.uiVal & pRhs->val.uiVal;
 	pResult->eType = FLM_UINT32_VAL;
@@ -287,9 +287,9 @@ Notes:	The signed and unsigned values better take up the same location
 ****************************************************************************/
 
 FSTATIC RCODE OpUUBitOR(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {
 	pResult->val.uiVal = pLhs->val.uiVal | pRhs->val.uiVal;
 	pResult->eType = FLM_UINT32_VAL;
@@ -303,9 +303,9 @@ Notes:	The signed and unsigned values better take up the same location
 ****************************************************************************/
 
 FSTATIC RCODE OpUUBitXOR(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {
 	pResult->val.uiVal = pLhs->val.uiVal ^ pRhs->val.uiVal;
 	pResult->eType = FLM_UINT32_VAL;
@@ -320,9 +320,9 @@ Notes:	Overflow conditions are not checked for.  For the most part,
 ****************************************************************************/
 
 FSTATIC RCODE OpUUMult(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {	
 	pResult->val.uiVal = pLhs->val.uiVal * pRhs->val.uiVal;
 	pResult->eType = FLM_UINT32_VAL;
@@ -330,9 +330,9 @@ FSTATIC RCODE OpUUMult(
 }
 	
 FSTATIC RCODE OpUSMult(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {	
 
 	pResult->val.iVal = (FLMINT)pLhs->val.uiVal * pRhs->val.iVal;
@@ -341,9 +341,9 @@ FSTATIC RCODE OpUSMult(
 }
 	
 FSTATIC RCODE OpSSMult(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {
 	pResult->val.iVal = pLhs->val.iVal * pRhs->val.iVal;
 	pResult->eType = (pResult->val.iVal < 0) ? FLM_INT32_VAL : FLM_UINT32_VAL;
@@ -351,9 +351,9 @@ FSTATIC RCODE OpSSMult(
 }
 
 FSTATIC RCODE OpSUMult(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {
 	pResult->val.iVal = pLhs->val.iVal * (FLMINT)pRhs->val.uiVal;
 	pResult->eType = FLM_INT32_VAL;
@@ -361,9 +361,9 @@ FSTATIC RCODE OpSUMult(
 }
 
 FSTATIC RCODE OpURMult(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {
 #ifndef FLM_REAL
 	return( OpSyntaxError( pLhs, pRhs, pResult));
@@ -374,9 +374,9 @@ FSTATIC RCODE OpURMult(
 #endif
 }
 FSTATIC RCODE OpRUMult(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {
 #ifndef FLM_REAL
 	return( OpSyntaxError( pLhs, pRhs, pResult));
@@ -388,9 +388,9 @@ FSTATIC RCODE OpRUMult(
 }	
 
 FSTATIC RCODE OpSRMult(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {
 #ifndef FLM_REAL
 	return( OpSyntaxError( pLhs, pRhs, pResult));
@@ -401,9 +401,9 @@ FSTATIC RCODE OpSRMult(
 #endif
 }
 FSTATIC RCODE OpRSMult(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {
 #ifndef FLM_REAL
 	return( OpSyntaxError( pLhs, pRhs, pResult));
@@ -414,9 +414,9 @@ FSTATIC RCODE OpRSMult(
 #endif
 }	
 FSTATIC RCODE OpRRMult(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {
 #ifndef FLM_REAL
 	return( OpSyntaxError( pLhs, pRhs, pResult));
@@ -441,9 +441,9 @@ VISIT:	Need to visit the divide/mod by zero cases.
 ****************************************************************************/
 
 FSTATIC RCODE OpUUDiv(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {	
 	if( pRhs->val.uiVal)
 	{
@@ -459,9 +459,9 @@ FSTATIC RCODE OpUUDiv(
 }
 	
 FSTATIC RCODE OpUSDiv(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {	
 	if( pRhs->val.iVal)
 	{
@@ -477,9 +477,9 @@ FSTATIC RCODE OpUSDiv(
 }
 	
 FSTATIC RCODE OpSSDiv(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {
 	if( pRhs->val.iVal)
 	{
@@ -496,9 +496,9 @@ FSTATIC RCODE OpSSDiv(
 }
 
 FSTATIC RCODE OpSUDiv(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {
 	if( pRhs->val.uiVal)
 	{
@@ -514,9 +514,9 @@ FSTATIC RCODE OpSUDiv(
 }
 
 FSTATIC RCODE OpURDiv(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {
 #ifndef FLM_REAL
 	return( OpSyntaxError( pLhs, pRhs, pResult));
@@ -536,9 +536,9 @@ FSTATIC RCODE OpURDiv(
 }
 
 FSTATIC RCODE OpRUDiv(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {
 #ifndef FLM_REAL
 	return( OpSyntaxError( pLhs, pRhs, pResult));
@@ -558,9 +558,9 @@ FSTATIC RCODE OpRUDiv(
 }	
 
 FSTATIC RCODE OpSRDiv(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {
 #ifndef FLM_REAL
 	return( OpSyntaxError( pLhs, pRhs, pResult));
@@ -580,9 +580,9 @@ FSTATIC RCODE OpSRDiv(
 }
 
 FSTATIC RCODE OpRSDiv(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {
 #ifndef FLM_REAL
 	return( OpSyntaxError( pLhs, pRhs, pResult));
@@ -602,9 +602,9 @@ FSTATIC RCODE OpRSDiv(
 }	
 
 FSTATIC RCODE OpRRDiv(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {
 #ifndef FLM_REAL
 	return( OpSyntaxError( pLhs, pRhs, pResult));
@@ -629,9 +629,9 @@ Notes:	Mod by zero is checked for, but the result is 0 unsigned.
 			For the most part, a signed value is usually a negative value.
 ****************************************************************************/
 FSTATIC RCODE OpUUMod(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {	
 	if( pRhs->val.uiVal != 0)
 	{
@@ -647,9 +647,9 @@ FSTATIC RCODE OpUUMod(
 }
 	
 FSTATIC RCODE OpUSMod(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {	
 	if( pRhs->val.iVal != 0)
 	{
@@ -665,9 +665,9 @@ FSTATIC RCODE OpUSMod(
 }
 	
 FSTATIC RCODE OpSSMod(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {
 	if( pRhs->val.iVal != 0)
 	{
@@ -684,9 +684,9 @@ FSTATIC RCODE OpSSMod(
 }
 
 FSTATIC RCODE OpSUMod(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {
 	if( pRhs->val.uiVal != 0)
 	{
@@ -710,9 +710,9 @@ Notes:	Underflow and overflow conditions are not checked.  In addition,
 ****************************************************************************/
 
 FSTATIC RCODE OpUUPlus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {	
 	pResult->val.uiVal = pLhs->val.uiVal + pRhs->val.uiVal;
 	pResult->eType = FLM_UINT32_VAL;
@@ -720,9 +720,9 @@ FSTATIC RCODE OpUUPlus(
 }
 	
 FSTATIC RCODE OpUSPlus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {	
 	if( ( pRhs->val.iVal >= 0) || 
 		 ( pLhs->val.uiVal > MAX_SIGNED_VAL))
@@ -740,9 +740,9 @@ FSTATIC RCODE OpUSPlus(
 }
 	
 FSTATIC RCODE OpSSPlus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {
 	pResult->val.iVal = pLhs->val.iVal + pRhs->val.iVal;
 	pResult->eType = (pResult->val.iVal < 0) 
@@ -751,9 +751,9 @@ FSTATIC RCODE OpSSPlus(
 }
 
 FSTATIC RCODE OpSUPlus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {
 	if( ( pLhs->val.iVal >= 0) ||
 		 ( pRhs->val.uiVal > MAX_SIGNED_VAL))
@@ -771,9 +771,9 @@ FSTATIC RCODE OpSUPlus(
 }
 
 FSTATIC RCODE OpURPlus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {
 #ifndef FLM_REAL
 	return( OpSyntaxError( pLhs, pRhs, pResult));
@@ -785,9 +785,9 @@ FSTATIC RCODE OpURPlus(
 }
 
 FSTATIC RCODE OpRUPlus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {
 #ifndef FLM_REAL
 	return( OpSyntaxError( pLhs, pRhs, pResult));
@@ -799,9 +799,9 @@ FSTATIC RCODE OpRUPlus(
 }	
 
 FSTATIC RCODE OpSRPlus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {
 #ifndef FLM_REAL
 	return( OpSyntaxError( pLhs, pRhs, pResult));
@@ -813,9 +813,9 @@ FSTATIC RCODE OpSRPlus(
 }
 
 FSTATIC RCODE OpRSPlus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {
 #ifndef FLM_REAL
 	return( OpSyntaxError( pLhs, pRhs, pResult));
@@ -827,9 +827,9 @@ FSTATIC RCODE OpRSPlus(
 }	
 
 FSTATIC RCODE OpRRPlus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {
 #ifndef FLM_REAL
 	return( OpSyntaxError( pLhs, pRhs, pResult));
@@ -847,9 +847,9 @@ Notes:	Underflow and overflow conditions are not checked.  In addition,
 			ANYTHING to real will always lose some data.
 ****************************************************************************/
 FSTATIC RCODE OpUUMinus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {	
 	if( pLhs->val.uiVal >= pRhs->val.uiVal)
 	{
@@ -865,9 +865,9 @@ FSTATIC RCODE OpUUMinus(
 }
 	
 FSTATIC RCODE OpUSMinus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {	
 	/* VISIT: The original code had...
 	if(( pRhs->val.iVal < 0) || ( pRhs->val.uiVal < pLhs->val.uiVal))
@@ -889,9 +889,9 @@ FSTATIC RCODE OpUSMinus(
 }
 	
 FSTATIC RCODE OpSSMinus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {
 	if(( pLhs->val.iVal > 0) && ( pRhs->val.iVal < 0))
 	{
@@ -908,9 +908,9 @@ FSTATIC RCODE OpSSMinus(
 }
 
 FSTATIC RCODE OpSUMinus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {
 	if( pRhs->val.uiVal > MAX_SIGNED_VAL)
 	{
@@ -928,9 +928,9 @@ FSTATIC RCODE OpSUMinus(
 }
 
 FSTATIC RCODE OpURMinus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {
 #ifndef FLM_REAL
 	return( OpSyntaxError( pLhs, pRhs, pResult));
@@ -942,9 +942,9 @@ FSTATIC RCODE OpURMinus(
 }
 
 FSTATIC RCODE OpRUMinus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {
 #ifndef FLM_REAL
 	return( OpSyntaxError( pLhs, pRhs, pResult));
@@ -956,9 +956,9 @@ FSTATIC RCODE OpRUMinus(
 }	
 
 FSTATIC RCODE OpSRMinus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {
 #ifndef FLM_REAL
 	return( OpSyntaxError( pLhs, pRhs, pResult));
@@ -970,9 +970,9 @@ FSTATIC RCODE OpSRMinus(
 }
 
 FSTATIC RCODE OpRSMinus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {
 #ifndef FLM_REAL
 	return( OpSyntaxError( pLhs, pRhs, pResult));
@@ -984,9 +984,9 @@ FSTATIC RCODE OpRSMinus(
 }	
 
 FSTATIC RCODE OpRRMinus(
-	FQATOM_p	pLhs,		
-	FQATOM_p	pRhs,	
-	FQATOM_p	pResult)
+	FQATOM *	pLhs,		
+	FQATOM *	pRhs,	
+	FQATOM *	pResult)
 {
 #ifndef FLM_REAL
 	return( OpSyntaxError( pLhs, pRhs, pResult));

@@ -1355,7 +1355,7 @@ Exit:
 Desc:	Parse a data dictionary domain definition for correct syntax &
 		assign the correct attributes.
 ****************************************************************************/
-FSTATIC RCODE	DDEncDefParse(
+FSTATIC RCODE DDEncDefParse(
 	TDICT *		pTDict,
 	DDENTRY *	pDDEntry,
 	FlmRecord *	pRecord,

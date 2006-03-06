@@ -24,30 +24,13 @@
 
 #include "flaimsys.h"
 
-/*API~***********************************************************************
-Name : GedChildGraft
-Area : GEDCOM/LINK
-Desc : Links a node or sub-tree as a child of an existing node.
-*END************************************************************************/
-NODE * 
-		// A pointer to the parent node is returned.
-	GedChildGraft(
-		NODE * 	parent,
-			// [IN] Pointer to the node to which the child will be linked.
-		NODE * 	child,
-      	// [IN] Pointer to the child node.
-		FLMINT	nth
-      	// [IN] Determines where the child will be linked.  Use GED_FIRST
-         // or GED_LAST to link as the first or last child of the parent.
-         // Otherwise, set nth to the ordinal number of the existing
-         // child to which the new child should be linked.  For
-         // example, set nth to 1 to link after the 1st existing child.
-         // If no children currently exist, nth may be any value.
-         //
-         // Note: The child node must not be connected to anything else.
-         // If the child node is already linked to another node,
-         // unpredictable results (such as circular trees) could occur.
-	)
+/****************************************************************************
+Desc:	Links a node or sub-tree as a child of an existing node.
+****************************************************************************/
+NODE * GedChildGraft(
+	NODE * 	parent,
+	NODE * 	child,
+	FLMINT	nth)
 {
 	NODE *	lastChildNode;							/* Used when child is sub-tree */
 
@@ -83,39 +66,20 @@ NODE *
 	}
 	return( parent);
 }
-/*API~***********************************************************************
-Name : GedSibGraft
-Area : GEDCOM/LINK
-Desc : Links a node or sub-tree as a sibling of an existing node.
-DNote: GED_LAST and GED_FIRST are #define's of +/- 32k.  These are practical
-		 assumptions.  Their actual value is not tested--the loop continues
-		 for that count or until no further siblings are found.  That is to say,
-		 if there are too many siblings in the list, a true LAST or FIRST is not
-		 reached.  Since all "nth" parameters are WORD typed, other routines
-		 would have the same problem.
-*END************************************************************************/
-NODE * 
-		// A pointer to self or sib is returned depending upon which one
-      // occurs first in the sibling list.  If sib occurs first, a
-      // pointer to sib is returned.  Otherwise, a pointer to self is
-      // returned.
-	GedSibGraft(
-		NODE *	self,
-			// [IN] Pointer to the node to which the child will be linked.
-		NODE *	sib,
-			// [IN] Pointer to the node which is to be linked as a sibling.
-		FLMINT	nth
-      	// [IN] Determines where the sibling will be linked.  Use GED_FIRST
-         // or GED_LAST to link as the first or last sibling of self.
-         // Otherwise, set nth to an ordinal number (relative to self) to
-			// specify which sibling that sib should be linked after.  Zero
-         // will cause sib to be linked directly after self and a value of
-         // -1 will cause sib to be linked after the prior sibling.
-         //
-         // Note: The sib node must not be connected to anything else.
-         // If the node is already linked to another node, unpredictable
-         // results (such as circular trees) could occur.
-	)
+/****************************************************************************
+Desc:		Links a node or sub-tree as a sibling of an existing node.
+Notes:	GED_LAST and GED_FIRST are #define's of +/- 32k.  These are
+			practical assumptions.  Their actual value is not tested -- the 
+			loop continues for that count or until no further siblings are
+			found.  That is to say, if there are too many siblings in the 
+			list, a true LAST or FIRST is not reached.  Since all "nth"
+			parameters are WORD typed, other routines would have the same
+			problem.
+****************************************************************************/
+NODE * GedSibGraft(
+	NODE *	self,
+	NODE *	sib,
+	FLMINT	nth)
 {
 	NODE *	lastSibNode;
 	NODE *	returnNode;

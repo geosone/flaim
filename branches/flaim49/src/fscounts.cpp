@@ -32,9 +32,9 @@ Desc:		Compute the number of blocks between two stack positions.
 			These values may be estimated or actual.
 *****************************************************************************/
 RCODE FSComputeRecordBlocks(			// Returns WERR_OK or FERR_BTREE_ERROR
-	BTSK_p			pFromStack,			// [in] - be carefull not to change
+	BTSK *			pFromStack,			// [in] - be carefull not to change
 												// anything in this structure.
-	BTSK_p			pUntilStack,		// [in]
+	BTSK *			pUntilStack,		// [in]
 	FLMUINT *		puiLeafBlocksBetween, // [out] blocks between the stacks
 	FLMUINT *		puiTotalRecords,	// [out]	
 	FLMBOOL *		pbTotalsEstimated)// [out] Set to TRUE when estimating.
@@ -179,9 +179,9 @@ Notes:	There are two versions for this routine in the way of estimating
 			the LFILE.
 *****************************************************************************/
 RCODE FSComputeIndexCounts(					// Returns WERR_OK or FERR_BTREE_ERROR
-	BTSK_p			pFromStack,			// [in] - be carefull not to change
+	BTSK *			pFromStack,			// [in] - be carefull not to change
 												// anything in this structure.
-	BTSK_p			pUntilStack,		// [in]
+	BTSK *			pUntilStack,		// [in]
 	FLMUINT *		puiLeafBlocksBetween, // [out] blocks between the stacks
 	FLMUINT *		puiTotalKeys,		// [out] total number of keys inclusive
 	FLMUINT *		puiTotalRefs,		// [out] total references inclusive
@@ -374,7 +374,7 @@ Desc:		Returns the number of first keys (elements with the first flag),
 			elements and references (for leaf blocks).  
 *****************************************************************************/
 RCODE FSBlockCounts(						// Returns WERR_OK currently.
-	BTSK_p			pStack,				// [in] - be careful not to change
+	BTSK *			pStack,				// [in] - be careful not to change
 												// anything in this structure.
 	FLMUINT			uiFirstElement,	// [in] start at this element
 	FLMUINT			uiLastElement,		// [in] Do not include reference counts
@@ -472,7 +472,7 @@ Desc:		Returns the number of references at the current b-tree element.
 			Leaf level blocks must be passed in and the block must be usable.
 *****************************************************************************/
 FLMUINT FSElementRefCount(				// Returns the number of references
-	BTSK_p			pStack)				// [in]
+	BTSK *			pStack)				// [in]
 {
 	FLMUINT			uiRefCount;
 	FLMBYTE *		pCurRef;					// Points to current reference
@@ -630,7 +630,7 @@ Desc:		For a positioning index update the count in all the parent elements.
 *****************************************************************************/
 RCODE FSChangeCount(
 	FDB *				pDb,
-	BTSK_p 			pStack,
+	BTSK * 			pStack,
 	FLMBOOL			bAddReference)			// If FALSE decrement the referernce
 {
 	RCODE				rc = FERR_OK;
@@ -813,7 +813,7 @@ RCODE FSPositionSearch(
 	DIN_STATE *		pDinState)
 {
 	RCODE			rc;
-	BTSK_p		pStack = *ppStack;
+	BTSK *		pStack = *ppStack;
 	FLMBYTE *	pKeyBuf = pStack->pKeyBuf;// Used to set key buf on each btsk.
 	FLMUINT		uiBlkAddr;
 	LFILE			TmpLFile;

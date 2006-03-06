@@ -35,12 +35,16 @@ Note:	Some of the most common errors will be coded so the use can set a
 RCODE flmMakeErr(
 	RCODE				rc,
 	const char *	pszFile,
-	int				iLine)
+	int				iLine,
+	FLMBOOL			bAssert)
 {
 	if( rc == FERR_OK)
+	{
 		return FERR_OK;
+	}
 		
 	// Switch on warning type return codes
+	
 	if( rc <= FERR_NOT_FOUND)
 	{
 		switch(rc)
@@ -60,6 +64,7 @@ RCODE flmMakeErr(
 			default:
 				break;
 		}
+		
 		return( rc);
 	}
 
@@ -106,13 +111,15 @@ RCODE flmMakeErr(
 			break;
 	}
 
-	return( rc);
-}
+#if defined( FLM_DEBUG)
+	if( bAssert)
+	{
+		flmAssert( 0);
+	}
+#else
+	F_UNREFERENCED_PARM( bAssert);
 #endif
 
-#if defined( FLM_NLM) && !defined( __MWERKS__)
-	int gv_iFlerrorDummy(void)
-	{
-		return( 0);
-	}
+	return( rc);
+}
 #endif

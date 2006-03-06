@@ -78,7 +78,7 @@ void flmGetCreateOpts(
 	}
 }
 
-/*API~***********************************************************************
+/****************************************************************************
 Desc: 	Rebuilds a damaged database.
 Notes:	This routine performs the following actions:  1) A temporary database
 		 	is created; 2) A copy of the source database is saved;  3) The source
@@ -86,7 +86,7 @@ Notes:	This routine performs the following actions:  1) A temporary database
 			and stored in the temporary database.  4) When the rebuild is
 			complete, the temporary database file is copied over the source
 			database file.
-*END************************************************************************/
+****************************************************************************/
 FLMEXP RCODE FLMAPI FlmDbRebuild(
 	const char *			pszSourceDbPath,
 	const char *			pszSourceDataDir,
@@ -472,7 +472,7 @@ FLMEXP RCODE FLMAPI FlmDbRebuild(
 	if (RC_BAD( rc = flmCreateNewFile( pszDestDbPath, pszDestDataDir,
 					pszDestRflDir,
 					pszDictPath, NULL,
-					pCreateOpts, uiTransID, (FDB_p *)&pRebuildState->hDb,
+					pCreateOpts, uiTransID, (FDB * *)&pRebuildState->hDb,
 					pRebuildState)))
 	{
 		goto Exit;
