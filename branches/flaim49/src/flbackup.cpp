@@ -165,6 +165,121 @@ private:
 	void *					m_pvCallbackData;
 };
 
+/****************************************************************************
+Desc:	This object is our implementation of the
+		F_UnknownStream object which is used to handle unknown
+		objects in the RFL.
+****************************************************************************/
+class F_RflUnknownStream : public F_UnknownStream
+{
+public:
+
+	F_RflUnknownStream();
+	virtual ~F_RflUnknownStream();
+
+	RCODE setup(
+		F_Rfl *			pRfl,
+		FLMBOOL			bInputStream);
+
+	RCODE reset( void);
+
+	RCODE read(
+		FLMUINT			uiLength,				// Number of bytes to read
+		void *			pvBuffer,				// Buffer to place read bytes into
+		FLMUINT *		puiBytesRead);			// [out] Number of bytes read
+
+	RCODE write(
+		FLMUINT			uiLength,				// Number of bytes to write
+		void *			pvBuffer);
+
+	RCODE close( void);							// Reads to the end of the
+														// stream and discards any
+														// remaining data (if input stream).
+
+private:
+
+	FLMBOOL		m_bSetupCalled;
+	F_Rfl *		m_pRfl;					// RFL object.
+	FLMBOOL		m_bInputStream;		// TRUE=input stream, FALSE=output stream
+	FLMBOOL		m_bStartedWriting;	// Only used for output streams
+};
+
+/****************************************************************************
+Desc:	The F_FSRestore class is used to read backup and RFL files from 
+		a disk file system.
+****************************************************************************/
+class F_FSRestore : public F_Restore
+{
+public:
+
+	F_FSRestore();
+	
+	virtual ~F_FSRestore();
+
+	RCODE setup(
+		const char *		pucDbPath,
+		const char *		pucBackupSetPath,
+		const char *		pucRflDir);
+
+	RCODE openBackupSet( void);
+
+	RCODE openIncFile(
+		FLMUINT				uiFileNum);
+
+	RCODE openRflFile(
+		FLMUINT			uiFileNum);
+
+	RCODE read(
+		FLMUINT			uiLength,
+		void *			pvBuffer,
+		FLMUINT *		puiBytesRead);
+
+	RCODE close( void);
+
+	FINLINE RCODE abortFile( void)
+	{
+		return( close());
+	}
+
+	FINLINE RCODE processUnknown(
+		F_UnknownStream *		pUnkStrm)
+	{
+		// Skip any unknown data in the RFL
+
+		return( pUnkStrm->close());
+	}
+
+	FINLINE RCODE status(
+		eRestoreStatusType	eStatusType,
+		FLMUINT					uiTransId,
+		void *					pvValue1,
+		void *					pvValue2,
+		void *					pvValue3,
+		eRestoreActionType *	peRestoreAction)
+	{
+		F_UNREFERENCED_PARM( eStatusType);
+		F_UNREFERENCED_PARM( uiTransId);
+		F_UNREFERENCED_PARM( pvValue1);
+		F_UNREFERENCED_PARM( pvValue2);
+		F_UNREFERENCED_PARM( pvValue3);
+
+		*peRestoreAction = RESTORE_ACTION_CONTINUE;
+		return( FERR_OK);
+	}
+
+private:
+
+	F_FileHdlImp *			m_pFileHdl;
+	F_64BitFileHandle *	m_pFileHdl64;
+	FLMUINT64				m_ui64Offset;
+	FLMUINT					m_uiDbVersion;
+	char						m_szDbPath[ F_PATH_MAX_SIZE];
+	char						m_szBackupSetPath[ F_PATH_MAX_SIZE];
+	char						m_szRflDir[ F_PATH_MAX_SIZE];
+	FLMBOOL					m_bSetupCalled;
+	FLMBOOL					m_bOpen;
+};
+
 /*******************************************************************************
 Desc:		Prepares FLAIM to backup a database.
 Notes:	Only one backup of a particular database can be active at any time
@@ -2900,4 +3015,515 @@ Exit:
 	pBackerStream->m_uiPendingIO = 0;
 	f_semSignal( pBackerStream->m_hIdleSem);
 	return( rc);
+}
+
+/****************************************************************************
+Desc:
+****************************************************************************/
+F_RflUnknownStream::F_RflUnknownStream() 
+{
+	m_pRfl = NULL;
+	m_bStartedWriting = FALSE;
+	m_bInputStream = FALSE;
+	m_bSetupCalled = FALSE;
+}
+
+/****************************************************************************
+Desc:
+****************************************************************************/
+F_RflUnknownStream::~F_RflUnknownStream() 
+{
+	if (m_bSetupCalled)
+	{
+		(void)close();
+	}
+}
+
+/****************************************************************************
+Desc:
+****************************************************************************/
+RCODE F_RflUnknownStream::setup(
+		F_Rfl *			pRfl,
+		FLMBOOL			bInputStream)
+{
+	RCODE			rc = FERR_OK;
+
+	flmAssert( !m_bSetupCalled);
+
+	if (!pRfl)
+	{
+		flmAssert( 0);
+		rc = RC_SET( FERR_INVALID_PARM);
+		goto Exit;
+	}
+	m_pRfl = pRfl;
+	m_bInputStream = bInputStream;
+	m_bSetupCalled = TRUE;
+	m_bStartedWriting = FALSE;
+
+Exit:
+	return( rc);
+}
+	
+/****************************************************************************
+Desc:
+****************************************************************************/
+RCODE F_RflUnknownStream::close( void)
+{
+	RCODE			rc = FERR_OK;
+
+	flmAssert( m_bSetupCalled);
+
+	// There is nothing to do for input streams, because the RFL
+	// code handles skipping over any unknown data that may not have
+	// been read yet.
+	// For output streams, we need to call the endLoggingUnknown
+	// routine so that the last packet gets written out.
+
+	if (!m_bInputStream)
+	{
+		if (m_bStartedWriting)
+		{
+			m_bStartedWriting = FALSE;
+			if (RC_BAD( rc = m_pRfl->endLoggingUnknown()))
+			{
+				goto Exit;
+			}
+		}
+	}
+Exit:
+	return( rc);
+}
+
+/****************************************************************************
+Desc:
+****************************************************************************/
+RCODE F_RflUnknownStream::read(
+	FLMUINT			uiLength,
+	void *			pvBuffer,
+	FLMUINT *		puiBytesRead)
+{
+	RCODE			rc = FERR_OK;
+
+	flmAssert( m_bSetupCalled);
+
+	if (!m_bInputStream)
+	{
+
+		// Cannot read from an output stream.
+
+		flmAssert( 0);
+		rc = RC_SET( FERR_ILLEGAL_OP);
+		goto Exit;
+	}
+
+	if (RC_BAD( rc = m_pRfl->readUnknown( uiLength, (FLMBYTE *)pvBuffer,
+										puiBytesRead)))
+	{
+		goto Exit;
+	}
+
+Exit:
+	return( rc);
+}
+
+/****************************************************************************
+Desc:
+****************************************************************************/
+RCODE F_RflUnknownStream::write(
+	FLMUINT			uiLength,
+	void *			pvBuffer)
+{
+	RCODE			rc = FERR_OK;
+
+	flmAssert( m_bSetupCalled);
+	flmAssert( m_pRfl);
+
+	if (m_bInputStream)
+	{
+
+		// Cannot write to an input stream.
+
+		flmAssert( 0);
+		rc = RC_SET( FERR_ILLEGAL_OP);
+		goto Exit;
+	}
+
+	// Need to start logging on the first write.
+
+	if (!m_bStartedWriting)
+	{
+		if (RC_BAD( rc = m_pRfl->startLoggingUnknown()))
+		{
+			goto Exit;
+		}
+		m_bStartedWriting = TRUE;
+	}
+
+	// Log the data.
+
+	if (RC_BAD( rc = m_pRfl->logUnknown( (FLMBYTE *)pvBuffer, uiLength)))
+	{
+		goto Exit;
+	}
+Exit:
+	return( rc);
+}
+
+/****************************************************************************
+Desc:	Returns an unknown stream object - suitable for writing unknown
+		streams into the roll-forward log.
+****************************************************************************/
+FLMEXP RCODE FLMAPI FlmDbGetUnknownStreamObj(
+	HFDB						hDb,
+	F_UnknownStream **	ppUnknownStream)
+{
+	RCODE						rc = FERR_OK;
+	FDB *						pDb = (FDB *)hDb;
+	F_RflUnknownStream *	pUnkStream = NULL;
+
+	flmAssert( pDb);
+	flmAssert( ppUnknownStream);
+
+	// See if the database is being forced to close
+
+	if( RC_BAD( rc = flmCheckDatabaseState( pDb)))
+	{
+		goto Exit;
+	}
+
+	// This is only valid on 4.3 and greater.
+
+	if (pDb->pFile->FileHdr.uiVersionNum < FLM_FILE_FORMAT_VER_4_3)
+	{
+		goto Exit;	// Will return FERR_OK and a NULL pointer.
+	}
+
+	// Must be in an update transaction.
+
+	if (pDb->uiTransType == FLM_NO_TRANS)
+	{
+		rc = RC_SET( FERR_NO_TRANS_ACTIVE);
+		goto Exit;
+	}
+	if (pDb->uiTransType != FLM_UPDATE_TRANS)
+	{
+		rc = RC_SET( FERR_ILLEGAL_TRANS_OP);
+		goto Exit;
+	}
+
+	// Allocate the stream object we want.
+
+	if ((pUnkStream = f_new F_RflUnknownStream) == NULL)
+	{
+		rc = RC_SET( FERR_MEM);
+		goto Exit;
+	}
+
+	// Setup the unknown stream object.
+
+	if (RC_BAD( rc = pUnkStream->setup( pDb->pFile->pRfl, FALSE)))
+	{
+		goto Exit;
+	}
+
+Exit:
+	if (RC_BAD( rc) && pUnkStream)
+	{
+		pUnkStream->Release();
+		pUnkStream = NULL;
+	}
+	*ppUnknownStream = (F_UnknownStream *)pUnkStream;
+	return( rc);
+}
+
+/****************************************************************************
+Desc:
+****************************************************************************/
+F_FSRestore::F_FSRestore() 
+{
+	m_pFileHdl = NULL;
+	m_pFileHdl64 = NULL;
+	m_ui64Offset = 0;
+	m_bSetupCalled = FALSE;
+	m_szDbPath[ 0] = 0;
+	m_uiDbVersion = 0;
+	m_szBackupSetPath[ 0] = 0;
+	m_szRflDir[ 0] = 0;
+	m_bOpen = FALSE;
+}
+
+/****************************************************************************
+Desc:
+****************************************************************************/
+F_FSRestore::~F_FSRestore() 
+{
+	if( m_bOpen)
+	{
+		(void)close();
+	}
+}
+
+/****************************************************************************
+Desc:
+****************************************************************************/
+RCODE F_FSRestore::setup(
+	const char *		pucDbPath,
+	const char *		pucBackupSetPath,
+	const char *		pucRflDir)
+{
+	flmAssert( !m_bSetupCalled);
+	flmAssert( pucDbPath);
+	flmAssert( pucBackupSetPath);
+
+	f_strcpy( m_szDbPath, pucDbPath);
+	f_strcpy( m_szBackupSetPath, pucBackupSetPath);
+
+	if( pucRflDir)
+	{
+		f_strcpy( m_szRflDir, pucRflDir);
+	}
+	
+
+	m_bSetupCalled = TRUE;
+	return( FERR_OK);
+}
+
+/****************************************************************************
+Desc:
+****************************************************************************/
+RCODE F_FSRestore::openBackupSet( void)
+{
+	RCODE			rc = FERR_OK;
+
+	flmAssert( m_bSetupCalled);
+	flmAssert( !m_pFileHdl64);
+
+	if( (m_pFileHdl64 = f_new F_64BitFileHandle) == NULL)
+	{
+		rc = RC_SET( FERR_MEM);
+		goto Exit;
+	}
+
+	if( RC_BAD( rc = m_pFileHdl64->Open( m_szBackupSetPath)))
+	{
+		m_pFileHdl64->Release();
+		m_pFileHdl64 = NULL;
+		goto Exit;
+	}
+
+	m_ui64Offset = 0;
+	m_bOpen = TRUE;
+
+Exit:
+
+	return( rc);
+}
+
+/****************************************************************************
+Desc:
+****************************************************************************/
+RCODE F_FSRestore::openRflFile(
+	FLMUINT			uiFileNum)
+{
+	RCODE				rc = FERR_OK;
+	char				szRflPath[ F_PATH_MAX_SIZE];
+	char				szDbPrefix[ F_FILENAME_SIZE];
+	char				szBaseName[ F_FILENAME_SIZE];
+	FLMBYTE *		pBuf = NULL;
+	FILE_HDR			fileHdr;
+	LOG_HDR			logHdr;
+	F_FileHdl *		pFileHdl = NULL;
+
+	flmAssert( m_bSetupCalled);
+	flmAssert( uiFileNum);
+	flmAssert( !m_pFileHdl);
+
+	// Read the database header to determine the version number
+	
+	if( !m_uiDbVersion)
+	{
+		if (RC_BAD( rc = f_alloc( 2048, &pBuf)))
+		{
+			goto Exit;
+		}
+
+		if( RC_BAD( rc = gv_FlmSysData.pFileSystem->Open( 
+			m_szDbPath, F_IO_RDWR | F_IO_SH_DENYNONE, &pFileHdl)))
+		{
+			goto Exit;
+		}
+
+		if( RC_BAD( rc = flmReadAndVerifyHdrInfo( NULL, pFileHdl,
+			pBuf, &fileHdr, &logHdr, NULL)))
+		{
+			goto Exit;
+		}
+
+		pFileHdl->Close();
+		pFileHdl->Release();
+		pFileHdl = NULL;
+
+		m_uiDbVersion = fileHdr.uiVersionNum;
+	}
+
+	/*
+	Generate the log file name.
+	*/
+
+	if( RC_BAD( rc = rflGetDirAndPrefix( 
+		m_uiDbVersion, m_szDbPath, m_szRflDir, szRflPath, szDbPrefix)))
+	{
+		goto Exit;
+	}
+
+	rflGetBaseFileName( m_uiDbVersion, szDbPrefix, uiFileNum, szBaseName);
+	f_pathAppend( szRflPath, szBaseName);
+
+	/* 
+	Open the file.
+	*/
+
+	if( RC_BAD( rc = gv_FlmSysData.pFileSystem->OpenBlockFile( 
+		szRflPath, F_IO_RDWR | F_IO_SH_DENYNONE | F_IO_DIRECT,
+		512, &m_pFileHdl)))
+	{
+		goto Exit;
+	}
+
+	m_bOpen = TRUE;
+	m_ui64Offset = 0;
+
+Exit:
+
+	if( pBuf)
+	{
+		f_free( &pBuf);
+	}
+
+	if( pFileHdl)
+	{
+		pFileHdl->Release();
+	}
+
+	return( rc);
+}
+
+/****************************************************************************
+Desc:
+****************************************************************************/
+RCODE F_FSRestore::openIncFile(
+	FLMUINT			uiFileNum)
+{
+	RCODE			rc = FERR_OK;
+	char			szIncPath[ F_PATH_MAX_SIZE];
+	char			szIncFile[ F_FILENAME_SIZE];
+
+	flmAssert( m_bSetupCalled);
+	flmAssert( !m_pFileHdl64);
+
+	/*
+	Since this is a non-interactive restore, we will "guess"
+	that incremental backups are located in the same parent
+	directory as the main backup set.  We will further assume
+	that the incremental backup sets have been named XXXXXXXX.INC,
+	where X is a hex digit.
+	*/
+
+	if( RC_BAD( rc = f_pathReduce( m_szBackupSetPath, 
+		szIncPath, NULL)))
+	{
+		goto Exit;
+	}
+
+	f_sprintf( szIncFile, "%08X.INC", (unsigned)uiFileNum);
+	f_pathAppend( szIncPath, szIncFile);
+
+	if( (m_pFileHdl64 = f_new F_64BitFileHandle) == NULL)
+	{
+		rc = RC_SET( FERR_MEM);
+		goto Exit;
+	}
+
+	if( RC_BAD( rc = m_pFileHdl64->Open( szIncPath)))
+	{
+		m_pFileHdl64->Release();
+		m_pFileHdl64 = NULL;
+		goto Exit;
+	}
+
+	m_ui64Offset = 0;
+	m_bOpen = TRUE;
+
+Exit:
+
+	return( rc);
+}
+
+/****************************************************************************
+Desc:
+****************************************************************************/
+RCODE F_FSRestore::read(
+	FLMUINT			uiLength,
+	void *			pvBuffer,
+	FLMUINT *		puiBytesRead)
+{
+	FLMUINT		uiBytesRead = 0;
+	RCODE			rc = FERR_OK;
+
+	flmAssert( m_bSetupCalled);
+	flmAssert( m_pFileHdl || m_pFileHdl64);
+
+	if( m_pFileHdl64)
+	{
+		if( RC_BAD( rc = m_pFileHdl64->Read( m_ui64Offset, 
+			uiLength, pvBuffer, &uiBytesRead)))
+		{
+			goto Exit;
+		}
+	}
+	else
+	{
+		if( RC_BAD( rc = m_pFileHdl->Read( (FLMUINT)m_ui64Offset,
+			uiLength, pvBuffer, &uiBytesRead)))
+		{
+			goto Exit;
+		}
+	}
+
+Exit:
+
+	m_ui64Offset += uiBytesRead;
+
+	if( puiBytesRead)
+	{
+		*puiBytesRead = uiBytesRead;
+	}
+
+	return( rc);
+}
+
+/****************************************************************************
+Desc:
+****************************************************************************/
+RCODE F_FSRestore::close( void)
+{
+	flmAssert( m_bSetupCalled);
+
+	if( m_pFileHdl64)
+	{
+		m_pFileHdl64->Release();
+		m_pFileHdl64 = NULL;
+	}
+
+	if( m_pFileHdl)
+	{
+		m_pFileHdl->Release();
+		m_pFileHdl = NULL;
+	}
+
+	m_bOpen = FALSE;
+	m_ui64Offset = 0;
+
+	return( FERR_OK);
 }
