@@ -1093,9 +1093,6 @@ RCODE F_FileHdlImp::DirectWrite(
 	FLMUINT			uiBytesBeingOutput;
 	FLMBYTE *		pucWriteBuffer;
 	FLMBYTE *		pucSrcBuffer;
-	FLMBOOL			bDoAsync = (pBufferObj != NULL) 
-										? TRUE 
-										: FALSE;
 	FLMBOOL			bDidAsync = FALSE;
 	FLMUINT			uiLastWriteOffset;
 	FLMUINT			uiLastWriteSize;
@@ -1103,7 +1100,7 @@ RCODE F_FileHdlImp::DirectWrite(
 	flmAssert( m_bFileOpened);
 
 #ifdef FLM_DEBUG
-	if( bDoAsync)
+	if( pBufferObj != NULL)
 	{
 		flmAssert( m_bCanDoAsync);
 	}
@@ -1140,7 +1137,7 @@ RCODE F_FileHdlImp::DirectWrite(
 			// Cannot be using a temporary write buffer if we are doing
 			// asynchronous writes!
 
-			flmAssert( !bDoAsync || !m_bCanDoAsync);
+			flmAssert( !pBufferObj || !m_bCanDoAsync);
 			
 			if( !m_pucAlignedBuff)
 			{

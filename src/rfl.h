@@ -758,6 +758,45 @@ private:
 													// RFL volume?
 };
 
+/****************************************************************************
+Desc:	This object is our implementation of the
+		F_UnknownStream object which is used to handle unknown
+		objects in the RFL.
+****************************************************************************/
+class F_RflUnknownStream : public F_UnknownStream
+{
+public:
+
+	F_RflUnknownStream();
+	virtual ~F_RflUnknownStream();
+
+	RCODE setup(
+		F_Rfl *			pRfl,
+		FLMBOOL			bInputStream);
+
+	RCODE reset( void);
+
+	RCODE read(
+		FLMUINT			uiLength,				// Number of bytes to read
+		void *			pvBuffer,				// Buffer to place read bytes into
+		FLMUINT *		puiBytesRead);			// [out] Number of bytes read
+
+	RCODE write(
+		FLMUINT			uiLength,				// Number of bytes to write
+		void *			pvBuffer);
+
+	RCODE close( void);							// Reads to the end of the
+														// stream and discards any
+														// remaining data (if input stream).
+
+private:
+
+	FLMBOOL		m_bSetupCalled;
+	F_Rfl *		m_pRfl;							// RFL object.
+	FLMBOOL		m_bInputStream;				// TRUE=input stream, FALSE=output stream
+	FLMBOOL		m_bStartedWriting;			// Only used for output streams
+};
+
 /**************************************************************************
 Desc: 	This structure is passed to the callback function that gets the
 			differences between an old and a new record when a record
