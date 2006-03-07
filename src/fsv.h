@@ -30,6 +30,7 @@
 // IMPORTANT NOTE: No other include files should follow this one except
 // for fpackoff.h
 
+#define FSV_MAX_TCP_HANDLERS					64
 #define FSV_LOG_BUFFER_SIZE					256
 
 // Server defaults
@@ -255,13 +256,7 @@ private:
 #define MAX_SESN_ITERATORS			10
 	HFCURSOR				m_IteratorList[ MAX_SESN_ITERATORS];
 	POOL					m_wireScratchPool;
-
-	/*
-	Metchods
-	*/
-
 };
-
 
 
 /****************************************************************************

@@ -22,7 +22,6 @@
 // $Id$
 //-------------------------------------------------------------------------
 
-
 #include "flaimsys.h"
 
 extern FLMBYTE arr[];
@@ -30,12 +29,49 @@ extern FLMBYTE ucMaxBcdINT32[];
 extern FLMBYTE ucMinBcdINT32[];
 extern FLMBYTE ucMaxBcdUINT32[];
 
+#define BINARY_GED_HEADER_LEN 8
+
+static FLMBYTE FlmBinaryGedHeader[BINARY_GED_HEADER_LEN] =
+{
+	0xFF,
+	'F',
+	'L',
+	'M',
+	'D',
+	'I',
+	'C',
+	'T'
+};
+
+static FLMBYTE FlmBinaryRecHeader[BINARY_GED_HEADER_LEN] =
+{
+	0xFF,
+	'F',
+	'L',
+	'M',
+	'R',
+	'E',
+	'C',
+	'S'
+};
+
 #define NODE_DRN_POS			0
 #define NODE_CONTAINER_POS ( NODE_DRN_POS + sizeof(FLMUINT))
 #define NODE_DB_POS			( NODE_CONTAINER_POS + sizeof(FLMUINT))
 
 #define f_isdigit(c) \
 		((c) < 60 ? ((((FLMBYTE) (arr[(c) >> 3])) << ((c) & 0x07)) & 0x80) : 0)
+
+FSTATIC RCODE expWrite(
+	EXP_IMP_INFO *		pExpImpInfo,
+	const FLMBYTE *	pData,
+	FLMUINT				uiDataLen);
+
+FSTATIC RCODE impRead(
+	EXP_IMP_INFO *		pExpImpInfo,	
+	FLMBYTE *			pData,
+	FLMUINT				uiDataLen,
+	FLMUINT *			puiBytesReadRV);
 
 FSTATIC RCODE tagValLenType(
 	POOL *				pPool,
@@ -83,7 +119,7 @@ RCODE GedGetBINARY(
 		goto Exit;
 	}
 
-	ptr = (FLMBYTE*) GedValPtr( pNode);
+	ptr = (FLMBYTE *) GedValPtr( pNode);
 	valLength = GedValLen( pNode);
 
 	// At this point we know the node is a BINARY node
@@ -454,7 +490,7 @@ FSTATIC RCODE tagValLenType(
 
 		if ((valLength = gedCopyValue( pGedStream, NULL)) > 0)
 		{
-			char*		vp = (char*) GedAllocSpace( pPool, nd, FLM_TEXT_TYPE,
+			char *	vp = (char *) GedAllocSpace( pPool, nd, FLM_TEXT_TYPE,
 															 valLength);
 
 			if (vp)
@@ -891,7 +927,7 @@ NODE * GedSibGraft(
 /*****************************************************************************
 Desc:
 *****************************************************************************/
-NODE* GedNodeCreate(
+NODE * GedNodeCreate(
 	POOL *		pPool,
 	FLMUINT		tagNum,
 	FLMUINT		id,
@@ -899,7 +935,7 @@ NODE* GedNodeCreate(
 {
 	NODE *		nd;
 
-	if ((nd = (NODE*) GedPoolAlloc( pPool, (sizeof(NODE) + 
+	if ((nd = (NODE *) GedPoolAlloc( pPool, (sizeof(NODE) + 
 		(id ? sizeof(id) : 0)))) == NULL)
 	{
 		*rc = RC_SET( FERR_MEM);
@@ -913,9 +949,9 @@ NODE* GedNodeCreate(
 
 		if (id)
 		{
-			FLMBYTE*		ptr;
+			FLMBYTE *		ptr;
 			GedValTypeSetFlag( nd, HAS_REC_ID);
-			ptr = ((FLMBYTE*) nd) + sizeof(NODE);
+			ptr = ((FLMBYTE *) nd) + sizeof(NODE);
 			*((FLMUINT *) (ptr + NODE_DRN_POS)) = id;
 		}
 
@@ -950,14 +986,14 @@ void * GedAllocSpace(
 		// If the size is less than sizeof (void *), we use the space right
 		// inside value pointer itself.
 		
-		rPtr = (FLMBYTE*) &pNode->value;
+		rPtr = (FLMBYTE *) &pNode->value;
 	}
 	else if (size <= GedValLen( pNode))
 	{
 
 		// If there is already allocated space, just re-use it
 
-		rPtr = (FLMBYTE*) GedValPtr( pNode);
+		rPtr = (FLMBYTE *) GedValPtr( pNode);
 	}
 	else
 	{
@@ -1046,8 +1082,8 @@ void * GedEncPtr(
 	NODE *		nd)
 {
 	return( nd && nd->ui32EncLength 
-					? (void*) nd->pucEncValue 
-					: (void*) NULL);
+					? (void *) nd->pucEncValue 
+					: (void *) NULL);
 }
 
 /*****************************************************************************
@@ -1097,7 +1133,7 @@ RCODE GedPutRecId(
 
 	// Set the Ids value
 
-	ptr = (FLMBYTE*) GedIdPtr( pNewNd);
+	ptr = (FLMBYTE *) GedIdPtr( pNewNd);
 	*((FLMUINT *) (ptr + NODE_DRN_POS)) = uiId;
 	*ppNd = pNewNd;
 
@@ -1113,7 +1149,7 @@ void gedSetRecSource(
 	FLMUINT	uiContainer,
 	FLMUINT	uiDrn)
 {
-	FLMBYTE*		pucPtr;
+	FLMBYTE *		pucPtr;
 
 	pucPtr = ((FLMBYTE *) pNode) + sizeof(NODE);
 	if (uiDrn)
@@ -1145,7 +1181,7 @@ RCODE GedGetRecSource(
 	FLMUINT *		puiRecId)
 {
 	RCODE			rc = FERR_OK;
-	FLMBYTE *	ptr = ((FLMBYTE*) pNode) + sizeof(NODE);
+	FLMBYTE *	ptr = ((FLMBYTE *) pNode) + sizeof(NODE);
 
 	if (GedNodeType( pNode) & HAS_REC_SOURCE)
 	{
@@ -1284,7 +1320,7 @@ RCODE GedGetRecPtr(
 
 	if (GedValLen( nd) == sizeof(FLMUINT32))
 	{
-		*drnRV = (FLMUINT) (FB2UD( (FLMBYTE*) GedValPtr( nd)));
+		*drnRV = (FLMUINT) (FB2UD( (FLMBYTE *) GedValPtr( nd)));
 	}
 
 Exit:
@@ -1386,8 +1422,8 @@ NODE * GedSibPrev(
 Desc:
 *****************************************************************************/
 RCODE GedPutNATIVE(
-	POOL*				pPool,
-	NODE*				pNode,
+	POOL *			pPool,
+	NODE *			pNode,
 	const char *	nativeString,
 	FLMUINT			uiEncId,
 	FLMUINT			uiEncSize)
@@ -1421,10 +1457,8 @@ RCODE GedPutNATIVE(
 		goto Exit;
 	}
 
-	if ((
-			 outPtr = (FLMBYTE*) GedAllocSpace( pPool, pNode, FLM_TEXT_TYPE,
-															allocLength, uiEncId, uiEncSize)
- ) == NULL)
+	if ((outPtr = (FLMBYTE *) GedAllocSpace( pPool, pNode, FLM_TEXT_TYPE,
+												allocLength, uiEncId, uiEncSize)) == NULL)
 	{
 		rc = RC_SET( FERR_MEM);
 		goto Exit;
@@ -1486,11 +1520,11 @@ RCODE GedGetNATIVE(
 		goto Exit;
 	}
 
-	ptr = (FLMBYTE*) GedValPtr( pNode);
+	ptr = (FLMBYTE *) GedValPtr( pNode);
 	valLength = GedValLen( pNode);
 
-	rc = FlmStorage2Native( uiNodeType, valLength, (const FLMBYTE*) ptr, bufLenRV,
-								  pszBuffer);
+	rc = FlmStorage2Native( uiNodeType, valLength, 
+				(const FLMBYTE *) ptr, bufLenRV, pszBuffer);
 
 Exit:
 
@@ -1541,7 +1575,7 @@ RCODE GedPutUINT(
 
 	// Determine number of bytes required for BCD number & allocate space
 
-	if ((pucPtr = (FLMBYTE*) GedAllocSpace( pPool, pNode, FLM_NUMBER_TYPE,
+	if ((pucPtr = (FLMBYTE *) GedAllocSpace( pPool, pNode, FLM_NUMBER_TYPE,
 			((pucNibStk - ucNibStk) >> 1), uiEncId, uiEncSize)) == NULL)
 	{
 		rc = RC_SET( FERR_MEM);
@@ -1751,7 +1785,7 @@ RCODE GedGetINT16(
 	}
 
 	if (RC_OK( rc = flmBcd2Num( GedValType( pNode), GedValLen( pNode),
-				 (const FLMBYTE*) GedValPtr( pNode), &bcd)))
+				 (const FLMBYTE *) GedValPtr( pNode), &bcd)))
 	{
 		if (bcd.bNegFlag)
 		{
@@ -1844,7 +1878,7 @@ RCODE GedGetUINT8(
 	}
 
 	if (RC_OK( rc = flmBcd2Num( GedValType( pNode), GedValLen( pNode),
-				 (const FLMBYTE*) GedValPtr( pNode), &bcd)))
+				 (const FLMBYTE *) GedValPtr( pNode), &bcd)))
 	{
 		*pui8Num = (FLMUINT8) bcd.uiNum;
 		rc = bcd.bNegFlag 
@@ -1880,7 +1914,7 @@ RCODE GedGetUINT32(
 	}
 
 	if (RC_OK( rc = flmBcd2Num( GedValType( pNode), GedValLen( pNode),
-				 (const FLMBYTE*) GedValPtr( pNode), &bcd)))
+				 (const FLMBYTE *) GedValPtr( pNode), &bcd)))
 	{
 		*pui32Num = (FLMUINT32) bcd.uiNum;
 
@@ -1950,8 +1984,8 @@ Desc:
 *****************************************************************************/
 RCODE GedNumToText(
 	const FLMBYTE *	num,
-	FLMBYTE*				buffer,
-	FLMUINT*				bufLenRV)
+	FLMBYTE *			buffer,
+	FLMUINT *			bufLenRV)
 {
 	FLMBYTE *			outPtr;
 	FLMBYTE				c;
@@ -2403,7 +2437,7 @@ RCODE GedPutUNICODE(
 
 	allocLength = FlmGetUnicodeStorageLength( puzString);
 
-	if ((outPtr = (FLMBYTE*) GedAllocSpace( pPool, pNode, FLM_TEXT_TYPE,
+	if ((outPtr = (FLMBYTE *) GedAllocSpace( pPool, pNode, FLM_TEXT_TYPE,
 						allocLength, uiEncId, uiEncSize)) == NULL)
 	{
 		return (RC_SET( FERR_MEM));
@@ -2463,7 +2497,7 @@ RCODE GedGetUNICODE(
 	}
 
 	if( RC_BAD( rc = FlmStorage2Unicode( uiNodeType, GedValLen( pNode),
-									(const FLMBYTE*) GedValPtr( pNode),
+									(const FLMBYTE *) GedValPtr( pNode),
 									bufLenRV, uniBuf)))
 	{
 		goto Exit;
@@ -2485,10 +2519,10 @@ RCODE gedCreateSourceNode(
 	FLMUINT		uiRecId,
 	NODE **	 	ppNode)
 {
-	NODE*		nd;
+	NODE *	nd;
 	RCODE		rc = FERR_OK;
 
-	*ppNode = nd = (NODE*) GedPoolCalloc( pPool, (sizeof(NODE) + 
+	*ppNode = nd = (NODE *) GedPoolCalloc( pPool, (sizeof(NODE) + 
 							sizeof(FLMUINT) + sizeof(FLMUINT) + sizeof(HFDB)));
 							
 	if (nd != NULL)
@@ -2503,4 +2537,698 @@ RCODE gedCreateSourceNode(
 	}
 
 	return (rc);
+}
+
+
+/*****************************************************************************
+Desc:
+*****************************************************************************/
+RCODE expImpInit(
+	F_FileHdl *			pFileHdl,
+	FLMUINT				uiFlag,
+	EXP_IMP_INFO *		pExpImpInfoRV)
+{
+	RCODE 				rc = FERR_OK;
+
+	f_memset( pExpImpInfoRV, 0, sizeof(EXP_IMP_INFO));
+	pExpImpInfoRV->pFileHdl = pFileHdl;
+	pExpImpInfoRV->bDictRecords = (uiFlag == EXPIMP_IMPORT_EXPORT_GEDCOM) 
+														? FALSE 
+														: TRUE;
+
+	// Allocate a buffer for reading or writing.
+
+	pExpImpInfoRV->uiBufSize = (uiFlag == EXPIMP_IMPORT_EXPORT_GEDCOM) 
+												? (FLMUINT) 2048 
+												: (FLMUINT) 32768;
+	for (;;)
+	{
+		if (RC_BAD( rc = f_alloc( pExpImpInfoRV->uiBufSize, &pExpImpInfoRV->pBuf)))
+		{
+			pExpImpInfoRV->uiBufSize -= 512;
+			if (pExpImpInfoRV->uiBufSize < 1024)
+			{
+				pExpImpInfoRV->uiBufSize = 0;
+				goto Exit;
+			}
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	// If writing, output the header data. If reading, seek past it.
+
+	if (uiFlag == EXPIMP_EXPORT_DICTIONARY)
+	{
+
+		// Write out the header data.
+
+		rc = expWrite( pExpImpInfoRV, FlmBinaryGedHeader, BINARY_GED_HEADER_LEN);
+	}
+	else if (uiFlag == EXPIMP_IMPORT_DICTIONARY)
+	{
+		rc = pFileHdl->Seek( (FLMUINT) BINARY_GED_HEADER_LEN, F_IO_SEEK_SET,
+								  &pExpImpInfoRV->uiFilePos);
+	}
+	else
+	{
+		rc = expWrite( pExpImpInfoRV, FlmBinaryRecHeader, BINARY_GED_HEADER_LEN);
+	}
+
+Exit:
+
+	if (RC_BAD( rc))
+	{
+		expImpFree( pExpImpInfoRV);
+	}
+
+	return (rc);
+}
+
+/*****************************************************************************
+Desc:
+*****************************************************************************/
+void expImpFree(
+	EXP_IMP_INFO *	 	pExpImpInfo)
+{
+	if (pExpImpInfo->pBuf)
+	{
+		f_free( &pExpImpInfo->pBuf);
+	}
+
+	f_memset( pExpImpInfo, 0, sizeof(EXP_IMP_INFO));
+}
+
+/*****************************************************************************
+Desc:
+*****************************************************************************/
+RCODE expFlush(
+	EXP_IMP_INFO *		pExpImpInfo)
+{
+	RCODE					rc = FERR_OK;
+	FLMUINT				uiBytesWritten;
+
+	if ((pExpImpInfo->uiBufUsed) && (pExpImpInfo->bBufDirty))
+	{
+		if (RC_BAD( rc = pExpImpInfo->pFileHdl->Write( pExpImpInfo->uiFilePos,
+					  pExpImpInfo->uiBufUsed, pExpImpInfo->pBuf, &uiBytesWritten)))
+		{
+			goto Exit;
+		}
+
+		if (uiBytesWritten < pExpImpInfo->uiBufUsed)
+		{
+			rc = RC_SET( FERR_IO_DISK_FULL);
+			goto Exit;
+		}
+
+		pExpImpInfo->uiFilePos += uiBytesWritten;
+		pExpImpInfo->uiCurrBuffOffset = pExpImpInfo->uiBufUsed = 0;
+		pExpImpInfo->bBufDirty = FALSE;
+	}
+
+Exit:
+
+	return (rc);
+}
+
+/*****************************************************************************
+Desc:
+*****************************************************************************/
+RCODE expImpSeek(
+	EXP_IMP_INFO *	pExpImpInfo,
+	FLMUINT			uiSeekPos)
+{
+	RCODE 			rc = FERR_OK;
+
+	if ((uiSeekPos >= pExpImpInfo->uiFilePos) &&
+		 (uiSeekPos < pExpImpInfo->uiFilePos + (FLMUINT) pExpImpInfo->uiBufUsed))
+	{
+		pExpImpInfo->uiCurrBuffOffset = (FLMUINT) (uiSeekPos - pExpImpInfo->uiFilePos);
+	}
+	else
+	{
+		if (pExpImpInfo->bBufDirty)
+		{
+			if (RC_BAD( rc = expFlush( pExpImpInfo)))
+			{
+				goto Exit;
+			}
+		}
+
+		pExpImpInfo->uiFilePos = uiSeekPos;
+		pExpImpInfo->uiBufUsed = pExpImpInfo->uiCurrBuffOffset = 0;
+	}
+
+Exit:
+
+	return (rc);
+}
+
+/*****************************************************************************
+Desc:
+*****************************************************************************/
+FSTATIC RCODE expWrite(
+	EXP_IMP_INFO *		pExpImpInfo,
+	const FLMBYTE *	pData,
+	FLMUINT				uiDataLen)
+{
+	RCODE		rc = FERR_OK;
+	FLMUINT	uiCopyLen;
+
+	while (uiDataLen)
+	{
+		if ((uiCopyLen = (pExpImpInfo->uiBufSize - 
+				pExpImpInfo->uiCurrBuffOffset)) > uiDataLen)
+		{
+			uiCopyLen = uiDataLen;
+		}
+
+		f_memcpy( &pExpImpInfo->pBuf[pExpImpInfo->uiCurrBuffOffset], pData,
+					uiCopyLen);
+					
+		pExpImpInfo->bBufDirty = TRUE;
+		uiDataLen -= uiCopyLen;
+		pData += uiCopyLen;
+		pExpImpInfo->uiCurrBuffOffset += uiCopyLen;
+		
+		if (pExpImpInfo->uiCurrBuffOffset > pExpImpInfo->uiBufUsed)
+		{
+			pExpImpInfo->uiBufUsed = pExpImpInfo->uiCurrBuffOffset;
+		}
+
+		if (pExpImpInfo->uiCurrBuffOffset == pExpImpInfo->uiBufSize)
+		{
+			if (RC_BAD( rc = expFlush( pExpImpInfo)))
+			{
+				goto Exit;
+			}
+		}
+	}
+
+Exit:
+
+	return (rc);
+}
+
+/*****************************************************************************
+Desc:
+*****************************************************************************/
+RCODE expWriteRec(
+	EXP_IMP_INFO *		pExpImpInfo,
+	FlmRecord *			pRecord,
+	FLMUINT				uiDrn)
+{
+	RCODE				rc = FERR_OK;
+	FLMBYTE			TBuf[ 24];
+	FLMUINT			uiLen;
+	FLMUINT			uiTagNum;
+	FLMUINT			uiInitLevel;
+	FLMBOOL			bOutputtingRecInfo;
+	FLMBOOL			bRootNode;
+	FLMUINT			uiTmpLen;
+	FlmRecord *		pRec = NULL;
+	FlmRecord *		pRecInfoRec = NULL;
+	void *			pvField;
+
+	if (pExpImpInfo->bDictRecords)
+	{
+
+		// Create a record for the RECINFO information
+
+		if ((pRecInfoRec = f_new FlmRecord) == NULL)
+		{
+			rc = RC_SET( FERR_MEM);
+			goto Exit;
+		}
+
+		if (RC_BAD( rc = pRecInfoRec->insertLast( 0, FLM_RECINFO_TAG,
+					  FLM_NUMBER_TYPE, &pvField)))
+		{
+			goto Exit;
+		}
+
+		// Add the record's DRN to the RECINFO information.
+
+		if (RC_BAD( rc = flmAddField( pRecInfoRec, FLM_DRN_TAG, (void *) &uiDrn,
+					  4, FLM_NUMBER_TYPE)))
+		{
+			goto Exit;
+		}
+
+		bOutputtingRecInfo = TRUE;
+
+		// Output both the REC_INFO GEDCOM tree and the record's GEDCOM
+		// tree.
+
+		bRootNode = FALSE;
+		pRec = pRecInfoRec;
+	}
+	else
+	{
+
+		// Output only the GEDCOM tree.
+
+		bOutputtingRecInfo = FALSE;
+		bRootNode = TRUE;
+		pRec = pRecord;
+	}
+
+	for (;;)
+	{
+
+		// Output each node in the record.
+
+		pvField = pRec->root();
+		uiInitLevel = pRec->getLevel( pvField);
+		do
+		{
+			uiTagNum = pRec->getFieldID( pvField);
+			uiLen = pRec->getDataLength( pvField);
+			UW2FBA( (FLMUINT16) uiTagNum, TBuf);
+			UW2FBA( (FLMUINT16) uiLen, &TBuf[2]);
+			TBuf[4] = (FLMBYTE) (pRec->getLevel( pvField) - uiInitLevel);
+			TBuf[5] = (FLMBYTE) (pRec->getDataType( pvField));
+
+			// Add on the record source information for the root node.
+
+			uiTmpLen = 6;
+			if (bRootNode)
+			{
+				UW2FBA( (FLMUINT16) pRec->getContainerID(), &TBuf[14]);
+				UD2FBA( pRec->getID(), &TBuf[16]);
+				uiTmpLen = 20;
+
+				bRootNode = FALSE;
+			}
+
+			if (RC_BAD( rc = expWrite( pExpImpInfo, TBuf, uiTmpLen)))
+			{
+				goto Exit;
+			}
+
+			if (uiLen)
+			{
+				const FLMBYTE *		pvData = pRec->getDataPtr( pvField);
+
+				if (RC_BAD( rc = expWrite( pExpImpInfo, pvData, uiLen)))
+				{
+					goto Exit;
+				}
+			}
+
+			pvField = pRec->next( pvField);
+		} while (pvField && (pRec->getLevel( pvField) > uiInitLevel));
+
+		// Output a zero tag number to indicate end of GEDCOM record.
+
+		UW2FBA( 0, TBuf);
+		if (RC_BAD( rc = expWrite( pExpImpInfo, TBuf, 2)))
+		{
+			goto Exit;
+		}
+
+		// Set things up to output the record after the REC_INFO.
+
+		if (!bOutputtingRecInfo)
+		{
+			break;
+		}
+
+		bOutputtingRecInfo = FALSE;
+		bRootNode = TRUE;
+		pRec = pRecord;
+	}
+
+Exit:
+
+	if (pRecInfoRec)
+	{
+		pRecInfoRec->Release();
+	}
+
+	return (rc);
+}
+
+/*****************************************************************************
+Desc:
+*****************************************************************************/
+FSTATIC RCODE impRead(
+	EXP_IMP_INFO *		pExpImpInfo,		// Export/Import information.
+	FLMBYTE *			pData,				// Buffer where data is to be read into.
+	FLMUINT				uiDataLen,			// Length of data to be read in.
+	FLMUINT *			puiBytesReadRV)	// Returns amount of data read in.
+{
+	RCODE			rc = FERR_OK;
+	FLMUINT		uiCopyLen;
+	FLMUINT		uiBytesRead = 0;
+
+	while (uiDataLen)
+	{
+
+		// See if we need to read some more data into the import buffer.
+
+		if (pExpImpInfo->uiCurrBuffOffset == pExpImpInfo->uiBufUsed)
+		{
+
+			// If we have a dirty buffer, flush it out first.
+
+			if (pExpImpInfo->bBufDirty)
+			{
+				if (RC_BAD( rc = expFlush( pExpImpInfo)))
+				{
+					goto Exit;
+				}
+			}
+			else
+			{
+				pExpImpInfo->uiFilePos += (FLMUINT) pExpImpInfo->uiBufUsed;
+				pExpImpInfo->uiBufUsed = pExpImpInfo->uiCurrBuffOffset = 0;
+			}
+
+			if (RC_BAD( rc = pExpImpInfo->pFileHdl->Read( pExpImpInfo->uiFilePos,
+						  pExpImpInfo->uiBufSize, pExpImpInfo->pBuf,
+						  &pExpImpInfo->uiBufUsed)))
+			{
+				if ((rc == FERR_IO_END_OF_FILE) && (pExpImpInfo->uiBufUsed))
+				{
+					rc = FERR_OK;
+				}
+				else
+				{
+					goto Exit;
+				}
+			}
+		}
+
+		// Copy from the import buffer to the data buffer.
+
+		if ((
+				 uiCopyLen =
+				 (
+				 pExpImpInfo->uiBufUsed -
+			 pExpImpInfo->uiCurrBuffOffset
+		 )
+	 ) > uiDataLen)
+			{
+				uiCopyLen = uiDataLen;
+		}
+
+		f_memcpy( pData, &pExpImpInfo->pBuf[pExpImpInfo->uiCurrBuffOffset],
+					uiCopyLen);
+		uiDataLen -= uiCopyLen;
+		uiBytesRead += uiCopyLen;
+		pData += uiCopyLen;
+		pExpImpInfo->uiCurrBuffOffset += uiCopyLen;
+	}
+
+Exit:
+
+	*puiBytesReadRV = uiBytesRead;
+	return (rc);
+}
+
+/*****************************************************************************
+Desc:
+*****************************************************************************/
+RCODE impReadRec(
+	EXP_IMP_INFO *		pExpImpInfo,	// Export/Import information.
+	FlmRecord **	 	ppRecordRV)		// Returns record that was read in.
+{
+	RCODE					rc = FERR_OK;
+	FLMBYTE				TBuf[24];
+	FLMUINT				uiLen;
+	FLMUINT				uiTagNum;
+	FLMUINT				uiRecInfoDrn = 0;
+	FLMUINT				uiDictID;
+	FLMBOOL				bHaveRecInfo = FALSE;
+	FLMBOOL				bHaveDictID = FALSE;
+	FLMUINT				uiLevel;
+	FLMUINT				uiType;
+	FLMBOOL				bGettingRecInfo;
+	FLMUINT				uiBytesRead;
+	FLMUINT				uiTmpLen;
+	FlmRecord *			pRecord = NULL;
+	void *				pvField;
+
+	bGettingRecInfo = (pExpImpInfo->bDictRecords) ? TRUE : FALSE;
+
+	// Read each node in the REC_INFO (if dictionary) and then the record.
+
+	for (;;)
+	{
+		if (RC_BAD( rc = impRead( pExpImpInfo, TBuf, 2, &uiBytesRead)))
+		{
+			if ((rc == FERR_IO_END_OF_FILE) &&
+				 (uiBytesRead == 0) &&
+				 ((!bGettingRecInfo) || (!bHaveRecInfo)))
+			{
+				rc = RC_SET( FERR_END);
+			}
+
+			goto Exit;
+		}
+
+		// A tag number of zero means we are at the end of the record.
+
+		uiTagNum = FB2UW( TBuf);
+		if (!uiTagNum)
+		{
+			if (bGettingRecInfo)
+			{
+				bGettingRecInfo = FALSE;
+				continue;
+			}
+			else
+			{
+				break;
+			}
+		}
+
+		uiTmpLen = ((!bGettingRecInfo) && (!pRecord)) ? 18 : 4;
+		if (RC_BAD( rc = impRead( pExpImpInfo, TBuf, uiTmpLen, &uiBytesRead)))
+		{
+			goto Exit;
+		}
+
+		uiLen = FB2UW( TBuf);
+		uiLevel = TBuf[2];
+		uiType = TBuf[3];
+
+		if (!pRecord)
+		{
+			if ((pRecord = f_new FlmRecord) == NULL)
+			{
+				rc = RC_SET( FERR_MEM);
+				goto Exit;
+			}
+
+			pRecord->setContainerID( FB2UW( &TBuf[12]));
+			pRecord->setID( FB2UD( &TBuf[14]));
+		}
+
+		if (RC_BAD( rc = pRecord->insertLast( uiLevel, uiTagNum, 
+			uiType, &pvField)))
+		{
+			goto Exit;
+		}
+
+		if (uiLen)
+		{
+			FLMBYTE *		pValue;
+
+			if (RC_BAD( rc = pRecord->allocStorageSpace( pvField, uiType, 
+				uiLen, 0, 0, 0, &pValue, NULL)))
+			{
+				goto Exit;
+			}
+
+			if (RC_BAD( rc = impRead( pExpImpInfo, pValue, uiLen, &uiBytesRead)))
+			{
+				goto Exit;
+			}
+		}
+
+		// Link the node into the tree.
+
+		if (bGettingRecInfo)
+		{
+			switch (uiTagNum)
+			{
+				case FLM_RECINFO_TAG:
+				{
+					bHaveRecInfo = TRUE;
+					break;
+				}
+				
+				case FLM_DRN_TAG:
+				{
+					if (RC_BAD( rc = pRecord->getUINT( pvField, &uiRecInfoDrn)))
+					{
+						goto Exit;
+					}
+					break;
+				}
+				
+				case FLM_DICT_SEQ_TAG:
+				{
+					if (RC_BAD( rc = pRecord->getUINT( pvField, &uiDictID)))
+					{
+						goto Exit;
+					}
+
+					bHaveDictID = TRUE;
+					break;
+				}
+			}
+		}
+	}
+
+Exit:
+
+	if (RC_OK( rc))
+	{
+		*ppRecordRV = pRecord;
+	}
+	else
+	{
+		if (pRecord)
+		{
+			pRecord->Release();
+		}
+
+		*ppRecordRV = NULL;
+	}
+
+	return (rc);
+}
+
+/*****************************************************************************
+Desc:
+*****************************************************************************/
+RCODE impFileIsExpImp(
+	F_FileHdl *		pFileHdl,
+	FLMBOOL *		pbFileIsBinaryRV)
+{
+	RCODE				rc = FERR_OK;
+	FLMUINT			uiCurrPos;
+	FLMUINT			uiIgnore;
+	FLMBYTE			byHeader[ BINARY_GED_HEADER_LEN];
+	FLMUINT			uiBytesRead;
+
+	*pbFileIsBinaryRV = FALSE;
+
+	// Save current position so we can return to it.
+
+	if (RC_BAD( rc = pFileHdl->Seek( (FLMUINT) 0, F_IO_SEEK_CUR, &uiCurrPos)))
+	{
+		goto Exit;
+	}
+
+	// Read the file's header information.
+
+	if (RC_BAD( rc = pFileHdl->Read( (FLMUINT) 0, BINARY_GED_HEADER_LEN,
+				  byHeader, &uiBytesRead)))
+	{
+		if (rc == FERR_IO_END_OF_FILE)
+		{
+			uiBytesRead = 0;
+			rc = FERR_OK;
+		}
+		else
+		{
+			goto Exit;
+		}
+	}
+
+	if ((uiBytesRead == BINARY_GED_HEADER_LEN) && 
+		((f_memcmp( byHeader, FlmBinaryGedHeader, BINARY_GED_HEADER_LEN) == 0) || 
+		(f_memcmp( byHeader, FlmBinaryRecHeader, BINARY_GED_HEADER_LEN) == 0)))
+	{
+		*pbFileIsBinaryRV = TRUE;
+	}
+
+	// Reset the file position to where it was before.
+
+	rc = pFileHdl->Seek( uiCurrPos, F_IO_SEEK_SET, &uiIgnore);
+
+Exit:
+
+	return (rc);
+}
+
+
+/****************************************************************************
+Desc:		This routine adds a field to a GEDCOM tree
+****************************************************************************/
+RCODE gedAddField(
+	POOL *			pPool,
+	NODE *			pRecord,
+	FLMUINT			uiTagNum,
+	const void *	pvData,
+	FLMUINT			uiDataLen,
+	FLMUINT			uiDataType)
+{
+	RCODE			rc = FERR_OK;
+	NODE *		pChildNode;
+	FLMUINT		uiNum;
+
+	if ((pChildNode = GedNodeMake( pPool, uiTagNum, &rc)) == NULL)
+	{
+		goto Exit;
+	}
+
+	switch( uiDataType)
+	{
+		case FLM_TEXT_TYPE:
+		{
+			rc = GedPutNATIVE( pPool, pChildNode, (const char *)pvData);
+			break;
+		}
+		
+		case FLM_NUMBER_TYPE:
+		{
+			switch (uiDataLen)
+			{
+				case 0:
+					uiNum = (FLMUINT)(*((FLMUINT *)(pvData)));
+					break;
+				case 1:
+					uiNum = (FLMUINT)(*((FLMBYTE *)(pvData)));
+					break;
+				case 2:
+					uiNum = (FLMUINT)(*((FLMUINT16 *)(pvData)));
+					break;
+				case 4:
+					uiNum = (FLMUINT)(*((FLMUINT32 *)(pvData)));
+					break;
+				default:
+					flmAssert( 0);
+					rc = RC_SET( FERR_INVALID_PARM);
+					goto Exit;
+			}
+			
+			rc = GedPutUINT( pPool, pChildNode, uiNum);
+			break;
+		}
+		
+		case FLM_BINARY_TYPE:
+		{
+			rc = GedPutBINARY( pPool, pChildNode, pvData, uiDataLen);
+			break;
+		}
+	}
+	
+	if (RC_BAD( rc))
+	{
+		goto Exit;
+	}
+	
+	GedChildGraft( pRecord, pChildNode, GED_LAST);
+
+Exit:
+
+	return( rc);
 }

@@ -633,3 +633,45 @@ FSTATIC RCODE flmNextKey(
 Exit:
 	return( rc);
 }
+
+/****************************************************************************
+Desc:	Given an input key tree a FLAIM collated key will be built and returned
+		to the user.
+****************************************************************************/
+FLMEXP RCODE FLMAPI FlmKeyBuild(
+	HFDB			hDb,
+	FLMUINT		uiIxNum,
+	FLMUINT		uiContainer,
+	FlmRecord *	pRecord,
+	FLMUINT		uiFlag,
+	FLMBYTE * 	pKeyBuf,
+	FLMUINT *	puiKeyLenRV)
+{
+	RCODE			rc;
+	FDB *			pDb = (FDB *)hDb;
+	IXD *			pIxd;
+	FLMBOOL		bImplicitTrans = FALSE;
+
+	if( RC_OK( rc = fdbInit( pDb, FLM_READ_TRANS,
+										TRUE, 0, &bImplicitTrans)))
+	{
+		if( RC_OK( rc = fdictGetIndex(
+				pDb->pDict, pDb->pFile->bInLimitedMode,
+				uiIxNum, NULL, &pIxd)))
+		{
+	
+			/* Build the collated key */
+
+			rc = KYTreeToKey( pDb, pIxd, pRecord, uiContainer,
+					pKeyBuf, puiKeyLenRV, uiFlag );
+		}
+	}
+
+	if( bImplicitTrans)
+	{
+		(void)flmAbortDbTrans( pDb);
+	}
+	
+	(void)fdbExit( pDb);
+	return( rc);
+}
