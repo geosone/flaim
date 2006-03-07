@@ -1057,6 +1057,7 @@
 	#include <netinet/tcp.h>
 	#ifndef FLM_OSX
 		#include <malloc.h>
+		#include <aio.h>
 	#endif
 	#include <sys/mman.h>
 	#include <sys/resource.h>
