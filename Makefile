@@ -43,14 +43,25 @@ project_desc = An extensible, flexible, adaptable, embeddable database engine
 
 major_version = 4
 minor_version = 9
+
+calc_svn_revision =
+
 ifneq (,$(findstring dist,$(MAKECMDGOALS)))
+	calc_svn_revision = 1
+endif
+
+ifneq (,$(findstring rpm,$(MAKECMDGOALS)))
+	calc_svn_revision = 1
+endif
+
+ifdef calc_svn_revision
 
 	# Get the info for all files.
 	
 	srevision = $(shell svnversion . -n)
 	
 	ifneq (,$(findstring M,$(srevision)))
-     $(error Local modifications found - please check in before making distro)
+      $(error Local modifications found - please check in before making distro)
 	endif
 
 	ifneq (,$(findstring :,$(srevision)))
@@ -985,8 +996,7 @@ pkgconfig: dircheck
 .PHONY : srcrpm
 srcrpm: dist
 	$(ec)$(gprintf) "Creating source RPM ...\n"
-	$(ec)rpmbuild -ts --quiet $(package_dir)/$(project_name)-$(version).tar.gz
-	$(ec)$(call copycmd,$(shell rpm --eval %{_srcrpmdir})/$(project_name)-$(version)*.src.rpm $(package_dir))
+	$(ec)rpmbuild --define="_topdir $(cwd)/$(package_dir)" --quiet -bs $(spec_dir)/libflaim.spec
 	$(ec)$(gprintf) "Source RPM created.\n"
 	
 # -- RPMS --
@@ -994,7 +1004,7 @@ srcrpm: dist
 .PHONY : rpms
 rpms: dist
 	$(ec)$(gprintf) "Creating source and binary RPMs ...\n"
-	$(ec)rpmbuild --define="_topdir $(cwd)/$(package_dir)" -vv -ba $(spec_dir)/libflaim.spec
+	$(ec)rpmbuild --define="_topdir $(cwd)/$(package_dir)" --quiet -ba $(spec_dir)/libflaim.spec
 	$(ec)$(gprintf) "Source and binary RPMs created.\n"
 	
 # -- Documentation --
