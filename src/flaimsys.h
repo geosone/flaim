@@ -100,7 +100,6 @@ class F_CCS;
 #include "fsuperfl.h"
 #include "f64bitfh.h"
 #include "fdynsset.h"
-#include "frestore.h"
 #include "fobjtrck.h"
 #include "ftrace.h"
 #include "flfixed.h"
