@@ -3062,10 +3062,10 @@ RCODE IFlmTestImpl::execute( void)
 	
 	// RFL size event test
 	
-	if (RC_BAD( rc = rflSizeEventTest( DB_NAME_STR)))
-	{
-		goto Exit;
-	}
+//	if (RC_BAD( rc = rflSizeEventTest( DB_NAME_STR)))
+//	{
+//		goto Exit;
+//	}
 
 	// FlmRecordAdd test
 	
