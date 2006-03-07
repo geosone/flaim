@@ -103,7 +103,6 @@ class F_CCS;
 #include "frestore.h"
 #include "fobjtrck.h"
 #include "ftrace.h"
-#include "gddiff.h"
 #include "flfixed.h"
 #include "f_nici.h"
 
@@ -2382,12 +2381,6 @@ eCorruptionType flmVerifyElement(
 eCorruptionType flmVerifyElmFOP(
 	STATE_INFO *		pStateInfo);
 
-RCODE flmVerifyIXRefs(
-	STATE_INFO *		pStateInfo,
-	IX_CHK_INFO *		pIxChkInfo,
-	FLMUINT				uiResetDrn,
-	eCorruptionType *	piElmCorruptionCode);
-
 void flmInitReadState(
 	STATE_INFO *		pStateInfo,
 	FLMBOOL *			pbStateInitialized,
@@ -2398,6 +2391,25 @@ void flmInitReadState(
 	FLMUINT				uiBlkType,
 	FLMBYTE *			pKeyBuffer);
 
+RCODE flmVerifyIXRefs(
+	STATE_INFO *		pStateInfo,
+	IX_CHK_INFO *		pIxChkInfo,
+	FLMUINT				uiResetDrn,
+	eCorruptionType *	piElmCorruptionCode);
+
+RCODE chkVerifyIXRSet(
+	STATE_INFO *		pStateInfo,
+	IX_CHK_INFO *		pIxChkInfo,
+	FLMUINT				uiIxRefDrn);
+
+RCODE chkResolveNonUniqueKey(
+	STATE_INFO *		pStateInfo,
+	IX_CHK_INFO *		pIxChkInfo,
+	FLMUINT				uiIndex,
+	FLMBYTE *			pucKey,
+	FLMUINT				uiKeyLen,
+	FLMUINT				uiDrn);
+
 RCODE flmGetRecKeys(
 	FDB *					pDb,
 	IXD *					pIxd,		
@@ -2406,72 +2418,6 @@ RCODE flmGetRecKeys(
 	FLMBOOL				bRemoveDups,
 	POOL *				pPool,
 	REC_KEY **			ppKeysRV);
-
-RCODE chkVerifyIXRSet(
-	STATE_INFO *		pStateInfo,
-	IX_CHK_INFO *		pIxChkInfo,
-	FLMUINT				uiIxRefDrn);
-
-RCODE chkGetNextRSKey(
-	IX_CHK_INFO *		pIxChkInfo);
-
-RCODE	chkResolveIXMissingKey(
-	STATE_INFO *		pStateInfo,
-	IX_CHK_INFO *		pIxChkInfo);
-
-RCODE	chkResolveNonUniqueKey(
-	STATE_INFO *		pStateInfo,
-	IX_CHK_INFO *		pIxChkInfo,
-	FLMUINT				uiIndex,
-	FLMBYTE *			pucKey,
-	FLMUINT				uiKeyLen,
-	FLMUINT				uiDrn);
-
-RCODE chkRSInit(
-	const char *		pszIoPath,
-	void **				pRSetRV);
-
-RCODE chkRSFinalize(
-	IX_CHK_INFO *		pIxChkInfo,
-	FLMUINT64 *			pui64TotalEntries);
-
-FLMINT chkCompareKeySet(
-	FLMUINT				uiIxNum1,
-	FLMBYTE *			pData1,
-	FLMUINT				uiLength1,
-	FLMUINT				uiDrn1,
-	FLMUINT				uiIxNum2,
-	FLMBYTE *			pData2,
-	FLMUINT				uiLength2,
-	FLMUINT				uiDrn2);
-
-RCODE chkBlkRead(
-	DB_INFO *			pDbInfo,
-	FLMUINT				uiBlkAddress,
-	LFILE *				pLFile,
-	FLMBYTE **			ppBlk,
-	SCACHE **			ppSCache,
-	eCorruptionType *	peCorruption);
-
-RCODE chkVerifyBTrees(
-	DB_INFO *			pDbInfo,
-	POOL *				pPool,
-	FLMBOOL *			pbStartOverRV);
-
-RCODE chkReportError(
-	DB_INFO *			pDbInfo,
-	eCorruptionType	eCorruption,
-	eCorruptionLocale	eErrLocale,
-	FLMUINT				uiErrLfNumber,
-	FLMUINT				uiErrLfType,
-	FLMUINT				uiErrBTreeLevel,
-	FLMUINT				uiErrBlkAddress,
-	FLMUINT				uiErrParentBlkAddress,
-	FLMUINT				uiErrElmOffset,
-	FLMUINT				uiErrDrn,
-	FLMUINT				uiErrElmRecOffset,
-	FLMUINT				uiErrFieldNum,
-	FLMBYTE *			pBlk);
 
 #ifdef FLM_UNIX
 	RCODE MapErrnoToFlaimErr(
@@ -2489,22 +2435,6 @@ RCODE flmSetRflSizeThreshold(
 	FLMUINT				uiTimeInterval,
 	FLMUINT				uiSizeInterval);
 	
-/****************************************************************************
-Desc:
-****************************************************************************/
-FINLINE RCODE chkCallProgFunc(
-	DB_INFO *			pDbInfo)
-{
-	if( (pDbInfo->fnStatusFunc) && (RC_OK( pDbInfo->LastStatusRc)))
-	{
-		pDbInfo->LastStatusRc = (*pDbInfo->fnStatusFunc)( FLM_CHECK_STATUS,
-												(void *)pDbInfo->pProgress,
-												(void *)0,
-												pDbInfo->pProgress->AppArg);
-	}
-	return( pDbInfo->LastStatusRc);
-}
-
 /****************************************************************************
 Desc: 	The FlmBlobImp class provides support for database Binary Large 
 	`		Objects (BLOB). This class replaces the old 'C' FlmBlobXxx functions.
@@ -2650,6 +2580,74 @@ FINLINE FLMUINT flmGetSigBits(
 
 	return( uiSigBits);
 }
+
+enum GRD_DifferenceType
+{
+	GRD_Inserted,
+	GRD_Deleted,
+	GRD_Modified,
+	GRD_DeletedSubtree
+};
+
+/****************************************************************************
+Desc:
+****************************************************************************/
+typedef struct 
+{
+	GRD_DifferenceType	type;
+	// The 'type' indicates the nature 
+	// of the difference, and can have one of the following values:
+	//		GRD_Inserted: a field was inserted.  In this case, the field only exists
+	//						in the 'after record.'  'pAfterField' points to the 
+	//						inserted field.  'pBeforeField' == NULL.
+	//		GRD_Deleted: a field was deleted.  In this case, the field only exists in
+	//						the 'before record'.  'pBeforeField' points to the 
+	//						deleted field.  'pAfterField' == NULL.
+	//		GRD_Modified: a field was modified.  In this case, 'pBeforeField' points 
+	//						to the field before it was modified, and 'pAfterField'
+	//						points to the field after it was modified.
+	//		GRD_DeletedSubtree: a sub-tree was deleted.  In this case, the sub-tree only exists in
+	//						the 'before record'.  'pBeforeField' points to the 
+	//						deleted sub-tree.  'pAfterField' == NULL
+
+	FLMUINT					uiAbsolutePosition; 
+	// 'uiAbsolutePosition' is the 1-based position where the difference occured.
+	// When using the list of differences generated by flmRecordDifference to
+	// undo changes, uiAbsolutePosition can be thought of as the 1-based position
+	// relative to the 'after record.'  In order for 'undo' to work correctly,
+	// the differences must be undone in reverse order.
+	//
+	// When using the list of differences to redo changes, uiAbsolutePosition
+	// can be thought of as the 1-based position relative to the 'before
+	// record.'  In order for 'redo' to work correctly, the differences must be
+	// redone in order.  Note that when a node is inserted or deleted, all
+	// subsequent nodes are, in essence, renumbered.
+
+	FlmRecord *				pBeforeRecord;
+	
+	FlmRecord *				pAfterRecord;
+	
+	void *					pvBeforeField;
+	// 'pvBeforeField' is a pointer to the field before the change.  
+	// There are situations where 'pBeforeField' will be NULL.  
+	// See a description of the 'type' for more details.
+															
+	void *					pvAfterField;		
+	// 'pvAfterField' is a pointer to the field after the change.  There are
+	// situations where 'pBeforeField' will be NULL.  See a description 
+	// of the 'type' for more details.
+}	GRD_DifferenceData;
+
+
+typedef void (* GRD_CallBackFunction)(			// Called for each difference found
+	GRD_DifferenceData & 	difference,			// Description of difference
+	void *						pCallBackData); 	// User-defined data
+
+void flmRecordDifference(
+	FlmRecord *					pBeforeRecord,
+	FlmRecord *					pAfterRecord,
+	GRD_CallBackFunction		pCallBackFunction,
+	void *						pvCallBackData);
 
 #include "fpackoff.h"
 
