@@ -231,13 +231,12 @@ RCODE FSComputeIndexCounts(					// Returns WERR_OK or FERR_BTREE_ERROR
 		goto Exit;
 	}
 
-	/*
-	Estimate number of keys/refs in the leaf block.
-	Estimate using just the left block.  The right block may be a right-most
-	block so will scew the results.
-	*/
-		
+	// Estimate number of keys/refs in the leaf block.
+	// Estimate using just the left block.  The right block may be a right-most
+	// block so will skew the results.
+	//
 	// Code for non-leaf child counts is easy - no need to estimate.
+	
 	if( (pFromStack-1)->uiBlkType != BHT_NON_LEAF_COUNTS)
 	{
 		*pbTotalsEstimated = TRUE;
