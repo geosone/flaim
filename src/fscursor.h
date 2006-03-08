@@ -26,6 +26,7 @@
 #define FSCURSOR_H
 
 #include "fpackon.h"
+
 // IMPORTANT NOTE: No other include files should follow this one except
 // for fpackoff.h
 
@@ -39,6 +40,7 @@ typedef struct KEYPOS
 	FLMBOOL			bExclusiveKey;
 
 	// State information
+	
 	FLMUINT			uiRefPosition;
 	FLMUINT			uiDomain;
 	FLMUINT			uiBlockTransId;
@@ -47,9 +49,9 @@ typedef struct KEYPOS
 	DIN_STATE		DinState;
 
 	// Stack and key information
+	
 	BTSK *			pStack;
 	FLMBOOL			bStackInUse;
-	// VISIT: Add bIsUntilKey boolean.
 	BTSK				Stack [BH_MAX_LEVELS];
 	FLMBYTE			pKey [MAX_KEY_SIZ + 4];	// + 4 is for safety
 } KEYPOS;
@@ -77,152 +79,147 @@ public:
 	virtual ~FSIndexCursor();
 
 	// Reset the cursor back to an empty state.
-	void reset();
+	
+	void reset( void);
 
 	// Reset the transaction on this cursor.
+	
 	RCODE resetTransaction( 
-		FDB *			pDb);
+		FDB *					pDb);
 
 	// Release all b-tree blocks back to the cache.
+	
 	void releaseBlocks( void);
 
 	RCODE	setupKeys(
-		FDB *				pDb,
-		IXD *				pIxd,
-		QPREDICATE * * ppQPredicateList,
-		FLMBOOL *		pbDoRecMatch,
-		FLMBOOL *		pbDoKeyMatch,
-		FLMUINT *		puiLeafBlocksBetween,
-		FLMUINT *		puiTotalKeys,	
-		FLMUINT *		puiTotalRefs,	
-		FLMBOOL *		pbTotalsEstimated);
+		FDB *					pDb,
+		IXD *					pIxd,
+		QPREDICATE ** 		ppQPredicateList,
+		FLMBOOL *			pbDoRecMatch,
+		FLMBOOL *			pbDoKeyMatch,
+		FLMUINT *			puiLeafBlocksBetween,
+		FLMUINT *			puiTotalKeys,	
+		FLMUINT *			puiTotalRefs,	
+		FLMBOOL *			pbTotalsEstimated);
 
 	RCODE	setupKeys(
-		FDB *			pDb,
-		IXD *       pIxd,
-		FLMBYTE *	pFromKey,
-		FLMUINT		uiFromKeyLen,
-		FLMUINT		uiFromRecordId,
-		FLMBYTE *	pUntilKey,
-		FLMUINT		uiUntilKeyLen,
-		FLMUINT		uiUntilRecordId,
-		FLMBOOL		bExclusiveUntil);
+		FDB *					pDb,
+		IXD *       		pIxd,
+		FLMBYTE *			pFromKey,
+		FLMUINT				uiFromKeyLen,
+		FLMUINT				uiFromRecordId,
+		FLMBYTE *			pUntilKey,
+		FLMUINT				uiUntilKeyLen,
+		FLMUINT				uiUntilRecordId,
+		FLMBOOL				bExclusiveUntil);
 
 	RCODE unionKeys(
-		FSIndexCursor * pFSCursor);
+		FSIndexCursor * 	pFSCursor);
 
 	RCODE intersectKeys(
-		FDB *			pDb,
-		FSIndexCursor * pFSCursor);
+		FDB *					pDb,
+		FSIndexCursor * 	pFSCursor);
 
 	FLMBOOL compareKeyRange(
-		FLMBYTE *	pFromKey,
-		FLMUINT		uiFromKeyLen,
-		FLMBOOL		bExclusiveFrom,
-		FLMBYTE *	pUntilKey,
-		FLMUINT		uiUntilKeyLen,
-		FLMBOOL		bExclusiveUntil,
-		FLMBOOL *	pbUntilKeyInSet,
-		FLMBOOL *	pbUntilGreaterThan);
+		FLMBYTE *			pFromKey,
+		FLMUINT				uiFromKeyLen,
+		FLMBOOL				bExclusiveFrom,
+		FLMBYTE *			pUntilKey,
+		FLMUINT				uiUntilKeyLen,
+		FLMBOOL				bExclusiveUntil,
+		FLMBOOL *			pbUntilKeyInSet,
+		FLMBOOL *			pbUntilGreaterThan);
 	
-	// Returns FERR_OK, FERR_BOF_HIT, FERR_EOF_HIT or error
 	RCODE currentKey(
-		FDB *				pDb,
-		FlmRecord **	pPrecordKey,
-		FLMUINT *		puiRecordId);
+		FDB *					pDb,
+		FlmRecord **		pPrecordKey,
+		FLMUINT *			puiRecordId);
 	
-	// Returns FERR_OK, FERR_BOF_HIT, FERR_EOF_HIT or error
 	RCODE currentKeyBuf(
-		FDB *				pDb,
-		POOL *			pPool,
-		FLMBYTE **		ppKeyBuf,
-		FLMUINT *		puiKeyLen,
-		FLMUINT *		puiRecordId,
-		FLMUINT *		puiContainerId);
+		FDB *					pDb,
+		POOL *				pPool,
+		FLMBYTE **			ppKeyBuf,
+		FLMUINT *			puiKeyLen,
+		FLMUINT *			puiRecordId,
+		FLMUINT *			puiContainerId);
 	
-	// Returns FERR_OK, FERR_BOF_HIT or error
 	RCODE firstKey(
-		FDB *				pDb,
-		FlmRecord **	pPrecordKey,
-		FLMUINT *		puiRecordId);
+		FDB *					pDb,
+		FlmRecord **		pPrecordKey,
+		FLMUINT *			puiRecordId);
 
-	// Returns FERR_OK, FERR_EOF_HIT or error
 	RCODE lastKey(
-		FDB *				pDb,
-		FlmRecord **	pPrecordKey,
-		FLMUINT *		puiRecordId);
+		FDB *					pDb,
+		FlmRecord **		pPrecordKey,
+		FLMUINT *			puiRecordId);
 
-	// Returns FERR_OK, FERR_EOF_HIT or error
 	RCODE	nextKey(
-		FDB *				pDb,
-		FlmRecord **	pPrecordKey,
-		FLMUINT *		puiRecordId);
+		FDB *					pDb,
+		FlmRecord **		pPrecordKey,
+		FLMUINT *			puiRecordId);
 
-	// Returns FERR_OK, FERR_BOF_HIT or error
 	RCODE	prevKey(
-		FDB *				pDb,
-		FlmRecord **	pPrecordKey,
-		FLMUINT *		puiRecordId);
+		FDB *					pDb,
+		FlmRecord **		pPrecordKey,
+		FLMUINT *			puiRecordId);
 
-	// Returns FERR_OK, FERR_EOF_HIT or error
 	RCODE	nextRef(
-		FDB *				pDb,
-		FLMUINT *		puiRecordId);
+		FDB *					pDb,
+		FLMUINT *			puiRecordId);
 
-	// Returns FERR_OK, FERR_BOF_HIT or error
 	RCODE	prevRef(
-		FDB *				pDb,
-		FLMUINT *		puiRecordId);
+		FDB *					pDb,
+		FLMUINT *			puiRecordId);
 
-	// Returns FERR_OK, FERR_NOT_FOUND if not found or error.
 	RCODE positionTo(
-		FDB *				pDb,
-		FLMBYTE *		pKey,
-		FLMUINT			uiKeyLen,
-		FLMUINT			uiRecordId = 0);
+		FDB *					pDb,
+		FLMBYTE *			pKey,
+		FLMUINT				uiKeyLen,
+		FLMUINT				uiRecordId = 0);
 
-	// Returns FERR_OK, FERR_NOT_FOUND if not found or error.
 	RCODE positionToDomain(
-		FDB *				pDb,
-		FLMBYTE *		pKey,
-		FLMUINT			uiKeyLen,
-		FLMUINT			uiDomain);
+		FDB *					pDb,
+		FLMBYTE *			pKey,
+		FLMUINT				uiKeyLen,
+		FLMUINT				uiDomain);
 
-	// Does this index support native absolute positioning?
-	FLMBOOL isAbsolutePositionable()
+	FLMBOOL isAbsolutePositionable( void)
 	{
 		return (m_pIxd->uiFlags & IXD_POSITIONING) ? TRUE : FALSE;
 	}
 
 	// Set absolute position (if not supported returns FERR_FAILURE).
 	// uiPosition of zero positions to BOF, ~0 to EOF, one based value.
+	
 	RCODE setAbsolutePosition(
-		FDB *				pDb,
-		FLMUINT			uiRefPosition);
+		FDB *					pDb,
+		FLMUINT				uiRefPosition);
 
 	// Get absolute position (if not supported returns FERR_FAILURE).
 	// uiPosition of zero positions to BOF, ~0 to EOF, one based value.
+	
 	RCODE getAbsolutePosition(
-		FDB *				pDb,
-		FLMUINT *		puiRefPosition);
+		FDB *					pDb,
+		FLMUINT *			puiRefPosition);
 
 	// Get the total number of reference with all from/until sets.
 	// Does not have to support absolute positioning.
+	
 	RCODE getTotalReferences(
-		FDB *				pDb,
-		FLMUINT *		puiTotalRefs,
-		FLMBOOL *		pbTotalEstimated);
+		FDB *					pDb,
+		FLMUINT *			puiTotalRefs,
+		FLMBOOL *			pbTotalEstimated);
 
 	RCODE savePosition( void);
 
 	RCODE restorePosition( void);
 
 	RCODE	getFirstLastKeys(
-		FLMBYTE **		ppFirstKey,
-		FLMUINT *		puiFirstKeyLen,
-		FLMBYTE **		ppLastKey,
-		FLMUINT *		puiLastKeyLen,
-		FLMBOOL *		pbLastKeyExclusive);
+		FLMBYTE **			ppFirstKey,
+		FLMUINT *			puiFirstKeyLen,
+		FLMBYTE **			ppLastKey,
+		FLMUINT *			puiLastKeyLen,
+		FLMBOOL *			pbLastKeyExclusive);
 
 protected:
 
@@ -239,28 +236,28 @@ private:
 		FDB *	pDb);
 
 	FLMBOOL FSCompareKeyPos(
-		KEYSET *			pSet1,
-		KEYSET *			pSet2,
-		FLMBOOL *		pbFromKeysLessThan,
-		FLMBOOL *		pbUntilKeysGreaterThan);
+		KEYSET *				pSet1,
+		KEYSET *				pSet2,
+		FLMBOOL *			pbFromKeysLessThan,
+		FLMBOOL *			pbUntilKeysGreaterThan);
 
 	RCODE setKeyPosition(
-		FDB *				pDb,
-		FLMBOOL			bGoingForward,
-		KEYPOS *			pInKeyPos,
-		KEYPOS *			pOutKeyPos);
+		FDB *					pDb,
+		FLMBOOL				bGoingForward,
+		KEYPOS *				pInKeyPos,
+		KEYPOS *				pOutKeyPos);
 
 	RCODE reposition(
-		FDB *				pDb,
-		FLMBOOL			bCanPosToNextKey,
-		FLMBOOL			bCanPosToPrevKey,
-		FLMBOOL *		pbKeyGone,
-		FLMBOOL			bCanPosToNextRef,
-		FLMBOOL			bCanPosToPrevRef,
-		FLMBOOL *		pbRefGone);
+		FDB *					pDb,
+		FLMBOOL				bCanPosToNextKey,
+		FLMBOOL				bCanPosToPrevKey,
+		FLMBOOL *			pbKeyGone,
+		FLMBOOL				bCanPosToNextRef,
+		FLMBOOL				bCanPosToPrevRef,
+		FLMBOOL *			pbRefGone);
 
 	void releaseKeyBlocks( 
-		KEYPOS *			pKeyPos)
+		KEYPOS *				pKeyPos)
 	{
 		if( pKeyPos->bStackInUse)
 		{
@@ -270,7 +267,7 @@ private:
 	}
 
 	RCODE checkTransaction(
-		FDB *				pDb)
+		FDB *					pDb)
 	{
 		return (RCODE) ((m_uiCurrTransId != pDb->LogHdr.uiCurrTransID ||
 			m_uiBlkChangeCnt != pDb->uiBlkChangeCnt)
@@ -279,43 +276,41 @@ private:
 	}
 
 	RCODE	setupForPositioning(
-		FDB *			pDb);
+		FDB *					pDb);
 
 	// Save the current key position into pSaveKeyPos
+	
 	void saveCurrKeyPos(
-		KEYPOS *		pSaveKeyPos);
+		KEYPOS *				pSaveKeyPos);
 
 	// Restore the current key position from pSaveKeyPos
-	void restoreCurrKeyPos(
-		KEYPOS *		pSaveKeyPos);
-
-	// Returns FERR_OK, FERR_NOT_FOUND if no key set.
-	RCODE getKeySet(
-		FLMBYTE *		pKey,
-		FLMUINT			uiKeyLen,
-		KEYSET **		ppKeySet);
-
-	// Database information
-	FLMUINT				m_uiCurrTransId;
-	FLMUINT				m_uiBlkChangeCnt;
-	FLMBOOL				m_bIsUpdateTrans;
-	FLMUINT				m_uiIndexNum;
-	LFILE	*				m_pLFile;
-	IXD *					m_pIxd;
-
-	// Contains a list of all of the FROM/UNTIL sets
-	KEYSET *				m_pFirstSet;
 	
-	// State information.
-	KEYSET *				m_pCurSet;
-	FLMBOOL				m_bAtBOF;			// Before the first key.
-	FLMBOOL				m_bAtEOF;			// After the last key.
+	void restoreCurrKeyPos(
+		KEYPOS *				pSaveKeyPos);
 
-	KEYPOS				m_curKeyPos;		// Current key position
-	KEYPOS *				m_pSavedPos;		// Saved position
-	KEYSET				m_DefaultSet;		// Single minimum FROM/UNTIL key
+	RCODE getKeySet(
+		FLMBYTE *			pKey,
+		FLMUINT				uiKeyLen,
+		KEYSET **			ppKeySet);
+
+	FLMUINT					m_uiCurrTransId;
+	FLMUINT					m_uiBlkChangeCnt;
+	FLMBOOL					m_bIsUpdateTrans;
+	FLMUINT					m_uiIndexNum;
+	LFILE	*					m_pLFile;
+	IXD *						m_pIxd;
+	KEYSET *					m_pFirstSet;
+	KEYSET *					m_pCurSet;
+	FLMBOOL					m_bAtBOF;
+	FLMBOOL					m_bAtEOF;
+	KEYPOS					m_curKeyPos;
+	KEYPOS *					m_pSavedPos;
+	KEYSET					m_DefaultSet;
 };
 
+/****************************************************************************
+Desc:
+****************************************************************************/
 typedef struct RECPOS
 {
 	FLMUINT			uiRecordId;
@@ -323,13 +318,14 @@ typedef struct RECPOS
 	FLMUINT			uiBlockAddr;
 	BTSK *			pStack;
 	FLMBOOL			bStackInUse;
-	FLMBOOL			bExclusiveKey;			// True if an UNTIL key.
+	FLMBOOL			bExclusiveKey;
 	BTSK				Stack [BH_MAX_LEVELS];
 	FLMBYTE			pKey [DIN_KEY_SIZ];
 } RECPOS;
 
-// The record set will always have inclusive FROM/UNTIL values.
-
+/****************************************************************************
+Desc:	The record set will always have inclusive FROM/UNTIL values.
+****************************************************************************/
 typedef struct RECSET
 {
 	RECPOS			fromKey;
@@ -350,9 +346,11 @@ public:
 	virtual ~FSDataCursor();
 
 	// Reset this cursor back to an initial state.
-	void reset();
+	
+	void reset( void);
 
 	// Reset the transaction on this cursor.
+	
 	RCODE resetTransaction( 
 		FDB *				pDb);
 
@@ -383,36 +381,30 @@ public:
 		FlmRecord **	pPrecord,
 		FLMUINT *		puiRecordId);
 	
-	// Returns FERR_OK, FERR_BOF_HIT or error
 	RCODE firstRec(
 		FDB *				pDb,
 		FlmRecord **	pPrecord,
 		FLMUINT *		puiRecordId);
 
-	// Returns FERR_OK, FERR_EOF_HIT or error
 	RCODE lastRec(
 		FDB *				pDb,
 		FlmRecord **	pPrecord,
 		FLMUINT *		puiRecordId);
 
-	// Returns FERR_OK, FERR_EOF_HIT or error
 	RCODE	nextRec(
 		FDB *				pDb,
 		FlmRecord **	pPrecord,
 		FLMUINT *		puiRecordId);
 
-	// Returns FERR_OK, FERR_BOF_HIT or error
 	RCODE	prevRec(
 		FDB *				pDb,
 		FlmRecord **	pPrecord,
 		FLMUINT *		puiRecordId);
 
-	// Returns FERR_OK, FERR_NOT_FOUND or error
 	RCODE positionTo(
 		FDB *				pDb,
 		FLMUINT			uiRecordId);
 
-	// Returns FERR_OK, FERR_EOF_HIT or error
 	RCODE positionToOrAfter(
 		FDB *				pDb,
 		FLMUINT *		puiRecordId);
@@ -441,6 +433,7 @@ private:
 			pRecPos->bStackInUse = FALSE;
 		}
 	}
+	
 	RCODE setRecPosition(
 		FDB *				pDb,
 		FLMBOOL			bGoingForward,
@@ -468,25 +461,18 @@ private:
 				: FERR_OK);
 	}
 	
-	// Database information
 	FLMUINT				m_uiCurrTransId;
 	FLMUINT				m_uiBlkChangeCnt;
 	FLMBOOL				m_bIsUpdateTrans;
 	FLMUINT				m_uiContainer;
 	LFILE	*				m_pLFile;
-
-	// Contains a list of all of the FROM/UNTIL sets
 	RECSET *				m_pFirstSet;
-	
-	// State information.
 	RECSET *				m_pCurSet;
-	FLMBOOL				m_bAtBOF;			// Before the first key.
-	FLMBOOL				m_bAtEOF;			// After the last key.
-
-	RECPOS				m_curRecPos;		// Current key position
-	RECPOS *				m_pSavedPos;	  	// Saved position
-	RECSET				m_DefaultSet;		// Single minimum FROM/UNTIL key
-
+	FLMBOOL				m_bAtBOF;
+	FLMBOOL				m_bAtEOF;
+	RECPOS				m_curRecPos;
+	RECPOS *				m_pSavedPos;
+	RECSET				m_DefaultSet;
 };
 
 #include "fpackoff.h"
